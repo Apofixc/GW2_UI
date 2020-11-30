@@ -65,18 +65,6 @@
     </Slider>
 
     <ScrollFrame name="GwScrollFrameTemplate" inherits="UIPanelScrollFrameCodeTemplate" virtual="true">
-        <Frames>
-            <Slider parentKey="ScrollBar" inherits="GwScrollBarTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-12"></Anchor>
-                    <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="12"></Anchor>
-                </Anchors>
-            </Slider>
-        </Frames>
-		<ScrollChild>
-			<Frame parentKey="ScrollChildFrame">
-			</Frame>
-		</ScrollChild>
 		<Scripts>
 			<OnLoad>
 				ScrollFrame_OnLoad(self);
@@ -87,23 +75,7 @@
 
 	<!-- Button -->
 
-    <Button name="GwGossipChoiceButtonTemplate" virtual="true">
-		<Size y = "35"/>
-		<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
-	</Button>
-
-    <Button name="GwGossipChoiceLargeButtonTemplate" virtual="true">
-		<Size y = "40"/>
-		<HighlightTexture file="Interface/AddOns/GW2_UI/textures/questview/gvf_scroll_buttom" alphaMode="ADD"/>
-	</Button>
-
     <Button name="GwChoiceTitleButtonTemplate" virtual="true" mixin="GwGossipTitleButtonMixin">
-		<Size y = "35"/>
-		<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
-		<Anchors>
-			<Anchor point="LEFT"/>
-			<Anchor point="RIGHT"/>
-		</Anchors>
 		<Layers>
 			<Layer level="OVERLAY">
 				<Texture parentKey="Icon">
@@ -846,6 +818,14 @@
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent" x="16" y="-40"/>
 						</Anchors>
+						<Frames>
+							<Slider parentKey="ScrollBar" inherits="GwScrollBarTemplate">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-12"/>
+									<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="12"/>
+								</Anchors>
+							</Slider>
+						</Frames>
 						<ScrollChild>
 							<Frame parentKey="ScrollChildFrame">
 								<Size x="210"/>
@@ -1114,7 +1094,7 @@
 					</OnDragStop>
 				</Scripts>
 			</Frame>		
-			<ScrollFrame parentKey="Scroll" inherits="HybridScrollFrameTemplate">
+			<ScrollFrame parentKey="Scroll" inherits="GwScrollFrameTemplate">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Dialog"  relativePoint="LEFT" />
 					<Anchor point="RIGHT" relativeKey="$parent.Dialog"  relativePoint="RIGHT" />
@@ -1134,13 +1114,17 @@
 					</Layer>
 				</Layers>
 				<Frames>
-					<Slider inherits="GwHybridScrollBarTemplate">
+					<Slider parentKey="ScrollBar" inherits="GwScrollBarTemplate">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="-5" y="-15"></Anchor>
-							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="-5" y="15"></Anchor>
+							<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="-5" y="-15"/>
+							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="-5" y="15"/>
 						</Anchors>
 					</Slider>
 				</Frames>
+				<ScrollChild>
+					<Frame parentKey="ScrollChildFrame">
+					</Frame>
+				</ScrollChild>
 				<Scripts>
 					<OnHide>
 						self.Text:SetText("");
@@ -1666,8 +1650,8 @@
 					</OnDragStop>
 				</Scripts>
 			</Frame>		
-			<ScrollFrame parentKey="Scroll" inherits="HybridScrollFrameTemplate">
-				<Size x="625" y="160"></Size>
+			<ScrollFrame parentKey="Scroll" inherits="GwScrollFrameTemplate">
+				<Size x="590" y="160"></Size>
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent.Dialog" relativePoint="BOTTOMLEFT" x="23" y="0"/>
 				</Anchors>
@@ -1698,13 +1682,17 @@
 					</Layer>
 				</Layers>
 				<Frames>
-					<Slider inherits="GwHybridScrollBarTemplate">
+					<Slider parentKey="ScrollBar" inherits="GwScrollBarTemplate">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="-5" y="-15"></Anchor>
-							<Anchor point="BOTTOMLEFT" x="-5" y="15"></Anchor>
+							<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="-5" y="-15"/>
+							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="-5" y="15"/>
 						</Anchors>
 					</Slider>
 				</Frames>
+				<ScrollChild>
+					<Frame parentKey="ScrollChildFrame">
+					</Frame>
+				</ScrollChild>
 				<Scripts>
 					<OnHide>
 						self.Text:SetText("");

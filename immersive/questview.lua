@@ -15,6 +15,16 @@ local AUTO_NEXT_TIME = 0.5;
 local ANIMATION_TEXT_SPEED = 0.05;
 local MOVE_AND_SCALE = true;
 
+local ITEM_BUTTOM_TITLE = {
+	buttonPool,
+	buttons = {}
+}
+
+local ITEM_BUTTOM_REWARD = {
+	buttonPool,
+	buttons = {}
+}
+
 ------------------------------------------------ Last Event --------------------------------------------------------
 
 local LAST_ACTIVE_EVENT = "NONE";
@@ -71,6 +81,14 @@ local function GwGossipEvent(self)
 	self:RegisterEvent("LEARNED_SPELL_IN_TAB");
 end
 
+local function GetItemButton(parent, parentButton)
+	local button = parent.buttonPool:Acquire();
+	button:SetParent(parentButton);
+	table.insert(parent.buttons, button);
+
+	return button;
+end
+
 local function Release(parent)
 	parent.buttons = {};
 	parent.buttonPool:ReleaseAll();
@@ -79,51 +97,6 @@ end
 local function SetActiveEvent(event)
 	PREV_ACTIVE_EVENT = LAST_ACTIVE_EVENT;
 	LAST_ACTIVE_EVENT = event;
-end
-
-local function GwRefreshLayout(self)
-    local items = self.scrollButtonTitleInfo;
-    local buttons = HybridScrollFrame_GetButtons(self);
-    local itemIndex = HybridScrollFrame_GetOffset(self);
-
-    for buttonIndex = 1, #buttons do
-		local button = buttons[buttonIndex];
-		itemIndex = itemIndex + 1; 
-
-        if itemIndex <= #items then
-            local item = items[itemIndex];
-			
-			if (not item.show) then
-				for newItemIndex = itemIndex + 1, #items do
-					itemIndex = newItemIndex; 
-					if (items[newItemIndex].show) then
-						item = items[newItemIndex];
-						break;
-					end
-				end
-			end
-
-			if (item.show) then
-				titleText = item.titleText or GW_INTERACTIVE_TEXT[item.action][math.random(1, #GW_INTERACTIVE_TEXT[item.action])];
-
-				button:SetInfo(item.buttonID, item.type, (buttonIndex < 11 and buttonIndex..". "..titleText) or titleText, item.isIgnored, item.isTrivial, item.icon, item.action, item.specID);
-				button:Show();
-			else
-				button:Release();
-				button:Hide();
-			end
-		else
-			button:Release();
-            button:Hide();
-        end
-    end
-
-    local buttonHeight = self.buttonHeight;
-    local totalHeight = #items * buttonHeight;
-    local shownHeight = #buttons * buttonHeight;
-
-	HybridScrollFrame_Update(self, totalHeight, shownHeight);
-	self.scrollBar.doNotHide =  #items > 0 and #items > #buttons;
 end
 
 local function GwButtonUpdate(self, start, finish, currete)
@@ -144,9 +117,32 @@ local function GwButtonUpdate(self, start, finish, currete)
 		["EXIT"] = true
 	}
 
-	for i,v in ipairs(Scroll.scrollButtonTitleInfo) do
-		if (v.action) then
-			v.show = move[v.action];
+	Release(ITEM_BUTTOM_TITLE);
+	local totalHeight = 0;
+
+	for _, item in ipairs(Scroll.scrollButtonTitleInfo) do
+		if (item.action) then
+			item.show = move[item.action];
+		end
+
+		if (item.show) then
+			local button = GetItemButton(ITEM_BUTTOM_TITLE, Scroll.ScrollChildFrame);
+			local key = #ITEM_BUTTOM_TITLE.buttons;
+
+			titleText = item.titleText or GW_INTERACTIVE_TEXT[item.action][math.random(1, #GW_INTERACTIVE_TEXT[item.action])];
+			button:SetInfo(item.buttonID, item.type, (key < 11 and key..". "..titleText) or titleText, item.isIgnored, item.isTrivial, item.icon, item.action, item.specID);
+
+			if (key > 1) then
+				button:SetPoint('TOPLEFT', ITEM_BUTTOM_TITLE.buttons[key - 1], 'BOTTOMLEFT', 0, -5);
+			else
+				
+				button:SetPoint('TOPLEFT', Scroll.ScrollChildFrame, 'TOPLEFT', 5, -5);
+			end
+			
+			button:Resize(Scroll.ScrollChildFrame:GetWidth());
+			button:Show();
+
+			totalHeight = totalHeight + button:GetHeight() + 5;
 		end
 	end
 
@@ -156,10 +152,9 @@ local function GwButtonUpdate(self, start, finish, currete)
 		end
 	end
 
-	--HybridScrollFrame_SetOffset(titleInfo, 0);
-	GwRefreshLayout(Scroll);
-
-	Scroll.scrollBar:SetAlpha(0);
+	Scroll.ScrollChildFrame:SetHeight(totalHeight);
+	Scroll.ScrollChildFrame:Show();
+	Scroll.ScrollBar:SetAlpha(0);
 end
 
 local function GwForceClose()
@@ -233,14 +228,14 @@ local function AnimationTextDialog(self, elapsed)
 					C_Timer.After(AUTO_NEXT_TIME, function() 
 						self:NextDialog();
 						if (AUTO_NEXT_BLOCK) then
-							self:GetParent().Scroll.scrollChild:Show();	
-							self:GetParent().Scroll.scrollBar:SetAlpha(1);	
+							self:GetParent().Scroll.ScrollChildFrame:Show();	
+							self:GetParent().Scroll.ScrollBar:SetAlpha(1);	
 						end
 						self.dialogActive = false;
 					end);
 				else
-					self:GetParent().Scroll.scrollChild:Show();	
-					self:GetParent().Scroll.scrollBar:SetAlpha(1);	
+					self:GetParent().Scroll.ScrollChildFrame:Show();	
+					self:GetParent().Scroll.ScrollBar:SetAlpha(1);	
 				end	
 
 				self:SetScript("OnUpdate", nil);
@@ -632,12 +627,6 @@ end
 ------------------------------------------- GOSSIP BUTTON MIXIN -----------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
 
-local ITEM_BUTTOM_TITLE = {
-	buttonPool,
-	buttons = {}
-}
-
-
 GwGossipTitleButtonMixin = {}
 
 function GwGossipTitleButtonMixin:SetInfo(buttonID, type, titleText, isIgnored, isTrivial, icon, actionType, specID)
@@ -672,15 +661,13 @@ function GwGossipTitleButtonMixin:UpdateTitle(titleText, isIgnored, isTrivial)
 		self.Label:SetFormattedText("|cFFFF5A00%s|r", titleText);
 		self.Icon:SetVertexColor(1,1,1);
 	end
-
-	self:Update()
 end
 
 function GwGossipTitleButtonMixin:OnClick()
 	local parent = self:GetParent():GetParent():GetParent();
 
 	if (not AUTO_NEXT_BLOCK) then
-		parent.Scroll.scrollChild:Hide();
+		parent.Scroll.ScrollChildFrame:Hide();
 	end
 
 	local unitName = "";
@@ -750,13 +737,15 @@ function GwGossipTitleButtonMixin:OnLeave()
 	GameTooltip:Hide(); 
 end 
 
-function GwGossipTitleButtonMixin:Update()
+function GwGossipTitleButtonMixin:Resize(width)
+	self:SetWidth(width);
 	self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()));
-	-- if (FULL_SCREEN) then
-	-- 	self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()));
-	-- else
-	-- 	self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()));
-	-- end
+	
+	if (FULL_SCREEN) then
+		self:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+	else
+		self:SetHighlightTexture("Interface/AddOns/GW2_UI/textures/questview/gvf_scroll_buttom")
+	end 
 end
 
 function GwGossipTitleButtonMixin:Release()
@@ -909,19 +898,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------- REWARD/DETALIE -------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
-
-local ITEM_BUTTOM_REWARD = {
-	buttonPool,
-	buttons = {}
-}
-
-local function GetItemButton(parent, parentButton)
-	local button = parent.buttonPool:Acquire();
-	button:SetParent(parentButton);
-	table.insert(parent.buttons, button);
-
-	return button;
-end
 
 local function GwHiddenButton(parent, index)
 	for i=index, #parent do
@@ -1800,7 +1776,7 @@ local function GwImmersiveFrameHandleShow(self)
 	end
 
 	AUTO_NEXT_BLOCK = false;
-	self.Scroll.scrollChild:Hide();
+	self.Scroll.ScrollChildFrame:Hide();
 	self.Scroll.scrollButtonTitleInfo = {}
 
 	local GwUpdate = UPDATE[LAST_ACTIVE_EVENT];	
@@ -1934,12 +1910,9 @@ local function GwGossipViewFrame_OnKeyDown(self, button)
 	end
 
 	local num = tonumber(button);
-	if (num and self.Scroll.scrollChild:IsShown()) then
-		local titlebutton = HybridScrollFrame_GetButtons(self.Scroll)
-		
-		if (titlebutton[num] and titlebutton[num]:IsShown()) then
-			titlebutton[num]:Click();
-		end
+	if (num and self.Scroll.ScrollChildFrame:IsShown()) then
+		local titlebutton = ITEM_BUTTOM_TITLE.buttons;
+		titlebutton[num]:Click();
 
 		self:SetPropagateKeyboardInput(false);
 		return;
@@ -2095,9 +2068,9 @@ local function LoadQuestview()
 	local buttonSettings = CreateFrame("Button", nil, nil, "buttonSettingsTemplate");
 
 	CreateFrame("Frame", "GwFullScreenGossipViewFrame", UIParent, "GwFullScreenGossipViewFrameTemplate");
-	HybridScrollFrame_CreateButtons(GwFullScreenGossipViewFrame.Scroll, "GwChoiceTitleButtonTemplate, GwGossipChoiceButtonTemplate");
-	GwFullScreenGossipViewFrame.Scroll.scrollChild:Hide();
-	GwFullScreenGossipViewFrame.Scroll.update = GwRefreshLayout;
+	GwFullScreenGossipViewFrame.Scroll.ScrollChildFrame:SetWidth(GwFullScreenGossipViewFrame.Scroll:GetWidth());
+	GwFullScreenGossipViewFrame.Scroll.ScrollChildFrame:Hide();
+
 	GwFullScreenGossipViewFrame:SetScript("OnEvent", GwGossipViewFrame_OnEvent);
 	GwFullScreenGossipViewFrame:SetScript("OnKeyDown", GwGossipViewFrame_OnKeyDown);
 	GwFullScreenGossipViewFrame.DetailButton:SetScript("OnClick", GwGossipViewFrameDetailButton_OnClick);
@@ -2105,9 +2078,8 @@ local function LoadQuestview()
 	GwFullScreenGossipViewFrame.Dialog.maxSizeText = 600;
 
 	CreateFrame("Frame", "GwGossipViewFrame", UIParent, "GwGossipViewFrameTemplate");
-	HybridScrollFrame_CreateButtons(GwGossipViewFrame.Scroll, "GwChoiceTitleButtonTemplate, GwGossipChoiceLargeButtonTemplate");
-	GwGossipViewFrame.Scroll.scrollChild:Hide();
-	GwGossipViewFrame.Scroll.update = GwRefreshLayout;
+	GwGossipViewFrame.Scroll.ScrollChildFrame:SetWidth(GwGossipViewFrame.Scroll:GetWidth());
+	GwGossipViewFrame.Scroll.ScrollChildFrame:Hide();
 	GwGossipViewFrame:SetScript("OnEvent", GwGossipViewFrame_OnEvent);
 	GwGossipViewFrame:SetScript("OnKeyDown", GwGossipViewFrame_OnKeyDown);
 	GwGossipViewFrame.DetailButton:SetScript("OnClick", GwGossipViewFrameDetailButton_OnClick);
@@ -2117,8 +2089,9 @@ local function LoadQuestview()
 
 	GwChangeGossipFrame();
 
+	ITEM_BUTTOM_TITLE.buttonPool = CreateFramePool("BUTTON", nil, "GwChoiceTitleButtonTemplate");
 	ITEM_BUTTOM_REWARD.buttonPool = CreateFramePool("BUTTON", nil, "GwGossipQuestItemTemplate, GwGossipRewardItemCodeTemplate");
-
+	
 	do
         --EnableTooltip(buttonSettings, "Gossip Option")
         local dd = buttonSettings.dropdown
