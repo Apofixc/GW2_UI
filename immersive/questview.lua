@@ -575,10 +575,14 @@ function GwGossipFullScreenStyle:OnShow()
 		self.Border:SetTexture("Interface\\AddOns\\GW2_UI\\textures\\questview\\fsgvf_border_"..num);
 		self.Bottom:SetTexture("Interface\\AddOns\\GW2_UI\\textures\\questview\\fsgvf_gw2_bottom_"..num);
 		self.Top:SetTexture("Interface\\AddOns\\GW2_UI\\textures\\questview\\fsgvf_gw2_top_"..num);
+
+		self:GetParent().Detail.background:SetTexture("Interface\\AddOns\\GW2_UI\\textures\\questview\\fsgvf_gw2_reward");
 	else
 		self.Border:SetTexture("Interface\\AddOns\\GW2_UI\\textures\\questview\\fsgvf_border_1");
 		self.Bottom:SetTexture("Interface\\AddOns\\GW2_UI\\textures\\questview\\fsgvf_classic_bottom");
 		self.Top:SetTexture("Interface\\AddOns\\GW2_UI\\textures\\questview\\fsgvf_classic_top");
+
+		self:GetParent().Detail.background:SetTexture("Interface\\AddOns\\GW2_UI\\textures\\questview\\fsgvf_classic_reward");
 	end
 
 	if (DINAMIC_BACKGROUND) then
@@ -1000,34 +1004,35 @@ end
 
 local function UpdateItemInfo(self)
 	if self.objectType == 'item' then
-		local name, texture, numItems, quality, isUsable = GetQuestItemInfo(self.type, self:GetID())
+		local name, texture, numItems, quality, isUsable = GetQuestItemInfo(self.type, self:GetID());
 		-- For the tooltip
-		self.Name:SetText(name)
-		self.itemTexture = texture
-		SetItemButtonCount(self, numItems)
-		SetItemButtonTexture(self, texture)
+		self.Name:SetText(name);
+		self.itemTexture = texture;
+		SetItemButtonCount(self, numItems);
+		SetItemButtonTexture(self, texture);
 		if ( isUsable ) then
-			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
-			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0)
+			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0);
+			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0);
 		else
-			SetItemButtonTextureVertexColor(self, 0.9, 0, 0)
-			SetItemButtonNameFrameVertexColor(self, 0.9, 0, 0)
+			SetItemButtonTextureVertexColor(self, 0.9, 0, 0);
+			SetItemButtonNameFrameVertexColor(self, 0.9, 0, 0);
 		end
-		self:Show()
-		return true
+
+		return self:Show();
 	elseif self.objectType == 'currency' then
-		local name, texture, numItems = GetQuestCurrencyInfo(self.type, self:GetID())
+		local name, texture, numItems = GetQuestCurrencyInfo(self.type, self:GetID());
 		if (name and texture and numItems) then
 			-- For the tooltip
-			self.Name:SetText(name)
-			self.itemTexture = texture
-			SetItemButtonCount(self, numItems, true)
-			SetItemButtonTexture(self, texture)
-			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
-			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0)
-			return true
+			self.Name:SetText(name);
+			self.itemTexture = texture;
+			SetItemButtonCount(self, numItems, true);
+			SetItemButtonTexture(self, texture);
+			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0);
+			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0);
+
+			return self:Show();
 		else
-			return self:Hide()
+			return self:Hide();
 		end
 	end
 end
@@ -1435,33 +1440,33 @@ end
 
 local function GwQuestDetail_Update(self)
 	local progress = self.Scroll.ScrollChildFrame.Progress;
-
+	local Offset = 5;
 	Release(ITEM_BUTTOM_REWARD);
+
 	local buttonIndex = 1;
 	local totalHeight = 0;
 	local lastElement;
 
-	self.numRequiredMoney =0-- math.random(0, 1000);
-	self.numRequiredItems = 0--math.random(5, 20);
-	self.numRequiredCurrencie = 0--math.random(5, 10);
+	--self.numRequiredMoney = math.random(0, 1000);
+	--self.numRequiredItems = math.random(10, 20);
+	--self.numRequiredCurrencies = math.random(5, 10);
 
 	if (self.numRequiredMoney > 0) then
 		MoneyFrame_Update(progress.MoneyFrame, self.numRequiredMoney);
 		
 		local moneyColor, moneyVertex;
-		if (self.numRequiredMoney > GetMoney()) then
+		
+		if (self.numRequiredMoney < GetMoney()) then
 			moneyColor, moneyVertex = 'red', 0.2;
-		else
-			moneyColor, moneyVertex = 'white', 0.75;
 		end
 
 		progress.MoneyText:SetTextColor(moneyVertex, moneyVertex, moneyVertex);
 		SetMoneyFrameColor(progress.MoneyFrame, moneyColor);
-		progress.MoneyText:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'TOPLEFT', 5, -5);
+		progress.MoneyText:SetPoint('TOPLEFT', progress, 'TOPLEFT', Offset, -Offset);
 		progress.MoneyText:Show();
 		progress.MoneyFrame:Show();
 
-		totalHeight = totalHeight + progress.MoneyFrame:GetHeight() + 5;
+		totalHeight = totalHeight + progress.MoneyFrame:GetHeight() + Offset;
 		lastElement = progress.MoneyText;
 	else
 		progress.MoneyText:Hide();
@@ -1470,12 +1475,11 @@ local function GwQuestDetail_Update(self)
 
 	if (self.numRequiredItems > 0) then
 		if (lastElement) then
-			progress.ReqItemText:SetPoint('TOPLEFT', lastElement, 'BOTTOMLEFT', 5, -5);
+			progress.ReqItemText:SetPoint('TOPLEFT', lastElement, 'BOTTOMLEFT', 0, -Offset);
 		else
-			progress.ReqItemText:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'BOTTOMLEFT', 5, -5);
+			progress.ReqItemText:SetPoint('TOPLEFT', progress, 'TOPLEFT', Offset, -Offset);
 		end
-		totalHeight = totalHeight + progress.ReqItemText:GetHeight() + 5;
-		progress.ReqItemText:Show();
+		totalHeight = totalHeight + progress.ReqItemText:GetHeight() + Offset;
 
 		for RequiredItems = 1, self.numRequiredItems do	
 			local hidden = IsQuestItemHidden(RequiredItems);
@@ -1487,61 +1491,63 @@ local function GwQuestDetail_Update(self)
 				
 				UpdateItemInfo(requiredItem);
 
-				if (RequiredItems > 1) then
-					requiredItem:SetPoint('TOPLEFT', ITEM_BUTTOM_REWARD.buttons[buttonIndex - 1], 'BOTTOMLEFT', 0, -5);
+				if (FULL_SCREEN) then
+					if (RequiredItems > 1) then
+						requiredItem:SetPoint('TOPLEFT', ITEM_BUTTOM_REWARD.buttons[buttonIndex - 1], 'BOTTOMLEFT', 0, -Offset);
+					else
+						requiredItem:SetPoint('TOPLEFT', progress.ReqItemText, 'BOTTOMLEFT', Offset, -Offset);
+					end
+					
+					totalHeight = totalHeight + requiredItem:GetHeight() + Offset;
 				else
-					requiredItem:SetPoint('TOPLEFT', progress.ReqItemText, 'BOTTOMLEFT', 5, -5);
+
 				end
 
-				totalHeight = totalHeight + requiredItem:GetHeight() + 5;
-				requiredItem:Show();
-				-- if (RequiredItems > 1) then
-				-- 	if (mod(RequiredItems, 2) == 1) then
-				-- 		requiredItem:SetPoint('TOPLEFT', ITEM_BUTTOM_REWARD.buttons[buttonIndex - 2], 'BOTTOMLEFT', 0, -2);
-				-- 		newHeight = newHeight + requiredItem:GetHeight() + 2;
-				-- 	else
-				-- 		requiredItem:SetPoint('TOPLEFT', ITEM_BUTTOM_REWARD.buttons[buttonIndex - 1], 'TOPRIGHT', 1, 0);
-				-- 	end
-				-- else
-				-- 	requiredItem:SetPoint('TOPLEFT', self.ReqItemText, 'BOTTOMLEFT', 0, -MARINE_REWARE_FRAME);
-				-- 	newHeight = newHeight + requiredItem:GetHeight() + MARINE_REWARE_FRAME;	
-				-- end	
-				
 				buttonIndex = buttonIndex + 1;
 			end
 		end
 
-		lastElement = ITEM_BUTTOM_REWARD.buttons[(mod(buttonIndex, 2) == 1 and buttonIndex - 2) or buttonIndex - 1];
+		if (buttonIndex ~= 1) then
+			progress.ReqItemText:Show();
+			lastElement = ITEM_BUTTOM_REWARD.buttons[buttonIndex - 1];
+		else
+			totalHeight = totalHeight - progress.ReqItemText:GetHeight() - Offset;
+			progress.ReqItemText:Hide();
+		end
 	else
 		progress.ReqItemText:Hide();
 	end
 
 	if (self.numRequiredCurrencies > 0) then
-		self.ReqCurrencyText:SetPoint('LEFT', self, 'LEFT', BORDER_REWARE_FRAME, 0);
-		self.ReqCurrencyText:SetPoint('TOP', lastElement, 'BOTTOM', 0, -MARINE_REWARE_FRAME);
-		newHeight = newHeight + self.ReqCurrencyText:GetHeight() + MARINE_REWARE_FRAME;
-		self.ReqCurrencyText:Show();
+		if (lastElement) then
+			progress.ReqCurrencyText:SetPoint('TOPLEFT', lastElement, 'BOTTOMLEFT', 0, -Offset);
+		else
+			progress.ReqCurrencyText:SetPoint('TOPLEFT', progress, 'TOPLEFT', Offset, -Offset);
+		end
+
+		totalHeight = totalHeight + progress.ReqCurrencyText:GetHeight() + Offset;
+		progress.ReqCurrencyText:Show();
+
 		for RequiredCurrencies = 1, self.numRequiredCurrencies do	
-			local requiredItem = GetItemButton(ITEM_BUTTOM_REWARD, self);
+			local requiredItem = GetItemButton(ITEM_BUTTOM_REWARD, progress);
 			requiredItem.type = 'required'
 			requiredItem.objectType = 'currency'
 			requiredItem:SetID(RequiredCurrencies);
-			requiredItem:Show();
 
 			UpdateItemInfo(requiredItem)
 
-			if (RequiredCurrencies > 1) then
-				if (mod(RequiredCurrencies, 2) == 1) then
-					requiredItem:SetPoint('TOPLEFT', ITEM_BUTTOM_REWARD.buttons[buttonIndex - 2], 'BOTTOMLEFT', 0, -2);
-					newHeight = newHeight + requiredItem:GetHeight() + 2;
+			if (FULL_SCREEN) then
+				if (RequiredCurrencies > 1) then
+					requiredItem:SetPoint('TOPLEFT', ITEM_BUTTOM_REWARD.buttons[buttonIndex - 1], 'BOTTOMLEFT', 0, -Offset);
 				else
-					requiredItem:SetPoint('TOPLEFT', ITEM_BUTTOM_REWARD.buttons[buttonIndex - 1], 'TOPRIGHT', 1, 0);
+					requiredItem:SetPoint('TOPLEFT', progress.ReqCurrencyText, 'BOTTOMLEFT', Offset, -Offset);
 				end
+				
+				totalHeight = totalHeight + requiredItem:GetHeight() + Offset;
 			else
-				requiredItem:SetPoint('TOPLEFT', self.ReqCurrencyText, 'BOTTOMLEFT', 0, -MARINE_REWARE_FRAME);
-				newHeight = newHeight + requiredItem:GetHeight() + MARINE_REWARE_FRAME;		
-			end
 
+			end
+	
 			buttonIndex = buttonIndex + 1;
 		end
 
@@ -1549,12 +1555,12 @@ local function GwQuestDetail_Update(self)
 		progress.ReqCurrencyText:Hide();
 	end
 	
-	self.Scroll.ScrollChildFrame.Progress:SetHeight(totalHeight);
+	progress:SetHeight(totalHeight);
 	self.Scroll.ScrollChildFrame:SetHeight(totalHeight);
 	self.Scroll.ScrollBar:SetValue(0);
 
 	self:Show();
-	--progress:Show();
+	progress:Show();
 
 	GwHiddenButton(ITEM_BUTTOM_REWARD.buttons, buttonIndex);
 end
@@ -2111,7 +2117,7 @@ local function LoadQuestview()
 
 	GwChangeGossipFrame();
 
-	ITEM_BUTTOM_REWARD.buttonPool = CreateFramePool("BUTTON", nil, "GwItemButtonTemplate, GwRewardItemCodeTemplate");
+	ITEM_BUTTOM_REWARD.buttonPool = CreateFramePool("BUTTON", nil, "GwGossipQuestItemTemplate, GwGossipRewardItemCodeTemplate");
 
 	do
         --EnableTooltip(buttonSettings, "Gossip Option")

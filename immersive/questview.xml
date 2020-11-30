@@ -73,6 +73,16 @@
                 </Anchors>
             </Slider>
         </Frames>
+		<ScrollChild>
+			<Frame parentKey="ScrollChildFrame">
+			</Frame>
+		</ScrollChild>
+		<Scripts>
+			<OnLoad>
+				ScrollFrame_OnLoad(self);
+				self.scrollBarHideable = true;
+			</OnLoad>
+		</Scripts>
     </ScrollFrame>
 
 	<!-- Button -->
@@ -137,9 +147,10 @@
 		</Scripts>
 	</Button>
 
-	<Button name="GwRewardItemCodeTemplate" virtual="true">
+	<Button name="GwGossipRewardItemCodeTemplate" virtual="true">
 		<Scripts>
 			<OnEnter>
+				GameTooltip:SetIgnoreParentAlpha(true);
 				GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0);
 				if (self.objectType == "item") then
 					GameTooltip:SetQuestItem(self.type, self:GetID());
@@ -170,6 +181,7 @@
 				end
 			</OnDoubleClick>
 			<OnLeave>
+				GameTooltip:SetIgnoreParentAlpha(false);
 				GameTooltip:Hide();
 				ResetCursor();
 			</OnLeave>
@@ -232,68 +244,51 @@
 		</Scripts>
 	</Button>
 
-	<Button name="GwItemButtonTemplate" virtual="true" registerForClicks="LeftButtonUp,RightButtonUp">
-		<Size x="150" y="28" />
+	<Button name="GwGossipQuestItemTemplate" registerForClicks="LeftButtonUp, RightButtonUp" virtual="true">
+		<Size x="180" y="38" />
 		<Layers>
-			<Layer level="BORDER">
-				<Texture name="$parentIconTexture" parentKey="Icon">
-					<Size x="26" y="26" />
+			<Layer level="BACKGROUND" textureSubLevel="1">
+				<Texture parentKey="Icon">
+					<Size x="38" y="38" />
 					<Anchors>
 						<Anchor point="TOPLEFT" />
 					</Anchors>
 				</Texture>
-				<FontString name="$parentName" inherits="GameFontHighlight" justifyH="LEFT" parentKey="Name">
-					<Size x="170" y="18" />
+			</Layer>
+
+			<Layer level="BACKGROUND" textureSubLevel="0">
+				 <Texture parentKey="NameFrame" file="Interface\QuestFrame\UI-QuestItemNameFrame" >
+					<Size x="190" y="42" />
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="CENTER" x="-10" y="0" />
+					</Anchors>
+				</Texture> 
+			</Layer>
+
+			<Layer level="BORDER">
+				<FontString inherits="GameFontHighlight" justifyH="LEFT" parentKey="Name" wordwrap="true">
+					<Size x="130" y="38" />
 					<Anchors>
 						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="8" y="0" />
 					</Anchors>
 				</FontString>
 			</Layer>
-			<Layer level="BACKGROUND">
-				<Texture name="$parentNameFrame" file="Interface\QuestFrame\UI-QuestItemNameFrame" parentKey="NameFrame">
-					<Size x="150" y="36" />
+
+			<Layer level="ARTWORK">
+				<Texture parentKey="IconBorder" file="Interface/AddOns/GW2_UI/textures/questview/fsgvf_item_icon_border">
+				<Size x="38" y="38" />
 					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="CENTER" x="-10" y="0" />
+						<Anchor point="CENTER" relativeKey="$parent.Icon" relativePoint="CENTER"/>
 					</Anchors>
 				</Texture>
-			</Layer>
-			<Layer level="ARTWORK">
+
 				<FontString name="$parentCount" inherits="NumberFontNormal" justifyH="RIGHT" parentKey="Count">
 					<Anchors>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="-1" y="1" />
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="-3" y="4" />
 					</Anchors>
 				</FontString>
-				<Texture name="$parentBorderexture" parentKey="Border" file="Interface\AddOns\Immersion\Textures\Button_Normal">
-					<Size x="26" y="26" />
-					<Anchors>
-						<Anchor point="TOPLEFT" />
-					</Anchors>
-				</Texture>
-				<MaskTexture parentKey="Mask" file="Interface\AddOns\Immersion\Textures\Mask_Icon" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent.Icon" relativePoint="TOPLEFT" x="0" y="0"/>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
-					</Anchors>
-					<MaskedTextures>
-						<MaskedTexture childKey="Icon"/>
-					</MaskedTextures>
-				</MaskTexture>
 			</Layer>
 		</Layers>									
-		<Animations>
-			<AnimationGroup parentKey="InAnim" setToFinalAlpha="true">
-				<Scale childKey="Icon" startDelay="0" duration="0.35" order="1" fromScaleX="1.15" fromScaleY="1.15" toScaleX="1" toScaleY="1">
-					<Origin point="CENTER">
-						<Offset x="0" y="0"/>
-					</Origin>
-				</Scale>
-				<Scale childKey="Border" startDelay="0" duration="0.35" order="1" fromScaleX="1.15" fromScaleY="1.15" toScaleX="1" toScaleY="1">
-					<Origin point="CENTER">
-						<Offset x="0" y="0"/>
-					</Origin>
-				</Scale>
-			</AnimationGroup>
-		</Animations>
 	</Button>
 
 	<Button name="buttonSettingsTemplate" text="" virtual="true" Alpha="0">
@@ -834,7 +829,7 @@
 				</Anchors>
 				<Layers>
 					<Layer frameStrata="BACKGROUND">
-						<Texture file="Interface/AddOns/GW2_UI/textures/questview/fsgvf_gw2_reward" setAllPoints="true"/>			
+						<Texture parentKey="background" setAllPoints="true"/>			
 					</Layer>
 					<Layer frameStrata="ARTWORK">
 						<FontString parentKey="Title" inherits="QuestTitleFont" text="QUEST_OBJECTIVES" justifyH="CENTER" JustifyV="CENTER">
@@ -856,18 +851,15 @@
 								<Size x="210"/>
 								<Frames>
 									<Frame parentKey="Progress" hidden="true">
-										<Size x="200"/>
+										<Size x="210"/>
 										<Anchors>
 											<Anchor point="TOPLEFT"/>
 										</Anchors>
 										<Layers>
 											<Layer frameStrata="ARTWORK">
-												<FontString parentKey="MoneyText" inherits="QuestFontNormalSmall" text="REQUIRED_MONEY" justifyH="LEFT">
-												</FontString>
-												<FontString parentKey="ReqItemText" inherits="QuestTitleFont" text="TURN_IN_ITEMS" justifyH="LEFT">
-												</FontString>
-												<FontString parentKey="ReqCurrencyText" inherits="QuestTitleFont" text="TURN_IN_ITEMS_1" justifyH="LEFT">
-												</FontString>
+												<FontString parentKey="MoneyText" inherits="ItemTextFontNormal" text="Money:"/>
+												<FontString parentKey="ReqItemText" inherits="ItemTextFontNormal" text="Items:"/>
+												<FontString parentKey="ReqCurrencyText" inherits="ItemTextFontNormal" text="Currencies:"/>
 											</Layer>
 										</Layers>
 										<Frames>
