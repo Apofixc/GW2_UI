@@ -15,165 +15,32 @@ local AUTO_NEXT_TIME = 0.5;
 local ANIMATION_TEXT_SPEED = 0.05;
 local MOVE_AND_SCALE = true;
 
-local ITEM_BUTTOM_TITLE = {
-	buttonPool,
-	buttons = {}
-}
-
-local ITEM_BUTTOM_REWARD = {
-	buttonPool,
-	buttons = {}
-}
-
 ------------------------------------------------ Last Event --------------------------------------------------------
 
 local LAST_ACTIVE_EVENT = "NONE";
-local PREV_ACTIVE_EVENT = "NONE";
 
--------------------------------------------------- Dialog ----------------------------------------------------------
-
-local ANIMATION_TEXT_STOP = false;
-local AUTO_NEXT_BLOCK = false;
-
-local GW_INTERACTIVE_TEXT = {
-	ACCEPT = {"Принять"},
-	DECLINE = {"Отказаться"},
-	NEXT = {"Далее", "Продолжить"},
-	BACK = {"Назад"},
-	RESET = {"Повторить"},
-	CANCEL = {"Выход", "Отмена"},
-	EXIT = {"Выход"},
-	COMPLETE = {"Завершить"},
-}
-
-local SEAL_QUESTS = { -- Seal quests
-	[40519] = {text = '|cff04aaff'..QUEST_KING_VARIAN_WRYNN..'|r', sealAtlas = 'Quest-Alliance-WaxSeal'},
-	[43926] = {text = '|cff480404'..QUEST_WARCHIEF_VOLJIN..'|r', sealAtlas = 'Quest-Horde-WaxSeal'},
-	[46730] = {text = '|cff2f0a48'..QUEST_KHADGAR..'|r', sealAtlas = 'Quest-Legionfall-WaxSeal'},
-}
 
 ---------------------------------------------------------------------------------------------------------------------
 -------------------------------------------- OTHER FUNCTION ---------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
 
-local function GwHideFrame(self)
-	self:UnregisterAllEvents()
-	self:SetSize(1, 1)
-	self:EnableMouse(false)
-	self:EnableKeyboard(false)
-	self:SetAlpha(0)
-	self:ClearAllPoints()
-end
-
-local function GwGossipEvent(self)
-	self:RegisterEvent("GOSSIP_SHOW");
-	self:RegisterEvent("GOSSIP_CLOSED");
-	self:RegisterEvent("QUEST_LOG_UPDATE");
-
-	self:RegisterEvent("QUEST_GREETING");
-	self:RegisterEvent("QUEST_DETAIL");
-	self:RegisterEvent("QUEST_PROGRESS");
-	self:RegisterEvent("QUEST_COMPLETE");
-	self:RegisterEvent("QUEST_FINISHED");
-	self:RegisterEvent("QUEST_ITEM_UPDATE");
-	--self:RegisterEvent("UNIT_PORTRAIT_UPDATE");
-	--self:RegisterEvent("PORTRAITS_UPDATED");
-	self:RegisterEvent("LEARNED_SPELL_IN_TAB");
-end
-
 local function GetItemButton(parent, parentButton)
-	local button = parent.buttonPool:Acquire();
+	local button = parent.pool:Acquire();
 	button:SetParent(parentButton);
 	table.insert(parent.buttons, button);
 
 	return button;
 end
 
-local function Release(parent)
+local function ReleaseAll(parent)
+	parent.pool:ReleaseAll();
 	parent.buttons = {};
-	parent.buttonPool:ReleaseAll();
-end
-
-local function SetActiveEvent(event)
-	PREV_ACTIVE_EVENT = LAST_ACTIVE_EVENT;
-	LAST_ACTIVE_EVENT = event;
-end
-
-local function GwButtonUpdate(self, start, finish, currete)
-	local Scroll = self.Scroll;
-	local lastElement = start == finish or currete == finish;
-	local firstElement = start == finish or currete == start;
-	local moveElement = start ~= finish and currete > start and currete < finish;
-
-	local move = {
-		["GOSSIP"] = lastElement,
-		["GREETING"] = lastElement,
-		["NEXT"] = firstElement or moveElement,
-		["ACCEPT"] = lastElement,
-		["DECLINE"] = lastElement,
-		["COMPLETE"] = lastElement,
-		["BACK"] = lastElement or moveElement,
-		["CANCEL"] = true,
-		["EXIT"] = true
-	}
-
-	Release(ITEM_BUTTOM_TITLE);
-	local totalHeight = 0;
-
-	for _, item in ipairs(Scroll.scrollButtonTitleInfo) do
-		if (item.action) then
-			item.show = move[item.action];
-		end
-
-		if (item.show) then
-			local button = GetItemButton(ITEM_BUTTOM_TITLE, Scroll.ScrollChildFrame);
-			local key = #ITEM_BUTTOM_TITLE.buttons;
-
-			titleText = item.titleText or GW_INTERACTIVE_TEXT[item.action][math.random(1, #GW_INTERACTIVE_TEXT[item.action])];
-			button:SetInfo(item.buttonID, item.type, (key < 11 and key..". "..titleText) or titleText, item.isIgnored, item.isTrivial, item.icon, item.action, item.specID);
-
-			if (key > 1) then
-				button:SetPoint('TOPLEFT', ITEM_BUTTOM_TITLE.buttons[key - 1], 'BOTTOMLEFT', 0, -5);
-			else
-				
-				button:SetPoint('TOPLEFT', Scroll.ScrollChildFrame, 'TOPLEFT', 5, -5);
-			end
-			
-			button:Resize(Scroll.ScrollChildFrame:GetWidth());
-			button:Show();
-
-			totalHeight = totalHeight + button:GetHeight() + 5;
-		end
-	end
-
-	if (LAST_ACTIVE_EVENT == "QUEST_PROGRESS" and lastElement) then
-		if (self.Detail.numRequiredMoney > 0 or self.Detail.numRequiredItems > 0 or self.Detail.numRequiredCurrencies > 0) then
-			self.DetailButton:Show();
-		end
-	end
-
-	Scroll.ScrollChildFrame:SetHeight(totalHeight);
-	Scroll.ScrollChildFrame:Show();
-	Scroll.ScrollBar:SetAlpha(0);
 end
 
 local function GwForceClose()
 	C_GossipInfo.CloseGossip();
 	CloseQuest();
 	CloseItemText();
-end
-
-local function GwAcceptQuest()
-	if (QuestFlagsPVP()) then
-		StaticPopup_Show('CONFIRM_ACCEPT_PVP_QUEST');
-	else
-		if (QuestGetAutoAccept()) then
-			AcknowledgeAutoAcceptQuest();
-		else
-			AcceptQuest();
-		end
-	end
-	PlaySound(SOUNDKIT.IG_QUEST_LIST_OPEN);
 end
 
 local function GwAutoQuest(questStartItemID)
@@ -194,20 +61,12 @@ local function GwAutoQuest(questStartItemID)
 	return false;
 end
 
-local function GwCompleteQuest(self)
-	local numQuestChoices = GetNumQuestChoices();
-	self.itemChoice = (numQuestChoices == 1 and 1) or self.itemChoice;
-
-	if ( self.itemChoice == 0 and numQuestChoices > 0 ) then
-		QuestChooseRewardError();
-	else
-		GetQuestReward(self.itemChoice);
-	end
-end
-
 ---------------------------------------------------------------------------------------------------------------------
 ------------------------------------------- ANIMATION ELEMENT -------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
+
+local ANIMATION_TEXT_STOP = false;
+local AUTO_NEXT_BLOCK = false;
 
 local function AnimationTextDialog(self, elapsed)
 	if (self.timeElapsed and self.char) then
@@ -624,8 +483,133 @@ function GwGossipFullScreenStyle:OnShow()
 end
 
 ---------------------------------------------------------------------------------------------------------------------
-------------------------------------------- GOSSIP BUTTON MIXIN -----------------------------------------------------
+---------------------------------------- GOSSIP TITLE BUTTON MIXIN --------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
+
+local ITEM_BUTTOM_TITLE = {
+	pool,
+	buttons = {}
+}
+
+local GW_INTERACTIVE_TEXT = {
+	ACCEPT = {"Принять"},
+	DECLINE = {"Отказаться"},
+	NEXT = {"Далее", "Продолжить"},
+	BACK = {"Назад"},
+	RESET = {"Повторить"},
+	CANCEL = {"Выход", "Отмена"},
+	EXIT = {"Выход"},
+	COMPLETE = {"Завершить"},
+	FINISH = {"Завершить"}
+}
+
+local  TITLE_CLICK = {
+	Action = {
+		ACCEPT = function ()
+					if (QuestFlagsPVP()) then
+						StaticPopup_Show('CONFIRM_ACCEPT_PVP_QUEST');
+					else
+						if (QuestGetAutoAccept()) then
+							AcknowledgeAutoAcceptQuest();
+						else
+							AcceptQuest();
+						end
+					end
+
+					PlaySound(SOUNDKIT.IG_QUEST_LIST_OPEN);
+				end,
+		DECLINE = function () DeclineQuest(); end,
+		NEXT = function (self) self.Dialog:NextDialog(); end,
+		BACK = function (self) self.Dialog:BackDialog(); end,
+		CANCEL = function () CloseQuest(); end,
+		EXIT = function () C_GossipInfo.CloseGossip(); end,
+		COMPLETE = function () CompleteQuest(); end,
+		FINISH = function () 
+					local numQuestChoices = GetNumQuestChoices();
+
+					if (numQuestChoices ~= 0) then
+						QuestChooseRewardError();
+					else
+						GetQuestReward();
+					end
+				end
+	},
+	GOSSIP_SHOW ={
+		Available = function (self) C_GossipInfo.SelectAvailableQuest(self:GetID()) end,
+		Active = function (self) C_GossipInfo.SelectActiveQuest(self:GetID()) end,
+		Gossip = function (self) C_GossipInfo.SelectOption(self:GetID()) end,
+	},
+	QUEST_GREETING ={
+		Available = function (self) SelectAvailableQuest(self:GetID()) end,
+		Active = function (self) SelectActiveQuest(self:GetID()) end,
+	}
+}
+
+local function GwButtonUpdate(self, start, finish, currete)
+	local Scroll = self.Scroll;
+	local lastElement = start == finish or currete == finish;
+	local firstElement = start == finish or currete == start;
+	local moveElement = start ~= finish and currete > start and currete < finish;
+
+	local move = {
+		["GOSSIP"] = lastElement,
+		["GREETING"] = lastElement,
+		["NEXT"] = firstElement or moveElement,
+		["ACCEPT"] = lastElement,
+		["DECLINE"] = lastElement,
+		["COMPLETE"] = lastElement,
+		["FINISH"] = lastElement,
+		["BACK"] = lastElement or moveElement,
+		["CANCEL"] = true,
+		["EXIT"] = true
+	}
+
+	ReleaseAll(ITEM_BUTTOM_TITLE);
+	local totalHeight = 0;
+
+	for _, item in ipairs(Scroll.scrollButtonTitleInfo) do
+		if (item.action) then
+			item.show = move[item.action];
+		end
+
+		if (item.show) then
+			local button = GetItemButton(ITEM_BUTTOM_TITLE, Scroll.ScrollChildFrame);
+			local key = #ITEM_BUTTOM_TITLE.buttons;
+
+			titleText = item.titleText or GW_INTERACTIVE_TEXT[item.action][math.random(1, #GW_INTERACTIVE_TEXT[item.action])];
+			button:SetInfo(item.buttonID, item.type, (key < 11 and key..". "..titleText) or titleText, item.isIgnored, item.isTrivial, item.icon, item.action, item.specID);
+
+			if (key > 1) then
+				button:SetPoint('TOPLEFT', ITEM_BUTTOM_TITLE.buttons[key - 1], 'BOTTOMLEFT', 0, -5);
+			else
+				button:SetPoint('TOPLEFT', Scroll.ScrollChildFrame, 'TOPLEFT', 5, -5);
+			end
+			
+			button:Resize(Scroll.ScrollChildFrame:GetWidth());
+			button:Show();
+
+			totalHeight = totalHeight + button:GetHeight() + 5;
+		end
+	end
+
+	Scroll.ScrollChildFrame:SetHeight(totalHeight);
+	Scroll.ScrollBar:SetValue(0);
+	Scroll.ScrollBar:SetAlpha(0);
+
+	if ((LAST_ACTIVE_EVENT == "QUEST_PROGRESS" or LAST_ACTIVE_EVENT == "QUEST_DETAIL" or LAST_ACTIVE_EVENT == "QUEST_COMPLETE") and lastElement) then
+		if (not self.Detail:IsShown()) then
+			self.Detail.Scroll.ScrollBar:SetValue(0);
+			self.Detail:Show();
+			if (self.Detail.Scroll.ScrollChildFrame:GetHeight() == 0) then
+				self.Detail:Hide();
+			end
+		end
+	else
+		if (self.Detail:IsShown()) then
+			self.Detail:Hide();
+		end
+	end
+end
 
 GwGossipTitleButtonMixin = {}
 
@@ -679,35 +663,11 @@ function GwGossipTitleButtonMixin:OnClick()
 
 	parent.Scroll.Text:SetText(unitName..self.Label:GetText():gsub("^.+%d.", ""));
 
-	if (self.type == "Action") then
-		if (self.actionType == "ACCEPT") then
-			GwAcceptQuest();
-		elseif (self.actionType == "DECLINE") then
-			DeclineQuest();
-		elseif (self.actionType == "NEXT") then 
-			parent.Dialog:NextDialog();
-		elseif (self.actionType == "BACK") then
-			parent.Dialog:BackDialog();
-		elseif (self.actionType == "CANCEL") then 
-			CloseQuest();
-		elseif (self.actionType == "EXIT") then 
-			C_GossipInfo.CloseGossip();
-		elseif (self.actionType == "COMPLETE") then 
-			CompleteQuest();
-		end
-	elseif (LAST_ACTIVE_EVENT == "GOSSIP_SHOW") then
-		if (self.type == "Available") then
-			C_GossipInfo.SelectAvailableQuest(self:GetID());
-		elseif (self.type == "Active") then
-			C_GossipInfo.SelectActiveQuest(self:GetID());
-		elseif (self.type == "Gossip") then 
-			C_GossipInfo.SelectOption(self:GetID());
-		end
-	elseif (LAST_ACTIVE_EVENT == "QUEST_GREETING") then
-		if (self.type == "Available" ) then
-			C_GossipInfo.SelectAvailableQuest(self:GetID());
-		elseif (self.type == "Active") then
-			C_GossipInfo.SelectActiveQuest(self:GetID());
+	if (TITLE_CLICK[self.type] and TITLE_CLICK[self.type][self.actionType]) then
+		TITLE_CLICK[self.type][self.actionType](self);
+	else
+		if (TITLE_CLICK[LAST_ACTIVE_EVENT] and TITLE_CLICK[LAST_ACTIVE_EVENT][self.type]) then
+			TITLE_CLICK[LAST_ACTIVE_EVENT][self.type](self);
 		end
 	end
 end 
@@ -746,15 +706,6 @@ function GwGossipTitleButtonMixin:Resize(width)
 	else
 		self:SetHighlightTexture("Interface/AddOns/GW2_UI/textures/questview/gvf_scroll_buttom")
 	end 
-end
-
-function GwGossipTitleButtonMixin:Release()
-	self:SetID(-1);
-	self.type = nil;
-	self.func = nil;
-	self.specID = nil;
-	self.Label:SetText("");
-	self.Icon:SetTexture("");
 end
 
 ---------------------------------------------------------------------------------------------------------------------
@@ -899,667 +850,512 @@ end
 ---------------------------------------------- REWARD/DETALIE -------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
 
-local function GwHiddenButton(parent, index)
-	for i=index, #parent do
-		parent[i]:Hide()
+local ITEM_BUTTOM_REWARD = {
+	pool,
+	buttons = {}
+}
+
+local ITEM_BUTTOM_SPELL_REWARD = {
+	pool,
+	buttons = {}
+}
+
+local ITEM_BUTTOM_FOLLOWER_REWARD = {
+	pool,
+	buttons = {}
+}
+
+local ITEM_SPELL_HEADER = {
+	pool,
+	buttons = {}
+}
+
+local TEMPLETE = {
+	events = {
+		QUEST_DETAIL = {
+			sealQuests = {
+				[40519] = {text = '|cff04aaff'..QUEST_KING_VARIAN_WRYNN..'|r', sealAtlas = 'Quest-Alliance-WaxSeal'},
+				[43926] = {text = '|cff480404'..QUEST_WARCHIEF_VOLJIN..'|r', sealAtlas = 'Quest-Horde-WaxSeal'},
+				[46730] = {text = '|cff2f0a48'..QUEST_KHADGAR..'|r', sealAtlas = 'Quest-Legionfall-WaxSeal'}
+			},
+			detail = {
+				function (self) return self:ShowObjectivesText(); end,
+				function (self) return self:ShowSpecialObjectives(); end,
+				--function (self) return self:ShowObjectivesText(); end,
+				function (self) return self:ShowRewards(); end,
+				function (self) return self:ShowSeal(); end
+			}
+		},
+		QUEST_PROGRESS = {
+			detail = {
+				function (self) return self:ShowObjectivesText(); end,
+				function (self) return self:ShowProgress(); end
+			}
+		},
+		QUEST_COMPLETE = {
+			chooseItems = true,
+			detail = {
+				function (self) return self:ShowObjectivesText(); end,
+				function (self) return self:ShowRewards(); end
+			}
+		}
+	}
+}
+
+local REWARDS_OFFSET = 5;
+
+GwGossipDetailMixin = {}
+
+function GwGossipDetailMixin:AddElement(element, special, index)
+	--element:ClearAllPoints();
+	if (special) then
+		if (FULL_SCREEN) then 
+			element:SetPoint('TOPLEFT', self.lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET);
+
+			self.rewardsCount = self.rewardsCount + 1;
+		else
+			-- if ( buttonIndex > 1 ) then
+			-- 	if ( mod(buttonIndex, ITEMS_PER_ROW) == 1 ) then
+			-- 		questItem:SetPoint('TOPLEFT', rewardButtons[index - 2], 'BOTTOMLEFT', 0, -2)
+			-- 		lastFrame = questItem
+			-- 		totalHeight = totalHeight + buttonHeight + 2
+			-- 	else
+			-- 		questItem:SetPoint('TOPLEFT', rewardButtons[index - 1], 'TOPRIGHT', 1, 0)
+			-- 	end
+			-- else
+			-- 	questItem:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
+			-- 	lastFrame = questItem
+			-- 	totalHeight = totalHeight + buttonHeight + REWARDS_OFFSET
+			-- end
+		end
+	else
+		if (self.lastFrame) then
+			element:SetPoint('TOPLEFT', self.lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET);
+		else
+			element:SetPoint('TOPLEFT', 0, -REWARDS_OFFSET);
+		end
+	end
+
+	element:Show();
+
+	self.lastFrame = element;
+	self.totalHeight = self.totalHeight + element:GetHeight() + REWARDS_OFFSET;
+end
+
+function GwGossipDetailMixin:UpdateItemInfo(button)
+	if button.objectType == 'item' then
+		local name, texture, numItems, quality, isUsable = GetQuestItemInfo(button.type, button:GetID());
+		-- For the tooltip
+		button.Name:SetText(name);
+		button.itemTexture = texture;
+		SetItemButtonCount(button, numItems);
+		SetItemButtonTexture(button, texture);
+		if (isUsable) then
+			SetItemButtonTextureVertexColor(button, 1.0, 1.0, 1.0);
+			SetItemButtonNameFrameVertexColor(button, 1.0, 1.0, 1.0);
+		else
+			SetItemButtonTextureVertexColor(button, 0.9, 0, 0);
+			SetItemButtonNameFrameVertexColor(button, 0.9, 0, 0);
+		end
+	elseif button.objectType == 'currency' then
+		local name, texture, numItems, quality = GetQuestCurrencyInfo(button.type, button:GetID())
+		local currencyID = GetQuestCurrencyID(button.type, button:GetID());
+		name, texture, numItems, quality = CurrencyContainerUtil.GetCurrencyContainerInfo(currencyID, numItems, name, texture, quality);
+		-- For the tooltip
+		button.Name:SetText(name)
+		button.itemTexture = texture
+		SetItemButtonCount(button, numItems, true)
+		SetItemButtonTexture(button, texture)
+		SetItemButtonTextureVertexColor(button, 1.0, 1.0, 1.0)
+		SetItemButtonNameFrameVertexColor(button, 1.0, 1.0, 1.0)
+	elseif button.objectType == 'questSessionBonusReward' then
+		local QUEST_SESSION_BONUS_REWARD_ITEM_COUNT = 1;
+		local QUEST_SESSION_BONUS_REWARD_ITEM_ID = 171305;
+
+		button.Name:SetText(C_Item.GetItemNameByID(QUEST_SESSION_BONUS_REWARD_ITEM_ID));
+		SetItemButtonCount(button, QUEST_SESSION_BONUS_REWARD_ITEM_COUNT);
+		SetItemButtonTexture(button, C_Item.GetItemIconByID(QUEST_SESSION_BONUS_REWARD_ITEM_ID));
+		SetItemButtonQuality(button, C_Item.GetItemQualityByID(QUEST_SESSION_BONUS_REWARD_ITEM_ID), QUEST_SESSION_BONUS_REWARD_ITEM_ID);
+		SetItemButtonTextureVertexColor(button, 1.0, 1.0, 1.0);
+		SetItemButtonNameFrameVertexColor(button, 1.0, 1.0, 1.0);
+	
+
+		button:SetID(QUEST_SESSION_BONUS_REWARD_ITEM_ID);
 	end
 end
 
-local function GwQuestDetaliesSpecialObjectives()
-	-- Show objective spell
-	local spellID, spellName, spellTexture = GetCriteriaSpell()
-	local specialFrame = self.Content.SpecialObjectivesFrame
-	local spellObjectiveLabel = specialFrame.SpellObjectiveLearnLabel
-	local spellObjective = specialFrame.SpellObjectiveFrame
+function GwGossipDetailMixin:ShowObjectivesText()
+	local questObjectives = GetObjectiveText();
 
+	if (questObjectives ~= nil) then
+		self.objectiveText:SetText(questObjectives);
+		self:AddElement(self.objectiveText);
+	end
+end
 
-	local lastFrame = nil
-	local totalHeight = 0
+function GwGossipDetailMixin:ShowSpecialObjectives()
+	local spellID, spellName, spellTexture, finished = GetCriteriaSpell();
 
 	if (spellID) then
-		spellObjective.Icon:SetTexture(spellTexture)
-		spellObjective.Name:SetText(spellName)
-		spellObjective.spellID = spellID
-
-		spellObjective:ClearAllPoints()
-		if (lastFrame) then
-			spellObjectiveLabel:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -4)
-			totalHeight = totalHeight + 4
+		if (finished) then
+			self.SpecialObjectivesFrame.SpellObjectiveLearnLabel:SetText(LEARN_SPELL_OBJECTIVE.." ("..COMPLETE..")");
+			self.SpecialObjectivesFrame.SpellObjectiveLearnLabel:SetTextColor(0.2, 0.2, 0.2);
 		else
-			spellObjectiveLabel:SetPoint('TOPLEFT', 0, 0)
+			self.SpecialObjectivesFrame.SpellObjectiveLearnLabel:SetText(LEARN_SPELL_OBJECTIVE);
+			self.SpecialObjectivesFrame.SpellObjectiveLearnLabel:SetTextColor(0, 0, 0);
 		end
 
-		spellObjective:SetPoint('TOPLEFT', spellObjectiveLabel, 'BOTTOMLEFT', 0, -4)
+		self.SpecialObjectivesFrame.SpellObjectiveFrame.Icon:SetTexture(spellTexture);
+		self.SpecialObjectivesFrame.SpellObjectiveFrame.Name:SetText(spellName);
+		self.SpecialObjectivesFrame.SpellObjectiveFrame.spellID = spellID;
 
-		spellObjectiveLabel:SetText(LEARN_SPELL_OBJECTIVE)
-		spellObjectiveLabel:SetTextColor(0, 0, 0)
-
-		spellObjectiveLabel:Show()
-		spellObjective:Show()
-		totalHeight = totalHeight + spellObjective:GetHeight() + spellObjectiveLabel:GetHeight()
-		lastFrame = spellObjective
-	else
-		spellObjective:Hide()
-		spellObjectiveLabel:Hide()
-	end
-
-	if (lastFrame) then
-		specialFrame:SetHeight(totalHeight)
-		specialFrame:Show()
-		return specialFrame
-	else
-		return specialFrame:Hide()
+		self:AddElement(self.SpecialObjectivesFrame);
 	end
 end
 
-local function IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowerID)
-	-- check if already known, check if is boost spell, check if follower is collected
-	return  texture and not knownSpell and
-			(not isBoostSpell or API:IsCharacterNewlyBoosted()) and
-			(not garrFollowerID or not API:IsFollowerCollected(garrFollowerID))
-end
+function GwGossipDetailMixin:ShowSeal()
+	if (self.sealQuests) then
+		local sealInfo = self.sealQuests[self.questID];
+		if (sealInfo) then
+			self.SealFrame.Text:SetText(sealInfo.text);
+			self.SealFrame.Texture:SetAtlas(sealInfo.sealAtlas);
 
-local function AddSpellToBucket(spellBuckets, type, rewardSpellIndex)
-	if not spellBuckets[type] then
-		spellBuckets[type] = {}
-	end
-	local spellBucket = spellBuckets[type]
-	spellBucket[#spellBucket + 1] = rewardSpellIndex
-end
-
-local function ToggleRewardElement(frame, value, anchor)
-	if ( value and tonumber(value) ~= 0 ) then
-		frame:SetPoint('TOPLEFT', anchor, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-		frame.ValueText:SetText(value)
-		frame:Show()
-		return true
-	else
-		frame:Hide()
-	end
-end
-
-local function UpdateItemInfo(self)
-	if self.objectType == 'item' then
-		local name, texture, numItems, quality, isUsable = GetQuestItemInfo(self.type, self:GetID());
-		-- For the tooltip
-		self.Name:SetText(name);
-		self.itemTexture = texture;
-		SetItemButtonCount(self, numItems);
-		SetItemButtonTexture(self, texture);
-		if ( isUsable ) then
-			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0);
-			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0);
-		else
-			SetItemButtonTextureVertexColor(self, 0.9, 0, 0);
-			SetItemButtonNameFrameVertexColor(self, 0.9, 0, 0);
-		end
-
-		return self:Show();
-	elseif self.objectType == 'currency' then
-		local name, texture, numItems = GetQuestCurrencyInfo(self.type, self:GetID());
-		if (name and texture and numItems) then
-			-- For the tooltip
-			self.Name:SetText(name);
-			self.itemTexture = texture;
-			SetItemButtonCount(self, numItems, true);
-			SetItemButtonTexture(self, texture);
-			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0);
-			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0);
-
-			return self:Show();
-		else
-			return self:Hide();
+			self:AddElement(self.SealFrame);
 		end
 	end
 end
 
-local function GwQuestRewards_Update()
-	local elements = self
-	local self = self.Content.RewardsFrame -- more convenient this way
-	local rewardButtons = self.Buttons
-	local 	numQuestRewards, numQuestChoices, numQuestCurrencies,
-			money,
-			skillName, skillPoints, skillIcon,
-			xp, artifactXP, artifactCategory, honor,
-			playerTitle,
-			numSpellRewards
+function GwGossipDetailMixin:ShowRewards()
+	local numQuestRewards = GetNumQuestRewards();
+	local numQuestChoices = GetNumQuestChoices();
+	local numQuestCurrencies = GetNumRewardCurrencies();
+	local money = GetRewardMoney();
+	local skillName, skillIcon, skillPoints = GetRewardSkillPoints();
+	local xp = GetRewardXP();
+	local artifactXP, artifactCategory = GetRewardArtifactXP();
+	local honor = GetRewardHonor();
+	local playerTitle = GetRewardTitle();
+	local numSpellRewards = GetNumRewardSpells();
+	local hasWarModeBonus = C_QuestLog.QuestCanHaveWarModeBonus(self.questID);
+
+	ReleaseAll(ITEM_BUTTOM_REWARD);
+	ReleaseAll(ITEM_BUTTOM_SPELL_REWARD);
+	ReleaseAll(ITEM_BUTTOM_FOLLOWER_REWARD);
+	ReleaseAll(ITEM_SPELL_HEADER);
+
+	local numQuestSpellRewards = 0;
+	for rewardSpellIndex = 1, numSpellRewards do
+		local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetRewardSpell(rewardSpellIndex);
+		local knownSpell = tonumber(spellID) and IsSpellKnownOrOverridesKnown(spellID);
+
+		if (texture and not knownSpell and (not isBoostSpell or IsCharacterNewlyBoosted()) and (not garrFollowerID or not C_Garrison.IsFollowerCollected(garrFollowerID))) then
+			numQuestSpellRewards = numQuestSpellRewards + 1;
+		end
+	end
+
+	local totalRewards = numQuestRewards + numQuestChoices + numQuestCurrencies;
+	if (totalRewards == 0 and money == 0 and xp == 0 and not playerTitle and numQuestSpellRewards == 0 and artifactXP == 0) then
+		return 0;
+	end
+
+	self:AddElement(self.Header);
+
+	local hasChanceForQuestSessionBonusReward = C_QuestLog.QuestHasQuestSessionBonus(self.questID);
+	if (numQuestRewards > 0 or numQuestCurrencies > 0 or money > 0 or xp > 0 or honor > 0 or hasChanceForQuestSessionBonusReward) then
+		if hasWarModeBonus and C_PvP.IsWarModeDesired() then
+			self.WarModeBonusFrame.Count:SetFormattedText(PLUS_PERCENT_FORMAT, C_PvP.GetWarModeRewardBonus());
+
+			self:AddElement(self.WarModeBonusFrame);
+		end
+
+		if (money > 0) then
+			MoneyFrame_Update(self.MoneyFrame.Money, money);
+
+			self:AddElement(self.MoneyFrame);
+		end
+
+		if (xp > 0) then
+			self.XPFrame.ValueText:SetText(BreakUpLargeNumbers(xp));
+
+			self:AddElement(self.XPFrame);		
+		end
+		
+		if (honor > 0) then
+			local faction = UnitFactionGroup('player');
+			local icon = faction and ('Interface\\Icons\\PVPCurrency-Honor-%s'):format(faction);
+
+			self.HonorFrame.Count:SetText(BreakUpLargeNumbers(honor));
+			self.HonorFrame.Name:SetText(HONOR);
+			self.HonorFrame.Icon:SetTexture(icon);
+
+			self:AddElement(self.HonorFrame);	
+		end
+
+		if (artifactXP > 0) then
+			local name, icon = C_ArtifactUI.GetArtifactXPRewardTargetInfo(artifactCategory);
 			
-	local numQuestSpellRewards = 0
-	local totalHeight = 0
-	local GetSpell = GetRewardSpell
+			self.ArtifactXPFrame.Name:SetText(BreakUpLargeNumbers(artifactXP));
+			self.ArtifactXPFrame.Icon:SetTexture(icon or 'Interface\\Icons\\INV_Misc_QuestionMark');
+			
+			self:AddElement(self.ArtifactXPFrame);
+		end
 
-	do  -- Get data
-		numQuestRewards = API:GetNumQuestRewards()
-		numQuestChoices = API:GetNumQuestChoices()
-		numQuestCurrencies = API:GetNumRewardCurrencies()
-		money = API:GetRewardMoney()
-		skillName, skillIcon, skillPoints = API:GetRewardSkillPoints()
-		xp = API:GetRewardXP()
-		artifactXP, artifactCategory = API:GetRewardArtifactXP()
-		honor = API:GetRewardHonor()
-		playerTitle = API:GetRewardTitle()
-		numSpellRewards = API:GetNumRewardSpells()
+		if (skillPoints) then
+			self.SkillPointFrame.ValueText:SetText(skillPoints);
+			self.SkillPointFrame.Icon:SetTexture(skillIcon);
+			if (skillName) then
+				self.SkillPointFrame.Name:SetFormattedText(BONUS_SKILLPOINTS, skillName);
+				self.SkillPointFrame.tooltip = format(BONUS_SKILLPOINTS_TOOLTIP, skillPoints, skillName);
+			else
+				self.SkillPointFrame.tooltip = nil;
+				self.SkillPointFrame.Name:SetText('');
+			end
+			
+			self:AddElement(self.SkillPointFrame);
+		end
+		
+		if (playerTitle) then
+			self.TitleFrame.Name:SetText(playerTitle);
+
+			self:AddElement(self.PlayerTitleText);
+			self:AddElement(self.TitleFrame);
+		end
+
+		if (numQuestRewards > 0) then
+			self:AddElement(self.ItemText);
+			for index = 1, numQuestRewards, 1 do
+				questItem = GetItemButton(ITEM_BUTTOM_REWARD, self);
+				questItem.type = 'reward';
+				questItem.objectType = 'item';
+				questItem:SetID(index);		
+
+				self:UpdateItemInfo(questItem);		
+				self:AddElement(questItem, true, index);
+			end
+		end
+
+		if (numQuestCurrencies > 0) then
+			self:AddElement(self.CurrencyText);
+			for index = 1, numQuestCurrencies, 1 do
+				questItem = GetItemButton(ITEM_BUTTOM_REWARD, self);
+				questItem.type = 'reward';
+				questItem.objectType = 'currency';
+				questItem:SetID(index);
+
+				self:UpdateItemInfo(questItem);
+				self:AddElement(questItem, true, index);
+			end
+		end
+
+		if hasChanceForQuestSessionBonusReward then
+			self:AddElement(self.QuestSessionBonusReward);
+
+			questItem = GetItemButton(ITEM_BUTTOM_REWARD, self);
+			questItem.type = "reward";
+			questItem.objectType = "questSessionBonusReward";
+
+			self:UpdateItemInfo(questItem);
+			self:AddElement(questItem, true, 1);
+		end
+	end
+	
+	if  (numQuestChoices > 0) then
+		self.ItemChooseText:SetText((numQuestChoices == 1 and REWARD_ITEMS_ONLY) or (self.chooseItems and REWARD_CHOOSE) or REWARD_CHOICES);
+
+		self:AddElement(self.ItemChooseText);
+
+		local highestValue, moneyItem
+		for index = 1, numQuestChoices do
+			local questItem = GetItemButton(ITEM_BUTTOM_REWARD, self);
+			questItem.type = 'choice';
+			questItem.objectType = 'item';
+			numItems = 1;
+			questItem:SetID(index);	
+
+			self:UpdateItemInfo(questItem);	
+			self:AddElement(questItem, true, index);
+
+			local link = GetQuestItemLink(questItem.type, index);
+			local vendorValue = link and select(11, GetItemInfo(link));
+
+			if vendorValue and ( not highestValue or vendorValue > highestValue ) then
+				highestValue = vendorValue;
+				if vendorValue > 0 and numQuestChoices > 1 then
+					moneyItem = questItem;
+				end
+			end	
+		end	
+
+		if (moneyItem) then
+			self.MoneyIcon:SetPoint('BOTTOMRIGHT', moneyItem, -13, 6);
+			self.MoneyIcon:Show();
+		end	
 	end
 
-	do -- Spell rewards
+	if (numQuestSpellRewards > 0) then
+		local spellBuckets = {}
+
+		-- Generate spell buckets
 		for rewardSpellIndex = 1, numSpellRewards do
-			local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetSpell(rewardSpellIndex)
-			local knownSpell = tonumber(spellID) and IsSpellKnownOrOverridesKnown(spellID)
-
-			-- only allow the spell reward if user can learn it
-			if IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowerID) then
-				numQuestSpellRewards = numQuestSpellRewards + 1
-			end
-		end
-	end
-
-	local totalRewards = numQuestRewards + numQuestChoices + numQuestCurrencies
-
-	do -- Check if any rewards are present, break out if none
-		if ( totalRewards == 0 and 
-			money == 0 and 
-			xp == 0 and 
-			not playerTitle and 
-			numQuestSpellRewards == 0 and 
-			artifactXP == 0 ) then
-
-			return self:Hide()
-		end
-	end
-
-	do -- Hide unused rewards
-		for i = totalRewards + 1, #rewardButtons do
-			local rewardButton = rewardButtons[i]
-			rewardButton:ClearAllPoints()
-			rewardButton:Hide()
-		end
-	end
-
-	-- Setup locals 
-	local questItem, name, texture, quality, isUsable, numItems
-	local rewardsCount = 0
-	local lastFrame = self.Header
-
-	local totalHeight = self.Header:GetHeight()
-	local buttonHeight = self.Buttons[1]:GetHeight()
-
-	do -- Artifact experience
-		self.ArtifactXPFrame:ClearAllPoints()
-		if ( artifactXP > 0 ) then
-			local name, icon = C_ArtifactUI.GetArtifactXPRewardTargetInfo(artifactCategory)
-			self.ArtifactXPFrame:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-			self.ArtifactXPFrame.Name:SetText(BreakUpLargeNumbers(artifactXP))
-			self.ArtifactXPFrame.Icon:SetTexture(icon or 'Interface\\Icons\\INV_Misc_QuestionMark')
-			self.ArtifactXPFrame:Show()
-
-			lastFrame = self.ArtifactXPFrame
-			totalHeight = totalHeight + self.ArtifactXPFrame:GetHeight() + REWARDS_OFFSET
-		else
-			self.ArtifactXPFrame:Hide()
-		end
-	end
-
-	do -- Setup choosable rewards
-		self.ItemChooseText:ClearAllPoints()
-		self.MoneyIcon:Hide()
-		if ( numQuestChoices > 0 ) then
-			self.ItemChooseText:Show()
-			self.ItemChooseText:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -5)
-
-			local highestValue, moneyItem
-			local index
-			local baseIndex = rewardsCount
-			for i = 1, numQuestChoices do
-				index = i + baseIndex
-				questItem = GetItemButton(self, index)
-				questItem.type = 'choice'
-				questItem.objectType = 'item'
-				numItems = 1
-				questItem:SetID(i)
-				questItem:Show()
-
-				UpdateItemInfo(questItem)
-
-				local link = GetQuestItemLink(questItem.type, i)
-				local vendorValue = link and select(11, GetItemInfo(link))
+			local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetRewardSpell(rewardSpellIndex);
+			local knownSpell = IsSpellKnownOrOverridesKnown(spellID);
+			if (texture and not knownSpell and (not isBoostSpell or IsCharacterNewlyBoosted()) and (not garrFollowerID or not C_Garrison.IsFollowerCollected(garrFollowerID))) then
+				local bucket = 	isTradeskillSpell 	and QUEST_SPELL_REWARD_TYPE_TRADESKILL_SPELL or
+								isBoostSpell 		and QUEST_SPELL_REWARD_TYPE_ABILITY or
+								garrFollowerID 		and QUEST_SPELL_REWARD_TYPE_FOLLOWER or
+								isSpellLearned 		and QUEST_SPELL_REWARD_TYPE_SPELL or
+								genericUnlock 		and QUEST_SPELL_REWARD_TYPE_UNLOCK or QUEST_SPELL_REWARD_TYPE_AURA;
 				
-				if vendorValue and ( not highestValue or vendorValue > highestValue ) then
-					highestValue = vendorValue
-					if vendorValue > 0 and numQuestChoices > 1 then
-						moneyItem = questItem
-					end
+				if (not spellBuckets[type]) then
+					spellBuckets[type] = {}
 				end
 
-				if ( i > 1 ) then
-					if ( mod(i, ITEMS_PER_ROW) == 1 ) then
-						questItem:SetPoint('TOPLEFT', rewardButtons[index - 2], 'BOTTOMLEFT', 0, -2)
-						lastFrame = questItem
-						totalHeight = totalHeight + buttonHeight + 2
+				local spellBucket = spellBuckets[type];
+				spellBucket[#spellBucket + 1] = rewardSpellIndex;
+			end
+		end
+
+		-- Sort buckets in the correct order
+		for orderIndex, spellBucketType in ipairs(QUEST_INFO_SPELL_REWARD_ORDERING) do
+			local spellBucket = spellBuckets[spellBucketType];
+			if (spellBucket) then
+				for i, rewardSpellIndex in ipairs(spellBucket) do
+					local texture, name, isTradeskillSpell, isSpellLearned, _, isBoostSpell, garrFollowerID = GetRewardSpell(rewardSpellIndex);
+					if i == 1 then
+						local header = GetItemButton(ITEM_SPELL_HEADER, self);
+						header:SetText(QUEST_INFO_SPELL_REWARD_TO_HEADER[spellBucketType]);
+						-- if self.spellHeaderPool.textR and self.spellHeaderPool.textG and self.spellHeaderPool.textB then
+						-- 	header:SetVertexColor(self.spellHeaderPool.textR, self.spellHeaderPool.textG, self.spellHeaderPool.textB)
+						-- end
+
+						self:AddElement(header);
+					end
+
+					if (garrFollowerID) then
+						local followerFrame = GetItemButton(ITEM_BUTTOM_FOLLOWER_REWARD, self);
+						local followerInfo = C_Garrison.GetFollowerInfo(garrFollowerID);
+						followerFrame.Name:SetText(followerInfo.name);
+						followerFrame.Class:SetAtlas(followerInfo.classAtlas);
+						followerFrame.PortraitFrame:SetupPortrait(followerInfo);
+						followerFrame.ID = garrFollowerID;
+						
+						self:AddElement(followerFrame);
 					else
-						questItem:SetPoint('TOPLEFT', rewardButtons[index - 1], 'TOPRIGHT', 1, 0)
-					end
-				else
-					questItem:SetPoint('TOPLEFT', self.ItemChooseText, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-					lastFrame = questItem
-					totalHeight = totalHeight + buttonHeight + REWARDS_OFFSET
-				end
-				rewardsCount = rewardsCount + 1
-			end
+						local spellRewardFrame = GetItemButton(ITEM_BUTTOM_SPELL_REWARD, self);
+						spellRewardFrame.Icon:SetTexture(texture);
+						spellRewardFrame.Name:SetText(name);
+						spellRewardFrame.rewardSpellIndex = rewardSpellIndex;
 
-			if moneyItem then
-				self.MoneyIcon:SetPoint('BOTTOMRIGHT', moneyItem, -13, 6)
-				self.MoneyIcon:Show()
-			end
-
-			if ( numQuestChoices == 1 ) then
-				elements.chooseItems = nil
-				self.ItemChooseText:SetText(REWARD_ITEMS_ONLY)
-			elseif ( elements.chooseItems ) then
-				self.ItemChooseText:SetText(REWARD_CHOOSE)
-			else
-				self.ItemChooseText:SetText(REWARD_CHOICES)
-			end
-			totalHeight = totalHeight + self.ItemChooseText:GetHeight() + REWARDS_OFFSET
-		else
-			elements.chooseItems = nil
-			self.ItemChooseText:Hide()
-		end
-	end
-
-	do -- Wipe reward pools
-		self.spellRewardPool:ReleaseAll()
-		self.followerRewardPool:ReleaseAll()
-		self.spellHeaderPool:ReleaseAll()
-	end
-
-	do -- Setup spell rewards
-		if ( numQuestSpellRewards > 0 ) then
-			local spellBuckets = {}
-
-			-- Generate spell buckets
-			for rewardSpellIndex = 1, numSpellRewards do
-				local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetSpell(rewardSpellIndex)
-				local knownSpell = IsSpellKnownOrOverridesKnown(spellID)
-				if IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowerID) then
-					local bucket = 	isTradeskillSpell 	and QUEST_SPELL_REWARD_TYPE_TRADESKILL_SPELL or
-									isBoostSpell 		and QUEST_SPELL_REWARD_TYPE_ABILITY or
-									garrFollowerID 		and QUEST_SPELL_REWARD_TYPE_FOLLOWER or
-									isSpellLearned 		and QUEST_SPELL_REWARD_TYPE_SPELL or
-									genericUnlock 		and QUEST_SPELL_REWARD_TYPE_UNLOCK or QUEST_SPELL_REWARD_TYPE_AURA
-					
-					AddSpellToBucket(spellBuckets, bucket, rewardSpellIndex)
-				end
-			end
-
-			-- Sort buckets in the correct order
-			for orderIndex, spellBucketType in ipairs(QUEST_INFO_SPELL_REWARD_ORDERING) do
-				local spellBucket = spellBuckets[spellBucketType]
-				if spellBucket then
-					for i, rewardSpellIndex in ipairs(spellBucket) do
-						local texture, name, isTradeskillSpell, isSpellLearned, _, isBoostSpell, garrFollowerID = GetSpell(rewardSpellIndex)
-						if i == 1 then
-							local header = self.spellHeaderPool:Acquire()
-							header:SetText(QUEST_INFO_SPELL_REWARD_TO_HEADER[spellBucketType])
-							header:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-							if self.spellHeaderPool.textR and self.spellHeaderPool.textG and self.spellHeaderPool.textB then
-								header:SetVertexColor(self.spellHeaderPool.textR, self.spellHeaderPool.textG, self.spellHeaderPool.textB)
-							end
-							header:Show()
-
-							totalHeight = totalHeight + header:GetHeight() + REWARDS_OFFSET
-							lastFrame = header
-						end
-
-						local anchorFrame
-						if garrFollowerID then
-							local followerFrame = self.followerRewardPool:Acquire()
-							local followerInfo = C_Garrison.GetFollowerInfo(garrFollowerID)
-							followerFrame.Name:SetText(followerInfo.name)
-							followerFrame.Class:SetAtlas(followerInfo.classAtlas)
-							followerFrame.PortraitFrame:SetupPortrait(followerInfo)
-							followerFrame.ID = garrFollowerID
-							followerFrame:Show()
-
-							anchorFrame = followerFrame
-						else
-							local spellRewardFrame = self.spellRewardPool:Acquire()
-							spellRewardFrame.Icon:SetTexture(texture)
-							spellRewardFrame.Name:SetText(name)
-							spellRewardFrame.rewardSpellIndex = rewardSpellIndex
-							spellRewardFrame:Show()
-
-							anchorFrame = spellRewardFrame
-						end
-						if i % 2 ==  1 then
-							anchorFrame:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-							totalHeight = totalHeight + anchorFrame:GetHeight() + REWARDS_OFFSET
-
-							lastFrame = anchorFrame
-						else
-							anchorFrame:SetPoint('LEFT', lastFrame, 'RIGHT', 1, 0)
-						end
+						self:AddElement(spellRewardFrame);
 					end
 				end
 			end
 		end
 	end
-
-	do -- Title reward
-		if ( playerTitle ) then
-			self.PlayerTitleText:Show()
-			self.PlayerTitleText:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-			totalHeight = totalHeight +  self.PlayerTitleText:GetHeight() + REWARDS_OFFSET
-			self.TitleFrame:SetPoint('TOPLEFT', self.PlayerTitleText, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-			self.TitleFrame.Name:SetText(playerTitle)
-			self.TitleFrame:Show()
-			lastFrame = self.TitleFrame
-			totalHeight = totalHeight +  self.TitleFrame:GetHeight() + REWARDS_OFFSET
-		else
-			self.PlayerTitleText:Hide()
-			self.TitleFrame:Hide()
-		end
-	end
-
-	do -- Setup mandatory rewards
-		if ( numQuestRewards > 0 or numQuestCurrencies > 0 or money > 0 or xp > 0 ) then
-			-- receive text, will either say 'You will receive' or 'You will also receive'
-			local questItemReceiveText = self.ItemReceiveText
-			if ( numQuestChoices > 0 or numQuestSpellRewards > 0 or playerTitle ) then
-				questItemReceiveText:SetText(REWARD_ITEMS)
-			else
-				questItemReceiveText:SetText(REWARD_ITEMS_ONLY)
-			end
-			questItemReceiveText:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-			questItemReceiveText:Show()
-			totalHeight = totalHeight + questItemReceiveText:GetHeight() + REWARDS_OFFSET
-			lastFrame = questItemReceiveText
-
-			do -- Money rewards
-				if ( money > 0 ) then
-					MoneyFrame_Update(self.MoneyFrame, money)
-					self.MoneyFrame:Show()
-				else
-					self.MoneyFrame:Hide()
-				end
-			end
-
-			do -- XP rewards
-				if ( ToggleRewardElement(self.XPFrame, BreakUpLargeNumbers(xp), lastFrame) ) then
-					lastFrame = self.XPFrame
-					totalHeight = totalHeight + self.XPFrame:GetHeight() + REWARDS_OFFSET
-				end
-			end
-
-			do -- Skill Point rewards
-				if ( ToggleRewardElement(self.SkillPointFrame, skillPoints, lastFrame) ) then
-					lastFrame = self.SkillPointFrame
-					self.SkillPointFrame.Icon:SetTexture(skillIcon)
-					if (skillName) then
-						self.SkillPointFrame.Name:SetFormattedText(BONUS_SKILLPOINTS, skillName)
-						self.SkillPointFrame.tooltip = format(BONUS_SKILLPOINTS_TOOLTIP, skillPoints, skillName)
-					else
-						self.SkillPointFrame.tooltip = nil
-						self.SkillPointFrame.Name:SetText('')
-					end
-					totalHeight = totalHeight + buttonHeight + REWARDS_OFFSET
-				end
-			end
-
-			local index
-			local baseIndex = rewardsCount
-			local buttonIndex = 0
-
-			do -- Item rewards
-				for i = 1, numQuestRewards, 1 do
-					buttonIndex = buttonIndex + 1
-					index = i + baseIndex
-					questItem = GetItemButton(self, index)
-					questItem.type = 'reward'
-					questItem.objectType = 'item'
-					questItem:SetID(i)
-					questItem:Show()
-
-					UpdateItemInfo(questItem)
-
-					if ( buttonIndex > 1 ) then
-						if ( mod(buttonIndex, ITEMS_PER_ROW) == 1 ) then
-							questItem:SetPoint('TOPLEFT', rewardButtons[index - 2], 'BOTTOMLEFT', 0, -2)
-							lastFrame = questItem
-							totalHeight = totalHeight + buttonHeight + 2
-						else
-							questItem:SetPoint('TOPLEFT', rewardButtons[index - 1], 'TOPRIGHT', 1, 0)
-						end
-					else
-						questItem:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-						lastFrame = questItem
-						totalHeight = totalHeight + buttonHeight + REWARDS_OFFSET
-					end
-					rewardsCount = rewardsCount + 1
-				end
-			end
-			
-			do -- Currency
-				baseIndex = rewardsCount
-				local foundCurrencies = 0
-				buttonIndex = buttonIndex + 1
-				for i = 1, API:GetMaxRewardCurrencies(), 1 do
-					index = i + baseIndex
-					questItem = GetItemButton(self, index)
-					questItem.type = 'reward'
-					questItem.objectType = 'currency'
-					questItem:SetID(i)
-					questItem:Show()
-
-					if (UpdateItemInfo(questItem)) then
-
-						if ( buttonIndex > 1 ) then
-							if ( mod(buttonIndex, ITEMS_PER_ROW) == 1 ) then
-								questItem:SetPoint('TOPLEFT', rewardButtons[index - 2], 'BOTTOMLEFT', 0, -2)
-								lastFrame = questItem
-								totalHeight = totalHeight + buttonHeight + 2
-							else
-								questItem:SetPoint('TOPLEFT', rewardButtons[index - 1], 'TOPRIGHT', 1, 0)
-							end
-						else
-							questItem:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-							lastFrame = questItem
-							totalHeight = totalHeight + buttonHeight + REWARDS_OFFSET
-						end
-						rewardsCount = rewardsCount + 1
-						foundCurrencies = foundCurrencies + 1
-						buttonIndex = buttonIndex + 1
-						if (foundCurrencies == numQuestCurrencies) then
-							break
-						end
-					end
-				end
-			end
-
-			do -- Honor reward 
-				self.HonorFrame:ClearAllPoints()
-				if ( honor > 0 ) then
-					local faction = UnitFactionGroup('player')
-					local icon = faction and ('Interface\\Icons\\PVPCurrency-Honor-%s'):format(faction)
-
-					self.HonorFrame:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
-					self.HonorFrame.Count:SetText(BreakUpLargeNumbers(honor))
-					self.HonorFrame.Name:SetText(HONOR)
-					self.HonorFrame.Icon:SetTexture(icon)
-					self.HonorFrame:Show()
-
-					lastFrame = self.HonorFrame
-					totalHeight = totalHeight + self.HonorFrame:GetHeight() + REWARDS_OFFSET
-				else
-					self.HonorFrame:Hide()
-				end
-			end
-
-		else -- Hide all sub-frames
-			self.ItemReceiveText:Hide()
-			self.MoneyFrame:Hide()
-			self.XPFrame:Hide()
-			self.SkillPointFrame:Hide()
-			self.HonorFrame:Hide()
-		end
-	end
-
-	-- deselect item
-	elements.itemChoice = 0
-	if ( self.ItemHighlight ) then
-		self.ItemHighlight:Hide()
-	end
-
-	self:Show()
-	self:SetHeight(totalHeight)
-	return self, lastFrame
 end
 
-local function GwQuestDetail_Update(self)
-	local progress = self.Scroll.ScrollChildFrame.Progress;
-	local Offset = 5;
-	Release(ITEM_BUTTOM_REWARD);
+function GwGossipDetailMixin:ShowProgress()
+	local numRequiredMoney = GetQuestMoneyToGet();
+	local numRequiredItems = GetNumQuestItems();
+	local numRequiredCurrencies = GetNumQuestCurrencies();
 
-	local buttonIndex = 1;
-	local totalHeight = 0;
-	local lastElement;
+	ReleaseAll(ITEM_BUTTOM_REWARD);
 
-	--self.numRequiredMoney = math.random(0, 1000);
-	--self.numRequiredItems = math.random(10, 20);
-	--self.numRequiredCurrencies = math.random(5, 10);
+	-- numRequiredMoney = math.random(100, 1000);
+	-- numRequiredItems = math.random(10, 20);
+	-- numRequiredCurrencies = math.random(5, 10);
 
-	if (self.numRequiredMoney > 0) then
-		MoneyFrame_Update(progress.MoneyFrame, self.numRequiredMoney);
+	if (numRequiredMoney > 0) then
+		MoneyFrame_Update(self.MoneyFrame.Money, numRequiredMoney);
 		
 		local moneyColor, moneyVertex;
 		
-		if (self.numRequiredMoney < GetMoney()) then
+		if (numRequiredMoney < GetMoney()) then
 			moneyColor, moneyVertex = 'red', 0.2;
 		end
 
-		progress.MoneyText:SetTextColor(moneyVertex, moneyVertex, moneyVertex);
-		SetMoneyFrameColor(progress.MoneyFrame, moneyColor);
-		progress.MoneyText:SetPoint('TOPLEFT', progress, 'TOPLEFT', Offset, -Offset);
-		progress.MoneyText:Show();
-		progress.MoneyFrame:Show();
+		self.MoneyFrame.Title:SetTextColor(moneyVertex, moneyVertex, moneyVertex);
+		SetMoneyFrameColor(self.MoneyFrame.Money, moneyColor);
 
-		totalHeight = totalHeight + progress.MoneyFrame:GetHeight() + Offset;
-		lastElement = progress.MoneyText;
-	else
-		progress.MoneyText:Hide();
-		progress.MoneyFrame:Hide();
+		self:AddElement(self.MoneyFrame);
 	end
 
-	if (self.numRequiredItems > 0) then
-		if (lastElement) then
-			progress.ReqItemText:SetPoint('TOPLEFT', lastElement, 'BOTTOMLEFT', 0, -Offset);
-		else
-			progress.ReqItemText:SetPoint('TOPLEFT', progress, 'TOPLEFT', Offset, -Offset);
-		end
-		totalHeight = totalHeight + progress.ReqItemText:GetHeight() + Offset;
-
-		for RequiredItems = 1, self.numRequiredItems do	
+	if (numRequiredItems > 0) then
+		for RequiredItems = 1, numRequiredItems do	
 			local hidden = IsQuestItemHidden(RequiredItems);
 			if (hidden == 0) then
-				local requiredItem = GetItemButton(ITEM_BUTTOM_REWARD, progress);
+				if (RequiredItems == 1) then
+					self:AddElement(self.ItemText);
+				end
+
+				local requiredItem = GetItemButton(ITEM_BUTTOM_REWARD, self);
 				requiredItem.type = 'required';
 				requiredItem.objectType = 'item';
-				requiredItem:SetID(1);
-				
-				UpdateItemInfo(requiredItem);
-
-				if (FULL_SCREEN) then
-					if (RequiredItems > 1) then
-						requiredItem:SetPoint('TOPLEFT', ITEM_BUTTOM_REWARD.buttons[buttonIndex - 1], 'BOTTOMLEFT', 0, -Offset);
-					else
-						requiredItem:SetPoint('TOPLEFT', progress.ReqItemText, 'BOTTOMLEFT', Offset, -Offset);
-					end
+				requiredItem:SetID(RequiredItems);
 					
-					totalHeight = totalHeight + requiredItem:GetHeight() + Offset;
-				else
-
-				end
-
-				buttonIndex = buttonIndex + 1;
+				self:UpdateItemInfo(requiredItem);
+				self:AddElement(requiredItem, true, RequiredItems);
 			end
 		end
-
-		if (buttonIndex ~= 1) then
-			progress.ReqItemText:Show();
-			lastElement = ITEM_BUTTOM_REWARD.buttons[buttonIndex - 1];
-		else
-			totalHeight = totalHeight - progress.ReqItemText:GetHeight() - Offset;
-			progress.ReqItemText:Hide();
-		end
-	else
-		progress.ReqItemText:Hide();
 	end
 
-	if (self.numRequiredCurrencies > 0) then
-		if (lastElement) then
-			progress.ReqCurrencyText:SetPoint('TOPLEFT', lastElement, 'BOTTOMLEFT', 0, -Offset);
-		else
-			progress.ReqCurrencyText:SetPoint('TOPLEFT', progress, 'TOPLEFT', Offset, -Offset);
-		end
-
-		totalHeight = totalHeight + progress.ReqCurrencyText:GetHeight() + Offset;
-		progress.ReqCurrencyText:Show();
-
-		for RequiredCurrencies = 1, self.numRequiredCurrencies do	
-			local requiredItem = GetItemButton(ITEM_BUTTOM_REWARD, progress);
-			requiredItem.type = 'required'
-			requiredItem.objectType = 'currency'
+	if (numRequiredCurrencies > 0) then
+		self:AddElement(self.CurrencyText);
+		for RequiredCurrencies = 1, numRequiredCurrencies do	
+			local requiredItem = GetItemButton(ITEM_BUTTOM_REWARD, self);
+			requiredItem.type = 'required';
+			requiredItem.objectType = 'currency';
 			requiredItem:SetID(RequiredCurrencies);
 
-			UpdateItemInfo(requiredItem)
-
-			if (FULL_SCREEN) then
-				if (RequiredCurrencies > 1) then
-					requiredItem:SetPoint('TOPLEFT', ITEM_BUTTOM_REWARD.buttons[buttonIndex - 1], 'BOTTOMLEFT', 0, -Offset);
-				else
-					requiredItem:SetPoint('TOPLEFT', progress.ReqCurrencyText, 'BOTTOMLEFT', Offset, -Offset);
-				end
-				
-				totalHeight = totalHeight + requiredItem:GetHeight() + Offset;
-			else
-
-			end
-	
-			buttonIndex = buttonIndex + 1;
+			self:UpdateItemInfo(requiredItem);
+			self:AddElement(requiredItem, true, RequiredCurrencies);
 		end
-
-	else
-		progress.ReqCurrencyText:Hide();
 	end
-	
-	progress:SetHeight(totalHeight);
-	self.Scroll.ScrollChildFrame:SetHeight(totalHeight);
-	self.Scroll.ScrollBar:SetValue(0);
-
-	self:Show();
-	progress:Show();
-
-	GwHiddenButton(ITEM_BUTTOM_REWARD.buttons, buttonIndex);
 end
 
-local function GwGossipViewFrameDetailButton_OnClick(self, button, down)
-	local Parent = self:GetParent();
-	self:ClearAllPoints();
+function GwGossipDetailMixin:Update()
+	if (self:IsShown()) then
+		self:Hide();
+		self:Show();
+	end
+end
 
-	if (Parent.Detail:IsShown()) then
-		if (FULL_SCREEN) then
-			self:SetPoint("TOPLEFT", Parent, "CENTER", -50, 50);		
-			self:SetPoint("BOTTOMRIGHT", Parent, "CENTER", 50, -50);	
+function GwGossipDetailMixin:OnLoad()
+	self.ItemText:SetText(ITEMS..":");
+	self.CurrencyText:SetText(CURRENCY..":");
+	self.MoneyFrame.MoneyText:SetText(MONEY..":");
+end
+
+function GwGossipDetailMixin:OnShow()
+	self.totalHeight = 0;
+	self.rewardsCount = 0;
+
+	local activeTemplete = TEMPLETE.events[LAST_ACTIVE_EVENT];
+	self.sealQuests = activeTemplete.sealQuests;
+	self.chooseItems = activeTemplete.chooseItems;
+	self.questID = GetQuestID();
+
+	for _, element in pairs(activeTemplete.detail) do
+		element(self);
+	end
+	
+	if (self.totalHeight > 0) then
+		self:SetHeight(self.totalHeight);
+		self:Show();
+	end
+end
+
+function GwGossipDetailMixin:OnHide()
+	self.totalHeight = nil;
+	self.rewardsCount = nil;
+	self.lastFrame = nil;
+
+	for _, getChild in pairs({function (self) return self:GetChildren(); end, function (self) return self:GetRegions(); end}) do
+		local childrenFrames = {getChild(self)};
+		
+		for _, child in pairs(childrenFrames) do
+			child:Hide();
 		end
-
-		Parent.Detail:Hide();
-	else	
-		if (FULL_SCREEN) then
-			self:SetPoint("TOPLEFT", Parent.Dialog, "BOTTOM", -50, 0);		
-			self:SetPoint("TOPRIGHT", Parent.Dialog, "BOTTOM", 50, 0);
-			self:SetPoint("BOTTOM", Parent.Dialog, "BOTTOM", 0, -100);
-		end
-
-		self.func(Parent.Detail);
 	end
 end
 
@@ -1676,9 +1472,6 @@ local UPDATE = {
 
 		self.Dialog:Split(GetQuestText());
 
-		self.Dialog.splitDialog[#self.Dialog.splitDialog + 1] = QUEST_OBJECTIVES..": "..GetObjectiveText();
-		--QuestInfo_Display(QUEST_TEMPLATE_DETAIL, QuestDetailScrollChildFrame, QuestFrameAcceptButton, material);
-
 		if (#self.Dialog.splitDialog > 1) then
 			GwAddTitleButtonInfo(self.Scroll, nil, "NEXT", "Action", nil, true);
 		end
@@ -1710,23 +1503,19 @@ local UPDATE = {
 		end
 
 		GwAddTitleButtonInfo(self.Scroll, nil, "CANCEL", "Action", nil, true);
-
-		self.Detail.numRequiredMoney = GetQuestMoneyToGet();
-		self.Detail.numRequiredItems = GetNumQuestItems();
-		self.Detail.numRequiredCurrencies = GetNumQuestCurrencies();
-
-		self.DetailButton.func = GwQuestDetail_Update;
 	end,
 	QUEST_COMPLETE = function (self)
 		self.Title.Text:SetText(GetTitleText());
 		self.Dialog:Split(GetRewardText());
 	
-		--QuestInfo_Display(QUEST_TEMPLATE_REWARD, QuestRewardScrollChildFrame, QuestFrameCompleteQuestButton, material);
-	
 		if (#self.Dialog.splitDialog > 1) then
 			GwAddTitleButtonInfo(self.Scroll, nil, "NEXT", "Action", nil, true);
 		end
-	
+
+		if (GetNumQuestChoices() == 0) then
+			GwAddTitleButtonInfo(self.Scroll, nil, "FINISH", "Action", nil, true);
+		end
+			
 		GwAddTitleButtonInfo(self.Scroll, nil, "CANCEL", "Action", nil, true);
 	
 		if (#self.Dialog.splitDialog > 1) then
@@ -1796,7 +1585,6 @@ local function GwImmersiveFrameHandleHide(self)
 	if (self:IsShown()) then
 		self.Scroll.scrollButtonTitleInfo = nil;
 		self.Title:Hide();
-		self.DetailButton:Hide();
 		self.Detail:Hide();
 		self.buttonSettings.dropdown:Hide();
 		self:Hide();
@@ -1818,23 +1606,23 @@ local function GwGossipViewFrame_OnEvent(self, event, ...)
 		if not C_GossipInfo.ForceGossip() then
 			C_Timer.After(0.5, function()
 				if LAST_ACTIVE_EVENT ~= "GOSSIP_CLOSED" then
-					SetActiveEvent(event);
+					LAST_ACTIVE_EVENT = event;
 					GwImmersiveFrameHandleShow(self);
 				end
 			end)
 		else
-			SetActiveEvent(event);
+			LAST_ACTIVE_EVENT = event;
 			GwImmersiveFrameHandleShow(self);
 		end
 
 		return;
 	elseif (event == "GOSSIP_CLOSED") then
-		SetActiveEvent(event);
+		LAST_ACTIVE_EVENT = event;
 		GwImmersiveFrameHandleHide(self)
 		
 		return;
 	elseif (event == "QUEST_GREETING") then
-		SetActiveEvent(event);
+		LAST_ACTIVE_EVENT = event;
 		GwImmersiveFrameHandleShow(self);
 		
 		return;
@@ -1852,39 +1640,29 @@ local function GwGossipViewFrame_OnEvent(self, event, ...)
 			return;
 		end
 
-		SetActiveEvent(event);
+		LAST_ACTIVE_EVENT = event;
 		GwImmersiveFrameHandleShow(self);
 		
 		return;
 	elseif (event == "QUEST_PROGRESS") then
-			SetActiveEvent(event);
+			LAST_ACTIVE_EVENT = event;
 			GwImmersiveFrameHandleShow(self);
 		return;
 	elseif (event == "QUEST_COMPLETE") then
-			SetActiveEvent(event);
+			LAST_ACTIVE_EVENT = event;
 			GwImmersiveFrameHandleShow(self);
 		return;
 	elseif (event == "QUEST_FINISHED") then
 		if (self:IsShown()) then
-			if (self.PrevActive == "GOSSIP_SHOW" or self.PrevActive == "QUEST_GREETING") then
-				SetActiveEvent(PREV_ACTIVE_EVENT);
-				GwImmersiveFrameHandleShow(self);
-			else
-				SetActiveEvent("GOSSIP_CLOSED");
-				GwImmersiveFrameHandleHide(self);
-			end
+			LAST_ACTIVE_EVENT = event;
+			GwImmersiveFrameHandleHide(self);
 		end
 		
 		return;
 	elseif (event == "QUEST_ITEM_UPDATE") then
-		if (self:IsShown()) then
-			if (LAST_ACTIVE_EVENT == "QUEST_DETAIL") then
-				GwImmersiveFrameHandleShow(self);
-			elseif (LAST_ACTIVE_EVENT == "QUEST_PROGRESS") then
-				if (self.Detail:IsShown()) then
-					GwQuestDetail_Update(self.Detail);
-				end
-			elseif (LAST_ACTIVE_EVENT =="QUEST_COMPLETE") then
+		if (self.Detail:IsShown()) then
+			if (LAST_ACTIVE_EVENT == "QUEST_DETAIL" or LAST_ACTIVE_EVENT == "QUEST_PROGRESS" or LAST_ACTIVE_EVENT =="QUEST_COMPLETE") then
+				self.Detail.Scroll.ScrollChildFrame:Update();
 			end
 		end
 
@@ -2009,6 +1787,22 @@ local function GwMoveAndScaleGossipViewFrame()
 end
 
 local function GwChangeGossipFrame()
+	local function GwGossipEvent(self)
+		self:RegisterEvent("GOSSIP_SHOW");
+		self:RegisterEvent("GOSSIP_CLOSED");
+		self:RegisterEvent("QUEST_LOG_UPDATE");
+	
+		self:RegisterEvent("QUEST_GREETING");
+		self:RegisterEvent("QUEST_DETAIL");
+		self:RegisterEvent("QUEST_PROGRESS");
+		self:RegisterEvent("QUEST_COMPLETE");
+		self:RegisterEvent("QUEST_FINISHED");
+		self:RegisterEvent("QUEST_ITEM_UPDATE");
+		--self:RegisterEvent("UNIT_PORTRAIT_UPDATE");
+		--self:RegisterEvent("PORTRAITS_UPDATED");
+		self:RegisterEvent("LEARNED_SPELL_IN_TAB");
+	end
+
 	if (FULL_SCREEN) then
 		GwGossipViewFrame:UnregisterAllEvents();
 
@@ -2062,6 +1856,15 @@ local function GwChangeGossipFrame()
 end
 
 local function LoadQuestview()
+	local function GwHideFrame(self)
+		self:UnregisterAllEvents()
+		self:SetSize(1, 1)
+		self:EnableMouse(false)
+		self:EnableKeyboard(false)
+		self:SetAlpha(0)
+		self:ClearAllPoints()
+	end
+
 	GwHideFrame(GossipFrame);
 	GwHideFrame(QuestFrame);
 
@@ -2073,7 +1876,6 @@ local function LoadQuestview()
 
 	GwFullScreenGossipViewFrame:SetScript("OnEvent", GwGossipViewFrame_OnEvent);
 	GwFullScreenGossipViewFrame:SetScript("OnKeyDown", GwGossipViewFrame_OnKeyDown);
-	GwFullScreenGossipViewFrame.DetailButton:SetScript("OnClick", GwGossipViewFrameDetailButton_OnClick);
 	GwFullScreenGossipViewFrame.buttonSettings = buttonSettings;
 	GwFullScreenGossipViewFrame.Dialog.maxSizeText = 600;
 
@@ -2082,15 +1884,17 @@ local function LoadQuestview()
 	GwGossipViewFrame.Scroll.ScrollChildFrame:Hide();
 	GwGossipViewFrame:SetScript("OnEvent", GwGossipViewFrame_OnEvent);
 	GwGossipViewFrame:SetScript("OnKeyDown", GwGossipViewFrame_OnKeyDown);
-	GwGossipViewFrame.DetailButton:SetScript("OnClick", GwGossipViewFrameDetailButton_OnClick);
 	GwGossipViewFrame.buttonSettings = buttonSettings;
 	GwGossipViewFrame.Dialog:SetScript("OnClick", GwGossipViewFrameDialog_OnClick);
 	GwGossipViewFrame.Dialog.maxSizeText = 300;
 
 	GwChangeGossipFrame();
 
-	ITEM_BUTTOM_TITLE.buttonPool = CreateFramePool("BUTTON", nil, "GwChoiceTitleButtonTemplate");
-	ITEM_BUTTOM_REWARD.buttonPool = CreateFramePool("BUTTON", nil, "GwGossipQuestItemTemplate, GwGossipRewardItemCodeTemplate");
+	ITEM_BUTTOM_TITLE.pool = CreateFramePool("BUTTON", nil, "GwChoiceTitleButtonTemplate");
+	ITEM_BUTTOM_REWARD.pool = CreateFramePool("BUTTON", nil, "GwGossipItemButtonTemplate, GwGossipRewardItemCodeTemplate");
+	ITEM_BUTTOM_SPELL_REWARD.pool = CreateFramePool("BUTTON", nil, "GwQuestSpellTemplate, GwRewardSpellCodeTemplate");
+	ITEM_BUTTOM_FOLLOWER_REWARD.pool = CreateFramePool("BUTTON", nil, "LargeQuestInfoRewardFollowerTemplate");
+	ITEM_SPELL_HEADER.pool = CreateFontStringPool(nil, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate");
 	
 	do
         --EnableTooltip(buttonSettings, "Gossip Option")
