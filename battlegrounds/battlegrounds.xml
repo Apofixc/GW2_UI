@@ -1,0 +1,76 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+
+    <Frame name="GwBattleGroundScores" hidden="true" virtual="true">
+        <Size x="500" y="64"></Size>
+        <Anchors>
+            <Anchor point="TOP" relativePoint="TOP"></Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="MID" file="Interface\AddOns\GW2_UI\textures\battleground\teamflag-mid">
+                    <Size x="2" y="64"></Size>
+                    <Anchors>
+                        <Anchor point="TOP" relativePoint="TOP" x="0" y="0"></Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\AddOns\GW2_UI\textures\battleground\teamflag-bg" parentKey="leftFlag">
+                    <Size x="256" y="128"></Size>
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" relativeKey="$parent.MID" relativePoint="TOPLEFT" x="0" y="0"></Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\AddOns\GW2_UI\textures\battleground\teamflag-bg" parentKey="rightFlag">
+                    <Size x="256" y="128"></Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.MID" relativePoint="TOPRIGHT" x="0" y="0"></Anchor>
+                    </Anchors>
+                    <TexCoords left="1" right="0" top="0" bottom="1" />
+                </Texture>
+            </Layer>
+            <Layer level="BACKGROUND" textureSubLevel="2">
+                <FontString parentKey="scoreLeft" text="1000" justifyH="CENTER" justifyV="MIDDLE">
+                    <Size x="180" y="50"></Size>
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" relativeKey="$parent.MID" relativePoint="TOPLEFT" x="0" y="0"></Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="scoreRight" text="1000" justifyH="CENTER" justifyV="MIDDLE">
+                    <Size x="180" y="50"></Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.MID" relativePoint="TOPRIGHT" x="0" y="0"></Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="timer" text="" justifyH="CENTER" justifyV="MIDDLE">
+                    <Size x="180" y="14"></Size>
+                    <Anchors>
+                        <Anchor point="TOP" relativePoint="TOP" x="0" y="0"></Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+    </Frame>
+
+    <Frame name="GwBattleLandMarkFrame" virtual="true">
+        <Size x="32" y="32"></Size>
+        <Layers>
+            <Layer level="BACKGROUND" textureSubLevel="3">
+                <Texture parentKey="IconBackground" file="Interface\AddOns\GW2_UI\textures\battleground\base-background">
+                    <Size x="32" y="32"></Size>
+                    <Anchors>
+                        <Anchor point="CENTER" relativePoint="CENTER"></Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="BACKGROUND" textureSubLevel="4">
+                <Texture parentKey="icon" file="Interface\Minimap\POIIcons">
+                    <Size x="32" y="32"></Size>
+                    <Anchors>
+                        <Anchor point="CENTER" relativePoint="CENTER"></Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+    </Frame>
+
+</Ui>
