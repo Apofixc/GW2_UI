@@ -72,7 +72,7 @@ local function styleRewards()
     GwQuestviewFrameContainerDialogRequired:SetFont("UNIT_NAME_FONT", 14)
     GwQuestviewFrameContainerDialogRequired:SetTextColor(1, 1, 1)
     GwQuestviewFrameContainerDialogRequired:SetShadowColor(0, 0, 0, 1)
-    GwQuestviewFrameContainerDialogRequired:SetText(L["QUEST_REQUIRED_ITEMS"])
+    GwQuestviewFrameContainerDialogRequired:SetText(L["Required Items:"])
 end
 GW.AddForProfiling("questview", "styleRewards", styleRewards)
 
@@ -238,7 +238,7 @@ local function questTextCompleted()
         GwQuestviewFrameContainerAcceptButton:SetText(COMPLETE_QUEST)
     elseif questState == "PROGRESS" then
         showRewards()
-        GwQuestviewFrameContainerAcceptButton:SetText(L["QUEST_VIEW_SKIP"])
+        GwQuestviewFrameContainerAcceptButton:SetText(L["Skip"])
     else
         showRewards()
         GwQuestviewFrameContainerAcceptButton:SetText(ACCEPT)
@@ -262,7 +262,7 @@ local function nextGossip()
         if QUESTSTRINGINT == count then
             questTextCompleted()
         else
-            GwQuestviewFrameContainerAcceptButton:SetText(L["QUEST_VIEW_SKIP"])
+            GwQuestviewFrameContainerAcceptButton:SetText(L["Skip"])
         end
     else
         questTextCompleted()
@@ -290,8 +290,10 @@ local model_tweaks = {
     [3387000] = {["x"] = 0, ["y"] = 2.75, ["z"] = 0},
     [3067262] = {["z"] = -0.05},
     [3483610] = {["x"] = -0.5, ["y"] = 4, ["z"] = 0.25},
-    [3492867] = {["x"] = 5, ["y"] = 10, ["z"] = 2.5}
-
+    [3492867] = {["x"] = 5, ["y"] = 10, ["z"] = 2.5},
+    [3670316] = {["x"] = -40, ["y"] = 4, ["z"] = 3},
+    [2343653] = {["z"] = -0.5},
+    [577134] = {["z"] = -0.8}
 }
 local function setPMUnit(PM, unit, side, is_dead, crace, cgender)
     local uX, uY, uZ, uF = -1.25, -0.65, -0.2, 0.7 -- fac 0.7

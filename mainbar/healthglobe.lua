@@ -287,7 +287,7 @@ local function LoadHealthGlobe()
             hg:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 0)
         end
     else
-        GW.RegisterMovableFrame(hg, GW.L["HEALTH_GLOBE"], "HealthGlobe_pos", "VerticalActionBarDummy", nil, true, {"default"}, false)
+        GW.RegisterMovableFrame(hg, GW.L["Health Globe"], "HealthGlobe_pos", "VerticalActionBarDummy", nil, true, {"default"}, false)
         hg:SetPoint("TOPLEFT", hg.gwMover)
         if not GetSetting("XPBAR_ENABLED") and not hg.isMoved then
             local framePoint = GetSetting("HealthGlobe_pos")
@@ -305,6 +305,7 @@ local function LoadHealthGlobe()
     hg:SetAttribute("*type2", "togglemenu")
     hg:SetAttribute("unit", "player")
     AddToClique(hg)
+    hg:RegisterForClicks("AnyUp")
 
     -- setup masking textures
     for i, v in ipairs(hg.fill.masked) do

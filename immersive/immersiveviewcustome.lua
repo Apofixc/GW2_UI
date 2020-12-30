@@ -2,6 +2,129 @@ local _, GW = ...
 local L = GW.L
 local GetSetting = GW.GetSetting
 local SetSetting = GW.SetSetting
+local AddToAnimation = GW.AddToAnimation
+local ActiveAnimation = GW.ActiveAnimation
+local StopAnimation = GW.StopAnimation
+
+---------------------------------------------------------------------------------------------------------------------
+---------------------------------------- GOSSIP TITLE BUTTON MIXIN --------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+
+GwGossipTitleButtonMixin = {}
+
+function GwGossipTitleButtonMixin:SetInfo(id, buttonType, titleText, specID, info, callBack)
+	local isIgnored = info and info.isIgnored;
+	local isTrivial = info and info.isTrivial;
+
+	self:SetID(id);
+	self.buttonType = buttonType;
+	self.specID = specID;
+	self.callBack = callBack;
+
+	if (buttonType == "ACTIVE") then
+		QuestUtil.ApplyQuestIconActiveToTexture(self.Icon, info.isComplete, info.isLegendary, info.frequency, info.isRepeatable, QuestUtil.ShouldQuestIconsUseCampaignAppearance(info.questID), C_QuestLog.IsQuestCalling(info.questID));
+	elseif (buttonType == "AVAILABLE") then
+		QuestUtil.ApplyQuestIconOfferToTexture(self.Icon, info.isLegendary, info.frequency, info.isRepeatable, QuestUtil.ShouldQuestIconsUseCampaignAppearance(info.questID), C_QuestLog.IsQuestCalling(info.questID))
+	elseif (buttonType == "GOSSIP") then
+		self.Icon:SetTexture("Interface/GossipFrame/" .. info.type .. "GossipIcon");
+	else
+		self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/icons/icon-"..buttonType);
+	end
+
+	self:UpdateTitle(titleText, isIgnored, isTrivial);
+end
+
+function GwGossipTitleButtonMixin:UpdateTitle(titleText, isIgnored, isTrivial)
+	if (isIgnored) then
+		self.Label:SetFormattedText("|cFF8C8C8C%s|r", titleText);
+		self.Icon:SetVertexColor(0.5,0.5,0.5);
+	elseif (isTrivial) then
+		self.Label:SetFormattedText("|cffffffff%s|r", titleText);
+		self.Icon:SetVertexColor(0.5,0.5,0.5);
+	elseif (self.buttonType == "AVAILABLE" or self.buttonType == "ACTIVE") then
+		self.Label:SetFormattedText("|cFFFF5A00%s|r",titleText);
+		self.Icon:SetVertexColor(1,1,1);
+	elseif (self.buttonType == "GOSSIP") then
+		self.Label:SetFormattedText(titleText);
+		self.Icon:SetVertexColor(1,1,1);
+	else
+		self.Label:SetFormattedText("|cFF8C00FF%s|r", titleText);
+		self.Icon:SetVertexColor(1,1,1);
+	end
+end
+
+function GwGossipTitleButtonMixin:OnClick()
+	if (self.callBack) then
+		if ((self.buttonType == "BACK" or self.buttonType == "NEXT") and ActiveAnimation("IMMERSIVE_DIALOG_ANIMATION")) then return; end
+
+		local parent = self:GetParent():GetParent():GetParent();
+
+		local unitName = "";
+		if (GetSetting("FULL_SCREEN")) then
+			unitName = "|cFFFF5A00"..UnitName("player")..":|r";
+		else
+			parent.Scroll.Icon:Show();
+		end
+
+		parent.Scroll.Text:SetText(unitName..self.Label:GetText():gsub("^.+%d.", ""));
+	
+		self.callBack.func(self.callBack.arg1);
+		
+		PlaySound(self.callBack.playSound);		
+	end
+end 
+
+function GwGossipTitleButtonMixin:OnShow()
+	local id = self:GetID();
+	local parent = self:GetParent()
+
+	AddToAnimation(
+		"IMMERSIVE_TITLE_ANIMATION_"..id,
+		self:GetWidth(),
+		0,
+		GetTime(),
+		0.4 * id,
+		function(step)
+			self:SetPoint('TOPLEFT', parent, 'TOPLEFT', step, (id - 1) * (-self:GetHeight() - 5))
+		end
+	)	
+end
+
+function GwGossipTitleButtonMixin:OnEnter()
+	if (self.specID) then
+		GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT");
+		if (self.buttonType == "GOSSIP") then 
+			GameTooltip:SetSpellByID(self.specID);
+		elseif (self.buttonType == "ACTIVE") then
+			local level = C_QuestLog.GetQuestDifficultyLevel(self.specID) ;
+			GameTooltip:SetText(string.format("Рекомендуемый уровень: %d", level));
+		elseif (self.buttonType == "AVAILABLE") then
+			local level =  C_QuestLog.GetQuestDifficultyLevel(self.specID) ;
+			local num = C_QuestLog.GetSuggestedGroupSize(self.specID);
+			num = num == 0 and 1;
+			GameTooltip:SetText(string.format("Рекомендуемый уровень: %d", level));
+			GameTooltip:AddLine(QUEST_SUGGESTED_GROUP_NUM:format(num));
+		end
+		GameTooltip:Show(); 
+		GameTooltip:SetIgnoreParentAlpha(true);
+	end
+end 
+
+function GwGossipTitleButtonMixin:OnLeave()
+	GameTooltip:SetIgnoreParentAlpha(false);
+	GameTooltip:Hide(); 
+end 
+
+function GwGossipTitleButtonMixin:Resize(width)
+	self:SetWidth(width);
+	self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()));
+	
+	if (GetSetting("FULL_SCREEN")) then
+		self:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight")
+	else
+		self:SetHighlightTexture("Interface/AddOns/GW2_UI/textures/questview/gvf_scroll_buttom")
+	end 
+end
 
 ---------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------- MODEL ------------------------------------------------------------

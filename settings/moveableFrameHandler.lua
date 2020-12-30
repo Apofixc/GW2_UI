@@ -4,6 +4,168 @@ local SetSetting = GW.SetSetting
 local GetDefault = GW.GetDefault
 local L = GW.L
 
+local settings_window_open_before_change = false
+local function lockHudObjects(self, inCombat)
+    GW.MoveHudScaleableFrame:UnregisterAllEvents()
+    if InCombatLockdown() then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r " .. L["You can not move elements during combat!"])
+        return
+    end
+
+    GW.MoveHudScaleableFrame:Hide()
+    if settings_window_open_before_change and inCombat ~= true then
+        settings_window_open_before_change = false
+        GwSettingsWindow:Show()
+    end
+
+    for i, mf in ipairs(GW.MOVABLE_FRAMES) do
+        mf:EnableMouse(false)
+        mf:SetMovable(false)
+        mf:Hide()
+    end
+    if GW.MoveHudScaleableFrame.showGrid.grid then
+        GW.MoveHudScaleableFrame.showGrid.grid:Hide()
+        GW.MoveHudScaleableFrame.gridAlign:Hide()
+        GW.MoveHudScaleableFrame.showGrid.forceHide = false
+        GW.MoveHudScaleableFrame.showGrid:SetText(L["Show grid"])
+    end
+end
+GW.lockHudObjects = lockHudObjects
+GW.AddForProfiling("settings", "lockHudObjects", lockHudObjects)
+
+local function moveHudObjects(self)
+    if GwSettingsWindow:IsShown() then
+        settings_window_open_before_change = true
+    end
+    GwSettingsWindow:Hide()
+    for i, mf in pairs(GW.MOVABLE_FRAMES) do
+        mf:EnableMouse(true)
+        mf:SetMovable(true)
+        mf:Show()
+    end
+    GW.MoveHudScaleableFrame.scaleSlider:Hide()
+    GW.MoveHudScaleableFrame.heightSlider:Hide()
+    GW.MoveHudScaleableFrame.default:Hide()
+    GW.MoveHudScaleableFrame.movers:Hide()
+    GW.MoveHudScaleableFrame.desc:Show()
+    GW.MoveHudScaleableFrame:Show()
+
+    -- register event to close move hud in combat
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self:SetScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_DISABLED" then
+            DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r " .. L["You can not move elements during combat!"])
+            self:UnregisterEvent(event)
+            lockHudObjects(self, true)
+        end
+    end)
+end
+GW.moveHudObjects = moveHudObjects
+
+local function Grid_GetRegion(mhgb)
+    if mhgb.grid then
+        if mhgb.grid.regionCount and mhgb.grid.regionCount > 0 then
+            local line = select(mhgb.grid.regionCount, mhgb.grid:GetRegions())
+            mhgb.grid.regionCount = mhgb.grid.regionCount - 1
+            line:SetAlpha(1)
+            return line
+        else
+            return mhgb.grid:CreateTexture()
+        end
+    end
+end
+
+local function create_grid(mhgb)
+    if not mhgb.grid then
+        mhgb.grid = CreateFrame("Frame", nil, UIParent)
+        mhgb.grid:SetFrameStrata("BACKGROUND")
+    else
+        mhgb.grid.regionCount = 0
+        local numRegions = mhgb.grid:GetNumRegions()
+        for i = 1, numRegions do
+            local region = select(i, mhgb.grid:GetRegions())
+            if region and region.IsObjectType and region:IsObjectType("Texture") then
+                mhgb.grid.regionCount = mhgb.grid.regionCount + 1
+                region:SetAlpha(0)
+            end
+        end
+    end
+
+    local size = (1 / 0.64) - ((1 - (768 / GW.screenHeight)) / 0.64)
+    local width, height = UIParent:GetSize()
+    local ratio = width / height
+    local hStepheight = height * ratio
+    local wStep = width / mhgb.gridSize
+    local hStep = hStepheight / mhgb.gridSize
+
+    mhgb.grid.boxSize = mhgb.gridSize
+    mhgb.grid:SetPoint("CENTER", UIParent)
+    mhgb.grid:SetSize(width, height)
+    mhgb.grid:Hide()
+
+    for i = 0, mhgb.gridSize do
+        local tx = Grid_GetRegion(mhgb)
+        if i == mhgb.gridSize / 2 then
+            tx:SetColorTexture(1, 0, 0)
+            tx:SetDrawLayer("BACKGROUND", 1)
+        else
+            tx:SetColorTexture(0, 0, 0)
+            tx:SetDrawLayer("BACKGROUND", 0)
+        end
+        tx:ClearAllPoints()
+        tx:SetPoint("TOPLEFT", mhgb.grid, "TOPLEFT", i * wStep - (size / 2), 0)
+        tx:SetPoint("BOTTOMRIGHT", mhgb.grid, "BOTTOMLEFT", i * wStep + (size / 2), 0)
+    end
+
+    do
+        local tx = Grid_GetRegion(mhgb)
+        tx:SetColorTexture(1, 0, 0)
+        tx:SetDrawLayer("BACKGROUND", 1)
+        tx:ClearAllPoints()
+        tx:SetPoint("TOPLEFT", mhgb.grid, "TOPLEFT", 0, -(height / 2) + (size / 2))
+        tx:SetPoint("BOTTOMRIGHT", mhgb.grid, "TOPRIGHT", 0, -(height / 2 + size / 2))
+    end
+
+    for i = 1, floor((height / 2) / hStep) do
+        local tx = Grid_GetRegion(mhgb)
+        tx:SetColorTexture(0, 0, 0)
+        tx:SetDrawLayer("BACKGROUND", 0)
+        tx:ClearAllPoints()
+        tx:SetPoint("TOPLEFT", mhgb.grid, "TOPLEFT", 0, -(height / 2 + i * hStep) + (size / 2))
+        tx:SetPoint("BOTTOMRIGHT", mhgb.grid, "TOPRIGHT", 0, -(height / 2 + i * hStep + size / 2))
+
+        tx = Grid_GetRegion(mhgb)
+        tx:SetColorTexture(0, 0, 0)
+        tx:SetDrawLayer("BACKGROUND", 0)
+        tx:ClearAllPoints()
+        tx:SetPoint("TOPLEFT", mhgb.grid, "TOPLEFT", 0, -(height / 2 - i * hStep) + (size / 2))
+        tx:SetPoint("BOTTOMRIGHT", mhgb.grid, "TOPRIGHT", 0, -(height / 2 - i * hStep + size / 2))
+    end
+end
+
+local function Grid_Show_Hide(self)
+    local self = self:GetParent()
+    if self.showGrid.forceHide then
+        if self.showGrid.grid then
+            self.showGrid.grid:Hide()
+        end
+        self.gridAlign:Hide()
+        self.showGrid.forceHide = false
+        self.showGrid:SetText(L["Show grid"])
+    else
+        if not self.showGrid.grid then
+            create_grid(self.showGrid)
+        elseif self.showGrid.grid.boxSize ~= self.showGrid.gridSize then
+            self.showGrid.grid:Hide()
+            create_grid(self.showGrid)
+        end
+        self.gridAlign:Show()
+        self.showGrid.grid:Show()
+        self.showGrid.forceHide = true
+        self.showGrid:SetText(L["Hide grid"])
+    end
+end
+
 local function CheckIfMoved(self, settingsName, new_point)
     -- check if we need to know if the frame is on its default position
     if self.gw_isMoved ~= nil then
@@ -78,6 +240,10 @@ local function smallSettings_resetToDefault(self, btn)
         self:GetParent().heightSlider.slider:SetValue(height)
     end
 
+    if mf.gw_postdrag then
+        mf.gw_postdrag(mf.gw_frame)
+    end
+
     GW.UpdateHudScale()
 end
 GW.AddForProfiling("index", "smallSettings_resetToDefault", smallSettings_resetToDefault)
@@ -107,6 +273,8 @@ local function mover_OnDragStop(self)
     new_point.relativePoint = relativePoint
     new_point.xOfs = xOfs and math.floor(xOfs) or 0
     new_point.yOfs = yOfs and math.floor(yOfs) or 0
+    self:ClearAllPoints()
+    self:SetPoint(point, UIParent, relativePoint, xOfs, yOfs)
     SetSetting(settingsName, new_point)
     if lockAble ~= nil then
         SetSetting(lockAble, false)
@@ -114,32 +282,12 @@ local function mover_OnDragStop(self)
     -- check if we need to know if the frame is on its default position
     CheckIfMoved(self, settingsName, new_point)
 
-    --check if we need to change the text string or button locations
-    if settingsName == "AlertPos" then
-        local _, y = self:GetCenter()
-        local screenHeight = UIParent:GetTop()
-        if y > (screenHeight / 2) then
-            if self.frameName and self.frameName.SetText then
-                self.frameName:SetText(L["ALERTFRAMES"] .. " (" .. COMBAT_TEXT_SCROLL_DOWN .. ")")
-            end
-        else
-            if self.frameName and self.frameName.SetText then
-                self.frameName:SetText(L["ALERTFRAMES"] .. " (" .. COMBAT_TEXT_SCROLL_UP .. ")")
-            end
-        end
-    elseif settingsName == "MinimapPos" then
-        local x = self:GetCenter()
-        local screenWidth = UIParent:GetRight()
-        if x > (screenWidth / 2) then
-            GW.setMinimapButtons("left")
-        else
-            GW.setMinimapButtons("right")
-        end
-    elseif settingsName == "MicromenuPos" then
-        -- Hide/Show BG here
-        self.gw_frame.cf.bg:SetShown(not self.gw_frame.isMoved)
+    if self.gw_postdrag then
+        self.gw_postdrag(self.gw_frame)
     end
 
+    self:SetMovable(true)
+    self:SetUserPlaced(true)
     self.IsMoving = false
 end
 GW.AddForProfiling("index", "mover_OnDragStop", mover_OnDragStop)
@@ -149,12 +297,12 @@ local function mover_options(self, button)
         if GW.MoveHudScaleableFrame.child == self then
             GW.MoveHudScaleableFrame.child = nil
             GW.MoveHudScaleableFrame.childMover = nil
-            GW.MoveHudScaleableFrame.headerString:SetText(L["SMALL_SETTINGS_HEADER"])
+            GW.MoveHudScaleableFrame.headerString:SetText(L["Extra Frame Options"])
             GW.MoveHudScaleableFrame.scaleSlider:Hide()
             GW.MoveHudScaleableFrame.heightSlider:Hide()
             GW.MoveHudScaleableFrame.default:Hide()
             GW.MoveHudScaleableFrame.movers:Hide()
-            GW.MoveHudScaleableFrame.desc:SetText(L["SMALL_SETTINGS_DEFAULT_DESC"])
+            GW.MoveHudScaleableFrame.desc:SetText(L["Right click on a moverframe to show extra frame options"])
             GW.MoveHudScaleableFrame.desc:Show()
             GW.StopFlash(GW.MoveHudScaleableFrame.activeFlasher)
         else
@@ -211,7 +359,7 @@ local function sliderEditBoxValueChanged(self)
 
     self:GetParent().slider:SetValue(roundValue)
     self:SetText(roundValue)
-    SetSetting(moverFrame.gw_Settings .."_scale", roundValue)
+    SetSetting(moverFrame.gw_Settings .. "_scale", roundValue)
 
     self:GetParent():GetParent().child.gw_frame.isMoved = true
     self:GetParent():GetParent().child.gw_frame:SetAttribute("isMoved", true)
@@ -264,7 +412,7 @@ local function moverframe_OnLeave(self)
     end
 end
 
-local function RegisterMovableFrame(frame, displayName, settingsName, dummyFrame, size, isMoved, smallOptions, mhf)
+local function RegisterMovableFrame(frame, displayName, settingsName, dummyFrame, size, isMoved, smallOptions, mhf, postdrag)
     local moveframe = CreateFrame("Frame", nil, UIParent, dummyFrame)
     frame.gwMover = moveframe
     if size then
@@ -278,6 +426,7 @@ local function RegisterMovableFrame(frame, displayName, settingsName, dummyFrame
     moveframe.gw_isMoved = isMoved
     moveframe.gw_frame = frame
     moveframe.gw_mhf = mhf
+    moveframe.gw_postdrag = postdrag
 
     if moveframe.frameName and moveframe.frameName.SetText then
         moveframe.frameName:SetSize(moveframe:GetSize())
@@ -286,10 +435,17 @@ local function RegisterMovableFrame(frame, displayName, settingsName, dummyFrame
 
     moveframe:SetClampedToScreen(true)
 
-    -- position mover
+    -- position mover (as fallback use the default position)
     local framePoint = GetSetting(settingsName)
+    local defaultPoint = GetDefault(settingsName)
     moveframe:ClearAllPoints()
-    moveframe:SetPoint(framePoint.point, UIParent, framePoint.relativePoint, framePoint.xOfs, framePoint.yOfs)
+    if not framePoint.point or not framePoint.relativePoint or not framePoint.xOfs or not framePoint.yOfs then
+        -- use default position
+        moveframe:SetPoint(defaultPoint.point, UIParent, defaultPoint.relativePoint, defaultPoint.xOfs, defaultPoint.yOfs)
+        framePoint = defaultPoint
+    else
+        moveframe:SetPoint(framePoint.point, UIParent, framePoint.relativePoint, framePoint.xOfs, framePoint.yOfs)
+    end
 
     local num = #GW.MOVABLE_FRAMES
     GW.MOVABLE_FRAMES[num + 1] = moveframe
@@ -347,12 +503,12 @@ local function RegisterMovableFrame(frame, displayName, settingsName, dummyFrame
                 if GW.MoveHudScaleableFrame.child == "nil" then
                     GW.MoveHudScaleableFrame.child = nil
                     GW.MoveHudScaleableFrame.childMover = nil
-                    GW.MoveHudScaleableFrame.headerString:SetText(L["SMALL_SETTINGS_HEADER"])
+                    GW.MoveHudScaleableFrame.headerString:SetText(L["Extra Frame Options"])
                     GW.MoveHudScaleableFrame.scaleSlider:Hide()
                     GW.MoveHudScaleableFrame.heightSlider:Hide()
                     GW.MoveHudScaleableFrame.default:Hide()
                     GW.MoveHudScaleableFrame.movers:Hide()
-                    GW.MoveHudScaleableFrame.desc:SetText(L["SMALL_SETTINGS_DEFAULT_DESC"])
+                    GW.MoveHudScaleableFrame.desc:SetText(L["Right click on a moverframe to show extra frame options"])
                     GW.MoveHudScaleableFrame.desc:Show()
                     GW.StopFlash(GW.MoveHudScaleableFrame.activeFlasher)
                 else
@@ -363,7 +519,7 @@ local function RegisterMovableFrame(frame, displayName, settingsName, dummyFrame
                     GW.MoveHudScaleableFrame.heightSlider:Hide()
                     GW.MoveHudScaleableFrame.default:Hide()
                     GW.MoveHudScaleableFrame.movers:Show()
-                    GW.MoveHudScaleableFrame.desc:SetText(format(L["SMALL_SETTINGS_NO_SETTINGS_FOR"], displayName))
+                    GW.MoveHudScaleableFrame.desc:SetText(format(L["No extra frame options for '%s'"], displayName))
                     GW.MoveHudScaleableFrame.desc:Show()
                     if GW.MoveHudScaleableFrame.activeFlasher then
                         GW.StopFlash(GW.MoveHudScaleableFrame.activeFlasher)
@@ -373,6 +529,14 @@ local function RegisterMovableFrame(frame, displayName, settingsName, dummyFrame
                     GW.FrameFlash(self, 1.5, 0.5, 1, true)
                 end
             end
+        end)
+    end
+
+    if postdrag then
+        moveframe:RegisterEvent("PLAYER_ENTERING_WORLD")
+        moveframe:SetScript("OnEvent", function(self)
+            postdrag(self.gw_frame)
+            self:UnregisterAllEvents()
         end)
     end
 
@@ -421,14 +585,14 @@ local function LoadMovers()
     moverSettingsFrame.heightSlider.input:SetFont(UNIT_NAME_FONT, 7)
     moverSettingsFrame.heightSlider.input:SetScript("OnEnterPressed", heightEditBoxValueChanged)
 
-    moverSettingsFrame.desc:SetText(L["SMALL_SETTINGS_DEFAULT_DESC"])
+    moverSettingsFrame.desc:SetText(L["Right click on a moverframe to show extra frame options"])
     moverSettingsFrame.desc:SetFont(UNIT_NAME_FONT, 12)
     moverSettingsFrame.scaleSlider.title:SetFont(UNIT_NAME_FONT, 12)
-    moverSettingsFrame.scaleSlider.title:SetText(L["SMALL_SETTINGS_OPTION_SCALE"])
+    moverSettingsFrame.scaleSlider.title:SetText(L["Scale"])
     moverSettingsFrame.heightSlider.title:SetFont(UNIT_NAME_FONT, 12)
     moverSettingsFrame.heightSlider.title:SetText(COMPACT_UNIT_FRAME_PROFILE_FRAMEHEIGHT)
     moverSettingsFrame.headerString:SetFont(UNIT_NAME_FONT, 14)
-    moverSettingsFrame.headerString:SetText(L["SMALL_SETTINGS_HEADER"])
+    moverSettingsFrame.headerString:SetText(L["Extra Frame Options"])
 
     moverSettingsFrame.movers.title:SetText(NPE_MOVE )
     moverSettingsFrame.movers.title:SetFont(UNIT_NAME_FONT, 12)
@@ -449,6 +613,46 @@ local function LoadMovers()
     end)
 
     moverSettingsFrame.default:SetScript("OnClick", smallSettings_resetToDefault)
+
+    -- lock and grid button
+    moverSettingsFrame.lockHud:SetScript("OnClick", lockHudObjects)
+    moverSettingsFrame.lockHud:SetText(L["Lock HUD"])
+
+    moverSettingsFrame.showGrid:SetScript("OnClick", Grid_Show_Hide)
+    moverSettingsFrame.showGrid:SetText(L["Show grid"])
+    moverSettingsFrame.showGrid.gridSize = 64
+    moverSettingsFrame.showGrid.forceHide = false
+    create_grid(moverSettingsFrame.showGrid)
+
+    moverSettingsFrame.gridAlign:SetScript("OnEscapePressed", function(eb)
+        eb:SetText(moverSettingsFrame.showGrid.gridSize)
+        EditBox_ClearFocus(eb)
+    end)
+    moverSettingsFrame.gridAlign:SetScript("OnEnterPressed", function(eb)
+        local text = eb:GetText()
+        if tonumber(text) then
+            if tonumber(text) <= 256 and tonumber(text) >= 4 then
+                moverSettingsFrame.showGrid.gridSize = tonumber(text)
+            else
+                eb:SetText(moverSettingsFrame.showGrid.gridSize)
+            end
+        else
+            eb:SetText(moverSettingsFrame.showGrid.gridSize)
+        end
+        moverSettingsFrame.showGrid.forceHide = false
+        Grid_Show_Hide(moverSettingsFrame.showGrid)
+        EditBox_ClearFocus(eb)
+    end)
+    moverSettingsFrame.gridAlign:SetScript("OnEditFocusLost", function(eb)
+        eb:SetText(moverSettingsFrame.showGrid.gridSize)
+    end)
+    moverSettingsFrame.gridAlign:SetScript("OnEditFocusGained", moverSettingsFrame.gridAlign.HighlightText)
+    moverSettingsFrame.gridAlign:SetScript("OnShow", function(eb)
+        EditBox_ClearFocus(eb)
+        eb:SetText(moverSettingsFrame.showGrid.gridSize)
+    end)
+    moverSettingsFrame.gridAlign.text:SetText(L["Grid Size:"])
+    moverSettingsFrame.gridAlign:Hide()
 
     moverSettingsFrame:Hide()
     mf:Hide()

@@ -12,17 +12,17 @@ local questCompass = {}
 local icons = {
     QUEST = {tex = "icon-objective", l = 0, r = 0.5, t = 0.25, b = 0.5},
     CAMPAIGN = {tex = "icon-objective", l = 0.5, r = 1, t = 0, b = 0.25},
-    EVENT_NEARBY = {tex = "icon-objective", l = 0, r = 0.5, t = 0.5, b = 0.75},
     EVENT = {tex = "icon-objective", l = 0, r = 0.5, t = 0.5, b = 0.75},
     SCENARIO = {tex = "icon-objective", l = 0, r = 0.5, t = 0.75, b = 1},
     BOSS = {tex = "icon-boss", l = 0, r = 1, t = 0, b = 1},
     DEAD = {tex = "icon-dead", l = 0, r = 1, t = 0, b = 1},
     ARENA = {tex = "icon-arena", l = 0, r = 1, t = 0, b = 1},
     DAILY = {tex = "icon-objective", l = 0.5, r = 1, t = 0.25, b = 0.5},
+    TORGHAST = {tex = "icon-objective", l = 0.5, r = 1, t = 0.5, b = 0.75},
 }
 
 local notification_priority = {
-    EVENT_NEARBY = 1,
+    TORGHAST = 1,
     SCENARIO = 2,
     EVENT = 3,
     ARENA = 4,
@@ -145,7 +145,7 @@ local function getNearestQuestPOI()
 
     if closestQuestID then
         local _, poiX, poiY = QuestPOIGetIconInfo(closestQuestID)
-        if isWQ then 
+        if isWQ then
             poiX, poiY = C_TaskQuest.GetQuestLocation(closestQuestID, GW.locationData.mapID)
         end
 
@@ -179,7 +179,7 @@ local function getNearestQuestPOI()
             questCompass.Y = poiY
             questCompass.QUESTID = closestQuestID
             questCompass.TYPE = isCampaign and "CAMPAIGN" or isFrequent and "DAILY" or isWQ and "EVENT" or "QUEST"
-            questCompass.COLOR = isCampaign and TRACKER_TYPE_COLOR.CAMPAIGN or isFrequent and TRACKER_TYPE_COLOR.DAILY or isWQ and TRACKER_TYPE_COLOR.BONUS or TRACKER_TYPE_COLOR.QUEST
+            questCompass.COLOR = isCampaign and TRACKER_TYPE_COLOR.CAMPAIGN or isFrequent and TRACKER_TYPE_COLOR.DAILY or isWQ and TRACKER_TYPE_COLOR.EVENT or TRACKER_TYPE_COLOR.QUEST
             questCompass.COMPASS = true
 
             return questCompass
@@ -212,7 +212,7 @@ local function getBodyPOI()
     local bodyCompass = {}
     bodyCompass.X = x
     bodyCompass.Y = y
-    bodyCompass.TITLE = L["TRACKER_RETRIVE_CORPSE"]
+    bodyCompass.TITLE = L["Retrieve your corpse"]
     bodyCompass.TYPE = "DEAD"
     bodyCompass.ID = "playerDead"
     bodyCompass.COLOR = TRACKER_TYPE_COLOR.DEAD

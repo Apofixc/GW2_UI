@@ -7,10 +7,8 @@ local RoundDec = GW.RoundDec
 local MAP_FRAMES_HIDE = {}
 MAP_FRAMES_HIDE[1] = MiniMapMailFrame
 MAP_FRAMES_HIDE[2] = MiniMapVoiceChatFrame
-MAP_FRAMES_HIDE[3] = GameTimeFrame
-MAP_FRAMES_HIDE[4] = MiniMapTrackingButton
-MAP_FRAMES_HIDE[5] = GarrisonLandingPageMinimapButton
-MAP_FRAMES_HIDE[6] = MiniMapTracking
+MAP_FRAMES_HIDE[3] = MiniMapTrackingButton
+MAP_FRAMES_HIDE[4] = MiniMapTracking
 
 local Minimap_Addon_Buttons = {
     [1] = "MiniMapTrackingFrame",
@@ -151,8 +149,8 @@ GW.AddForProfiling("map", "hideMiniMapIcons", hideMiniMapIcons)
 
 local function MapCoordsMiniMap_OnEnter(self) 
     GameTooltip:SetOwner(self, "ANCHOR_TOP", 0, 5)
-    GameTooltip:AddLine(L["MAP_COORDINATES_TITLE"])  
-    GameTooltip:AddLine(L["MAP_COORDINATES_TOGGLE_TEXT"], 1, 1, 1, TRUE) 
+    GameTooltip:AddLine(L["Map Coordinates"])  
+    GameTooltip:AddLine(L["Left Click to toggle higher precision coordinates."], 1, 1, 1, true) 
     GameTooltip:SetMinimumWidth(100)
     GameTooltip:Show()
 end
@@ -240,10 +238,10 @@ local function time_OnEnter(self)
 
     GameTooltip:SetOwner(self, "ANCHOR_TOP", 0, 5)
     GameTooltip:AddLine(TIMEMANAGER_TITLE)
-    GameTooltip:AddLine(L["MAP_CLOCK_MILITARY"], 1, 1, 1, TRUE)
-    GameTooltip:AddLine(L["MAP_CLOCK_LOCAL_REALM"], 1, 1, 1, TRUE)
-    GameTooltip:AddLine(L["MAP_CLOCK_STOPWATCH"], 1, 1, 1, TRUE)
-    GameTooltip:AddLine(L["MAP_CLOCK_TIMEMANAGER"], 1, 1, 1, TRUE)
+    GameTooltip:AddLine(L["Shift-Click to toggle military time format"], 1, 1, 1, TRUE)
+    GameTooltip:AddLine(L["Left Click to switch between Local and Realm time"], 1, 1, 1, TRUE)
+    GameTooltip:AddLine(L["Right Click to open the Stopwatch"], 1, 1, 1, TRUE)
+    GameTooltip:AddLine(L["Shift-Right Click to open the Time Manager"], 1, 1, 1, TRUE)
     GameTooltip:AddDoubleLine(WORLD_MAP_FILTER_TITLE .. " ", string, nil, nil, nil, 1, 1, 0)
     GameTooltip:SetMinimumWidth(100)
     GameTooltip:Show()
@@ -275,52 +273,6 @@ GW.AddForProfiling("map", "time_OnClick", time_OnClick)
 local function getMinimapShape()
     return "SQUARE"
 end
-
-local function garrisonBtn_OnEnter(self)
-    local garrisonType = self.gw_GarrisonType
-    if not garrisonType then
-        self.gw_GarrisonType = C_Garrison.GetLandingPageGarrisonType()
-        garrisonType = self.gw_GarrisonType
-    end
-    if not garrisonType then
-        return
-    end
-    GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, -45)
-    if garrisonType == LE_GARRISON_TYPE_6_0 then
-        GameTooltip:SetText(GARRISON_LANDING_PAGE_TITLE, 1, 1, 1)
-        GameTooltip:AddLine(MINIMAP_GARRISON_LANDING_PAGE_TOOLTIP, nil, nil, nil, true)
-    elseif garrisonType == LE_GARRISON_TYPE_7_0 then
-        GameTooltip:SetText(ORDER_HALL_LANDING_PAGE_TITLE, 1, 1, 1)
-        GameTooltip:AddLine(MINIMAP_ORDER_HALL_LANDING_PAGE_TOOLTIP, nil, nil, nil, true)
-    elseif garrisonType == LE_GARRISON_TYPE_8_0 then
-        GameTooltip:SetText(GARRISON_TYPE_8_0_LANDING_PAGE_TITLE, 1, 1, 1)
-        GameTooltip:AddLine(GARRISON_TYPE_8_0_LANDING_PAGE_TOOLTIP, nil, nil, nil, true)
-    end
-    GameTooltip:Show()
-end
-
-local function garrisonBtn_OnEvent(self, event, ...)
-    if event ~= "GARRISON_UPDATE" then
-        return
-    end
-    self.gw_GarrisonType = C_Garrison.GetLandingPageGarrisonType()
-    local garrisonType = self.gw_GarrisonType
-    if not garrisonType then
-        self:Hide()
-        self.gw_Showing = false
-        return
-    end
-    if garrisonType == Enum.GarrisonType.Type_6_0 or garrisonType == Enum.GarrisonType.Type_7_0 or garrisonType == Enum.GarrisonType.Type_8_0 or garrisonType == Enum.GarrisonType.Type_9_0 then
-        if Minimap:IsShown() then
-            self:Show()
-        end
-        self.gw_Showing = true
-    else
-        self:Hide()
-        self.gw_Showing = false
-    end
-end
-GW.AddForProfiling("map", "garrisonBtn_OnEvent", garrisonBtn_OnEvent)
 
 local function stackIcons(self, event, ...)
     local children = {Minimap:GetChildren()}
@@ -378,14 +330,8 @@ end
 GW.AddForProfiling("map", "stack_OnClick", stack_OnClick)
 
 local function minimap_OnShow(self)
-    if GwCalendarButton then
-        GwCalendarButton:Show()
-    end
     if GwAddonToggle and GwAddonToggle.gw_Showing then
         GwAddonToggle:Show()
-    end
-    if GwGarrisonButton and GwGarrisonButton.gw_Showing then
-        GwGarrisonButton:Show()
     end
     if GwMailButton and GwMailButton.gw_Showing then
         GwMailButton:Show()
@@ -394,14 +340,8 @@ end
 GW.AddForProfiling("map", "minimap_OnShow", minimap_OnShow)
 
 local function minimap_OnHide(self)
-    if GwCalendarButton then
-        GwCalendarButton:Hide()
-    end
     if GwAddonToggle then
         GwAddonToggle:Hide()
-    end
-    if GwGarrisonButton then
-        GwGarrisonButton:Hide()
     end
     if GwMailButton then
         GwMailButton:Hide()
@@ -410,34 +350,52 @@ end
 GW.AddForProfiling("map", "minimap_OnHide", minimap_OnHide)
 
 local function setMinimapButtons(side)
+    GarrisonLandingPageMinimapButton.SetPoint = nil
+    GarrisonLandingPageMinimapButton.ClearAllPoints = nil
+
     QueueStatusMinimapButton:ClearAllPoints()
-    GwCalendarButton:ClearAllPoints()
-    GwGarrisonButton:ClearAllPoints()
+    GameTimeFrame:ClearAllPoints()
+    GarrisonLandingPageMinimapButton:ClearAllPoints()
     GwMailButton:ClearAllPoints()
     GwAddonToggle:ClearAllPoints()
     GwAddonToggle.container:ClearAllPoints()
     
     if side == "left" then
-        QueueStatusMinimapButton:SetPoint("TOPRIGHT", Minimap, "TOPLEFT", -5, -69)
-        GwCalendarButton:SetPoint("TOPRIGHT", Minimap, "TOPLEFT", -7, 0)
-        GwGarrisonButton:SetPoint("BOTTOMRIGHT", Minimap, "BOTTOMLEFT", 1, -7)
-        GwMailButton:SetPoint("TOPRIGHT", Minimap, "TOPLEFT", -12, -47)
-        GwAddonToggle:SetPoint("TOPRIGHT", Minimap, "TOPLEFT", -5.5, -127)
+        QueueStatusMinimapButton:SetPoint("TOPRIGHT", Minimap, "TOPLEFT", -8.5, -69)
+        GameTimeFrame:SetPoint("TOPRIGHT", Minimap, "TOPLEFT", -7, 0)
+        GarrisonLandingPageMinimapButton:SetPoint("BOTTOMRIGHT", Minimap, "BOTTOMLEFT", 1, -7)
+        GwMailButton:SetPoint("TOPRIGHT", Minimap, "TOPLEFT", -16, -47)
+        GwAddonToggle:SetPoint("TOPRIGHT", Minimap, "TOPLEFT", -10, -127)
         GwAddonToggle.container:SetPoint("RIGHT", GwAddonToggle, "LEFT")
     else
-        QueueStatusMinimapButton:SetPoint("TOPLEFT", Minimap, "TOPRIGHT", 5, -69)
-        GwCalendarButton:SetPoint("TOPLEFT", Minimap, "TOPRIGHT", 7, 0)
-        GwGarrisonButton:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMRIGHT", -1, -7)
-        GwMailButton:SetPoint("TOPLEFT", Minimap, "TOPRIGHT", 10, -47)
-        GwAddonToggle:SetPoint("TOPLEFT", Minimap, "TOPRIGHT", 5.5, -127)
+        QueueStatusMinimapButton:SetPoint("TOPLEFT", Minimap, "TOPRIGHT", 8, -69)
+        GameTimeFrame:SetPoint("TOPLEFT", Minimap, "TOPRIGHT", 7, 0)
+        GarrisonLandingPageMinimapButton:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMRIGHT", -1, -7)
+        GwMailButton:SetPoint("TOPLEFT", Minimap, "TOPRIGHT", 14, -47)
+        GwAddonToggle:SetPoint("TOPLEFT", Minimap, "TOPRIGHT", 8, -127)
         GwAddonToggle.container:SetPoint("LEFT", GwAddonToggle, "RIGHT")
     end
+    GarrisonLandingPageMinimapButton.SetPoint = GW.NoOp
+    GarrisonLandingPageMinimapButton.ClearAllPoints = GW.NoOp
 end
 GW.setMinimapButtons = setMinimapButtons
 
+local function MinimapPostDrag(self)
+    _G.MinimapBackdrop:ClearAllPoints()
+    _G.MinimapBackdrop:SetAllPoints(_G.Minimap)
+
+    local x = self.gwMover:GetCenter()
+    local screenWidth = UIParent:GetRight()
+    if x > (screenWidth / 2) then
+        GW.setMinimapButtons("left")
+    else
+        GW.setMinimapButtons("right")
+    end
+end
+
 local function LoadMinimap()
     -- https://wowwiki.wikia.com/wiki/USERAPI_GetMinimapShape
-    _G["GetMinimapShape"] = getMinimapShape
+    _G.GetMinimapShape = getMinimapShape
 
     local GwMinimapShadow = CreateFrame("Frame", "GwMinimapShadow", Minimap, "GwMinimapShadow")
 
@@ -541,16 +499,9 @@ local function LoadMinimap()
     MinimapBorder:Hide()
     MiniMapWorldMapButton:Hide()
 
-    GarrisonLandingPageMinimapButton:ClearAllPoints()
-    GarrisonLandingPageMinimapButton:SetPoint("TOPLEFT", Minimap, 0, 30)
-
-    MiniMapMailFrame:ClearAllPoints()
-    MiniMapMailFrame:SetPoint("TOPLEFT", Minimap, 45, 15)
-
     MinimapZoneText:ClearAllPoints()
     MinimapZoneText:SetParent(GwMapGradient)
     MinimapZoneText:SetDrawLayer("OVERLAY", 2)
-    GameTimeFrame:SetPoint("TOPLEFT", Minimap, -42, 0)
     MiniMapTracking:SetPoint("TOPLEFT", Minimap, -15, -30)
 
     MinimapZoneText:SetTextColor(1, 1, 1)
@@ -565,40 +516,23 @@ local function LoadMinimap()
 
     QueueStatusMinimapButtonBorder:SetTexture(nil)
 
-    GameTimeFrame:HookScript(
-        "OnShow",
-        function(self)
-            self:Hide()
-        end
-    )
+    GameTimeFrame:SetHitRectInsets(0, 0, 0, 0)
+    GameTimeFrame:SetSize(35, 35)
+    GameTimeFrame:StripTextures()
+    GameTimeFrame:SetNormalTexture("Interface/AddOns/GW2_UI/textures/icons/icon-calendar-Up")
+    GameTimeFrame:SetPushedTexture("Interface/AddOns/GW2_UI/textures/icons/icon-calendar")
+    GameTimeFrame:SetHighlightTexture(nil)
+    GameTimeFrame:GetNormalTexture():SetTexCoord(0, 1, 0, 1)
+    GameTimeFrame:GetPushedTexture():SetTexCoord(0, 1, 0, 1)
 
-    GwCalendarButton = CreateFrame("Button", "GwCalendarButton", UIParent, "GwCalendarButton")
-    local fnGwCalendarButton_OnShow = function(self)
-        if (Kiosk.IsEnabled()) then
-            self:Disable()
-        end
-    end
-    local fnGwCalendarButton_OnEnter = function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, -70)
-        GameTooltip:AddLine(GAMETIME_TOOLTIP_TOGGLE_CALENDAR, 1, 1, 1)
-        GameTooltip:Show()
-    end
-    GwCalendarButton:SetScript("OnShow", fnGwCalendarButton_OnShow)
-    GwCalendarButton:SetScript("OnEnter", fnGwCalendarButton_OnEnter)
-    GwCalendarButton:SetScript("OnLeave", GameTooltip_Hide)
-    GwCalendarButton:SetScript("OnClick", GameTimeFrame_OnClick)
-    GwCalendarButton.gw_Showing = true
-    GwCalendarButton.Text:SetFont(UNIT_NAME_FONT, 14)
-    GwCalendarButton.Text:SetTextColor(0, 0, 0)
-    GwCalendarButton.Text:SetText(date("%d"))
-
-    local GwGarrisonButton = CreateFrame("Button", "GwGarrisonButton", UIParent, "GwGarrisonButton")
-    GwGarrisonButton:SetScript("OnClick", GarrisonLandingPageMinimapButton_OnClick)
-    GwGarrisonButton:SetScript("OnEnter", garrisonBtn_OnEnter)
-    GwGarrisonButton:SetScript("OnLeave", GameTooltip_Hide)
-    GwGarrisonButton:SetScript("OnEvent", garrisonBtn_OnEvent)
-    GwGarrisonButton.gw_Showing = false
-    GwGarrisonButton:RegisterEvent("GARRISON_UPDATE")
+    GarrisonLandingPageMinimapButton:SetSize(50, 50)
+    hooksecurefunc("GarrisonLandingPageMinimapButton_UpdateIcon", function(self)
+        self:SetSize(50, 50)
+        self:SetNormalTexture("Interface/AddOns/GW2_UI/textures/icons/garrison-up")
+        self:SetPushedTexture("Interface/AddOns/GW2_UI/textures/icons/garrison-down")
+        self:SetHighlightTexture("Interface/AddOns/GW2_UI/textures/icons/garrison-down")
+        self.LoopingGlow:SetTexture("Interface/AddOns/GW2_UI/textures/icons/garrison-up")
+    end)
 
     local GwMailButton = CreateFrame("Button", "GwMailButton", UIParent, "GwMailButton")
     local fnGwMailButton_OnEvent = function(self, event, ...)
@@ -702,7 +636,7 @@ local function LoadMinimap()
     Minimap:SetSize(size, size)
 
     -- mobeable stuff
-    GW.RegisterMovableFrame(Minimap, MINIMAP_LABEL, "MinimapPos", "VerticalActionBarDummy", {size, size}, nil, {"default"})
+    GW.RegisterMovableFrame(Minimap, MINIMAP_LABEL, "MinimapPos", "VerticalActionBarDummy", {size, size}, nil, {"default"}, nil, MinimapPostDrag)
     Minimap:ClearAllPoints()
     Minimap:SetPoint("TOPLEFT", Minimap.gwMover)
     -- check on which side we need to set the buttons
@@ -720,3 +654,4 @@ local function LoadMinimap()
     C_Timer.After(0.1, hoverMiniMapOut)
 end
 GW.LoadMinimap = LoadMinimap
+

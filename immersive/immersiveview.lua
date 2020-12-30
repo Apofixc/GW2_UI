@@ -141,14 +141,13 @@ local function TitleButtonShow(self, event, start, finish, current)
 
 				button:SetInfo(key, item.buttonType, (key < 11 and key..". "..titleText) or titleText, item.specID, item.info, item.callBack);
 				button:Resize(self.Scroll.ScrollChildFrame:GetWidth());	
-
 				button:Show();
 
 				totalHeight = totalHeight + button:GetHeight() + 5;
 			end
 		end
 	end
-	print(totalHeight)
+
 	self.Scroll.ScrollChildFrame:SetHeight(totalHeight);
 
 	if ((event == "QUEST_PROGRESS" or event == "QUEST_DETAIL" or event == "QUEST_COMPLETE") and lastElement) then
@@ -232,7 +231,7 @@ local function Dialog(self, numPart)
 		
 		local lenght = strlenutf8(self.GossipFrame.Dialog.Text:GetText()) - self.startAnimation;
 		AddToAnimation(
-			"DIALOG_ANIMATION",
+			"IMMERSIVE_DIALOG_ANIMATION",
 			self.startAnimation,
 			lenght,
 			GetTime(),
@@ -257,7 +256,7 @@ local function Dialog(self, numPart)
 end
 
 local function NextDialog(self)
-	if (self.numPartDialog and not ActiveAnimation("DIALOG_ANIMATION")) then
+	if (self.numPartDialog and not ActiveAnimation("IMMERSIVE_DIALOG_ANIMATION")) then
 		local num = self.numPartDialog + 1;
 
 		Dialog(self, num);
@@ -265,7 +264,7 @@ local function NextDialog(self)
 end
 
 local function BackDialog(self)
-	if (self.numPartDialog and not ActiveAnimation("DIALOG_ANIMATION")) then
+	if (self.numPartDialog and not ActiveAnimation("IMMERSIVE_DIALOG_ANIMATION")) then
 		local num = self.numPartDialog - 1;
 		
 		Dialog(self, num);
@@ -849,125 +848,6 @@ function GwGossipDetailMixin:OnHide()
 end
 
 ---------------------------------------------------------------------------------------------------------------------
----------------------------------------- GOSSIP TITLE BUTTON MIXIN --------------------------------------------------
----------------------------------------------------------------------------------------------------------------------
-GwGossipTitleButtonMixin = {}
-
-function GwGossipTitleButtonMixin:SetInfo(key, buttonType, titleText, specID, info, callBack)
-	local isIgnored = info and info.isIgnored;
-	local isTrivial = info and info.isTrivial;
-
-	self:SetID(key);
-	self.buttonType = buttonType;
-	self.specID = specID;
-	self.callBack = callBack;
-
-	if (buttonType == "ACTIVE") then
-		QuestUtil.ApplyQuestIconActiveToTexture(self.Icon, info.isComplete, info.isLegendary, info.frequency, info.isRepeatable, QuestUtil.ShouldQuestIconsUseCampaignAppearance(info.questID), C_QuestLog.IsQuestCalling(info.questID));
-	elseif (buttonType == "AVAILABLE") then
-		QuestUtil.ApplyQuestIconOfferToTexture(self.Icon, info.isLegendary, info.frequency, info.isRepeatable, QuestUtil.ShouldQuestIconsUseCampaignAppearance(info.questID), C_QuestLog.IsQuestCalling(info.questID))
-	elseif (buttonType == "GOSSIP") then
-		self.Icon:SetTexture("Interface/GossipFrame/" .. info.type .. "GossipIcon");
-	else
-		self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/icons/icon-"..buttonType);
-	end
-
-	self:UpdateTitle(titleText, isIgnored, isTrivial);
-end
-
-function GwGossipTitleButtonMixin:UpdateTitle(titleText, isIgnored, isTrivial)
-	if (isIgnored) then
-		self.Label:SetFormattedText("|cFF8C8C8C%s|r", titleText);
-		self.Icon:SetVertexColor(0.5,0.5,0.5);
-	elseif (isTrivial) then
-		self.Label:SetFormattedText("|cffffffff%s|r", titleText);
-		self.Icon:SetVertexColor(0.5,0.5,0.5);
-	elseif (self.buttonType == "AVAILABLE" or self.buttonType == "ACTIVE") then
-		self.Label:SetFormattedText("|cFFFF5A00%s|r",titleText);
-		self.Icon:SetVertexColor(1,1,1);
-	elseif (self.buttonType == "GOSSIP") then
-		self.Label:SetFormattedText(titleText);
-		self.Icon:SetVertexColor(1,1,1);
-	else
-		self.Label:SetFormattedText("|cFF8C00FF%s|r", titleText);
-		self.Icon:SetVertexColor(1,1,1);
-	end
-end
-
-function GwGossipTitleButtonMixin:OnClick()
-	if (self.callBack) then
-		if ((self.buttonType == "BACK" or self.buttonType == "NEXT") and ActiveAnimation("DIALOG_ANIMATION")) then return; end
-
-		local parent = self:GetParent():GetParent():GetParent();
-
-		local unitName = "";
-		if (GetSetting("FULL_SCREEN")) then
-			unitName = "|cFFFF5A00"..UnitName("player")..":|r";
-		else
-			parent.Scroll.Icon:Show();
-		end
-
-		parent.Scroll.Text:SetText(unitName..self.Label:GetText():gsub("^.+%d.", ""));
-	
-		self.callBack.func(self.callBack.arg1);
-		
-		PlaySound(self.callBack.playSound);		
-	end
-end 
-
-function GwGossipTitleButtonMixin:OnShow()
-	local id = self:GetID();
-	local parent = self:GetParent()
-
-	AddToAnimation(
-		"IMMERSIVE_TITLE_ANIMATION_"..id,
-		self:GetWidth(),
-		0,
-		GetTime(),
-		0.6 * id * 0.5,
-		function(step)
-			self:SetPoint('TOPLEFT', parent, 'TOPLEFT', step, (id - 1) * -(self:GetHeight() + 5))
-		end
-	)	
-end
-
-function GwGossipTitleButtonMixin:OnEnter()
-	if (self.specID) then
-		GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT");
-		if (self.buttonType == "GOSSIP") then 
-			GameTooltip:SetSpellByID(self.specID);
-		elseif (self.buttonType == "ACTIVE") then
-			local level = C_QuestLog.GetQuestDifficultyLevel(self.specID) ;
-			GameTooltip:SetText(string.format("Рекомендуемый уровень: %d", level));
-		elseif (self.buttonType == "AVAILABLE") then
-			local level =  C_QuestLog.GetQuestDifficultyLevel(self.specID) ;
-			local num = C_QuestLog.GetSuggestedGroupSize(self.specID);
-			num = num == 0 and 1;
-			GameTooltip:SetText(string.format("Рекомендуемый уровень: %d", level));
-			GameTooltip:AddLine(QUEST_SUGGESTED_GROUP_NUM:format(num));
-		end
-		GameTooltip:Show(); 
-		GameTooltip:SetIgnoreParentAlpha(true);
-	end
-end 
-
-function GwGossipTitleButtonMixin:OnLeave()
-	GameTooltip:SetIgnoreParentAlpha(false);
-	GameTooltip:Hide(); 
-end 
-
-function GwGossipTitleButtonMixin:Resize(width)
-	self:SetWidth(width);
-	self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()));
-	
-	if (GetSetting("FULL_SCREEN")) then
-		self:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight")
-	else
-		self:SetHighlightTexture("Interface/AddOns/GW2_UI/textures/questview/gvf_scroll_buttom")
-	end 
-end
-
----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------- Show/ Hide/ Update --------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
 
@@ -997,7 +877,7 @@ local function ImmersiveFrameHandleShow(self, title, dialog)
 	self.GossipFrame:Show();
 
 	AddToAnimation(
-		tostring(self.GossipFrame),
+		self.GossipFrame:GetName(),
 		self.GossipFrame:GetAlpha(),
 		1,
 		GetTime(),
@@ -1019,7 +899,7 @@ local function ImmersiveFrameHandleHide(self)
 		self.customFrame = nil;		
 	else
 		GwImmersiveSettings:Hide();
-		StopAnimation("DIALOG_ANIMATION");
+		StopAnimation("IMMERSIVE_DIALOG_ANIMATION");
 		self.splitDialog = nil;
 		self.numPartDialog = nil;
 		self.startAnimation = nil;
@@ -1027,7 +907,7 @@ local function ImmersiveFrameHandleHide(self)
 		local frame = self.GossipFrame;
 		
 		AddToAnimation(
-			tostring(frame),
+			frame:GetName(),
 			frame:GetAlpha(),
 			0,
 			GetTime(),
@@ -1103,8 +983,8 @@ local function ImmersiveViewOnKeyDown(self, button)
 		end
 		return;
 	elseif (button == "SPACE") then
-		if (ActiveAnimation("DIALOG_ANIMATION")) then
-			StopAnimation("DIALOG_ANIMATION");
+		if (ActiveAnimation("IMMERSIVE_DIALOG_ANIMATION")) then
+			StopAnimation("IMMERSIVE_DIALOG_ANIMATION");
 			StopAnimationDialog(GwImmersiveFrame);
 		end
 
@@ -1147,8 +1027,8 @@ local function DialogOnClick(self, button)
 		return;
 	end
 
-	if (ActiveAnimation("DIALOG_ANIMATION")) then
-		StopAnimation("DIALOG_ANIMATION");
+	if (ActiveAnimation("IMMERSIVE_DIALOG_ANIMATION")) then
+		StopAnimation("IMMERSIVE_DIALOG_ANIMATION");
 		StopAnimationDialog(GwImmersiveFrame);
 	else
 		if(button == "LeftButton") then

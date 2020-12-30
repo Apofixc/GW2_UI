@@ -9,7 +9,7 @@ local IsFrameModified = GW.IsFrameModified
 local Debug = GW.Debug
 local LibSharedMedia = GW.Libs.LSM
 
-GW.VERSION_STRING = "GW2_UI v5.5.1"
+GW.VERSION_STRING = "GW2_UI v5.7.3"
 
 -- setup Binding Header color
 _G.BINDING_HEADER_GW2UI = GetAddOnMetadata(..., "Title")
@@ -314,7 +314,7 @@ local function gw_OnUpdate(self, elapsed)
             foundAnimation = true
         end
     end
-    
+
     if foundAnimation == false and count ~= 0 then
         table.wipe(animations)
     end
@@ -432,12 +432,12 @@ local function loadAddon(self)
     else
         --Setup addon button
         local GwMainMenuFrame = CreateFrame("Button", "GW2_UI_SettingsButton", _G.GameMenuFrame, "GameMenuButtonTemplate") -- add a button name to you that for other Addons
-        GwMainMenuFrame:SetText(format("|cffffedba%s|r", L["SETTINGS_BUTTON"]))
+        GwMainMenuFrame:SetText(format("|cffffedba%s|r", L["GW2 UI Settings"]))
         GwMainMenuFrame:SetScript(
             "OnClick",
             function()
                 if InCombatLockdown() then
-                    DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r " .. L["HIDE_SETTING_IN_COMBAT"])
+                    DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r " .. L["Settings are not available in combat!"])
                     return
                 end
                 ShowUIPanel(GwSettingsWindow)
@@ -445,7 +445,7 @@ local function loadAddon(self)
                 HideUIPanel(GameMenuFrame)
             end
         )
-        GameMenuFrame[L["SETTINGS_BUTTON"]] = GwMainMenuFrame
+        GameMenuFrame[L["GW2 UI Settings"]] = GwMainMenuFrame
 
         if not IsAddOnLoaded("ConsolePortUI_Menu") then
             GwMainMenuFrame:SetSize(GameMenuButtonLogout:GetWidth(), GameMenuButtonLogout:GetHeight())
@@ -513,11 +513,9 @@ local function loadAddon(self)
     if GetSetting("INSPECTION_SKIN_ENABLED") then
         GW.SkinDressUpFrame()
     end
-
     if GetSetting("HELPFRAME_SKIN_ENABLED") then
         GW.skinHelpFrameOnEvent()
     end
-
 
     if GetSetting("WORLDMAP_COORDS_TOGGLE") then
         GW.AddCoordsToWorldMap()
@@ -558,7 +556,8 @@ local function loadAddon(self)
     end
 
     if GetSetting("CASTINGBAR_ENABLED") then
-        GW.LoadCastingBar()
+        GW.LoadCastingBar(CastingBarFrame, "GwCastingBarPlayer", "player")
+        GW.LoadCastingBar(PetCastingBarFrame, "GwCastingBarPet", "pet")
     end
 
     if GetSetting("MINIMAP_ENABLED") then
@@ -705,7 +704,7 @@ local function loadAddon(self)
     GW.UpdateHudScale()
 
     if (forcedMABags) then
-        GW.Notice(L["DISABLED_MA_BAGS"])
+        GW.Notice(L["MoveAnything bag handling disabled."])
     end
 
     --Add Shared Media

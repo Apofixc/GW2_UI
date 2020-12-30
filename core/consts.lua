@@ -64,12 +64,12 @@ GW.TRACKER_TYPE_COLOR = TRACKER_TYPE_COLOR
 TRACKER_TYPE_COLOR["QUEST"] = {r = 221 / 255, g = 198 / 255, b = 68 / 255}
 TRACKER_TYPE_COLOR["CAMPAIGN"] = {r = 121 / 255, g = 222 / 255, b = 47 / 255}
 TRACKER_TYPE_COLOR["EVENT"] = {r = 240 / 255, g = 121 / 255, b = 37 / 255}
-TRACKER_TYPE_COLOR["BONUS"] = {r = 240 / 255, g = 121 / 255, b = 37 / 255}
 TRACKER_TYPE_COLOR["SCENARIO"] = {r = 171 / 255, g = 37 / 255, b = 240 / 255}
 TRACKER_TYPE_COLOR["BOSS"] = {r = 240 / 255, g = 37 / 255, b = 37 / 255}
 TRACKER_TYPE_COLOR["ARENA"] = {r = 240 / 255, g = 37 / 255, b = 37 / 255}
 TRACKER_TYPE_COLOR["ACHIEVEMENT"] = {r = 37 / 255, g = 240 / 255, b = 172 / 255}
 TRACKER_TYPE_COLOR["DAILY"] = {r = 68 / 255, g = 192 / 255, b = 250 / 255}
+TRACKER_TYPE_COLOR["TORGHAST"] = {r = 109 / 255, g = 161 / 255, b = 207 / 255}
 
 --GW_FACTION_BAR_COLORS = FACTION_BAR_COLORS
 --GW_FACTION_BAR_COLORS = {
@@ -210,8 +210,10 @@ local REALM_FLAGS = {
 }
 GW.REALM_FLAGS = REALM_FLAGS
 
-local INDICATORS = {"BAR", "TOPLEFT","TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT"}
+local INDICATORS = {"BAR", "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT"}
+local indicatorsText = {"Bar", "Top Left", "Top", "Top Right", "Left", "Center", "Right"}
 GW.INDICATORS = INDICATORS
+GW.indicatorsText = indicatorsText
 
 -- Taken from ElvUI: https://git.tukui.org/elvui/elvui/blob/master/ElvUI/Settings/Filters/UnitFrame.lua
 -- Format: {class = {id = {r, g, b[, <spell-id-same-slot>]} ...}, ...}
@@ -224,19 +226,21 @@ local AURAS_INDICATORS = {
         [139] =     {0.4, 0.7, 0.2},    -- Renew
         [17] =      {0.7, 0.7, 0.7},    -- Power Word: Shield
         [47788] =   {0.86, 0.45, 0},    -- Guardian Spirit
-        [33206] =   {0.47, 0.35, 0.74}  -- Pain Suppression
+        [33206] =   {0.47, 0.35, 0.74}, -- Pain Suppression
+        [6788]   =  {0.89, 0.1, 0.1},   -- Weakened Soul
     },
     DRUID = {
         [774] =     {0.8, 0.4, 0.8},    -- Rejuvenation
         [155777] =  {0.8, 0.4, 0.8},    -- Germination
         [8936] =    {0.2, 0.8, 0.2},    -- Regrowth
         [33763] =   {0.4, 0.8, 0.2},    -- Lifebloom
-        [188550] =   {0.4, 0.8, 0.2},    -- Lifebloom Legendary version
+        [188550] =  {0.4, 0.8, 0.2},    -- Lifebloom Legendary version
         [48438] =   {0.8, 0.4, 0},      -- Wild Growth
         [207386] =  {0.4, 0.2, 0.8},    -- Spring Blossoms
         [102351] =  {0.2, 0.8, 0.8},    -- Cenarion Ward (Initial Buff)
         [102352] =  {0.2, 0.8, 0.8},    -- Cenarion Ward (HoT)
         [200389] =  {1, 1, 0.4},        -- Cultivation
+        [203554] =  {1, 1, 0.4},		-- Focused Growth (PvP)
     },
     PALADIN = {
         [53563] =   {1, 0.3, 0},        -- Beacon of Light
@@ -247,6 +251,8 @@ local AURAS_INDICATORS = {
         [6940] =    {0.89, 0.1, 0.1},   -- Hand of Sacrifice
         [223306] =  {0.7, 0.7, 0.3},    -- Bestow Faith
         [287280] =  {1, 0.5, 0},        -- Glimmer of Light
+        [157047] =  {0.15, 0.58, 0.84},	-- Saved by the Light (T25 Talent)
+        [204018] =  {0.2, 0.2, 1},      -- Blessing of Spellwarding
     },
     SHAMAN = {
         [61295] =   {0, 0.4, 0.53},     -- Riptide
@@ -257,6 +263,8 @@ local AURAS_INDICATORS = {
         [116849] =  {0.2, 0.8, 0.2},    -- Life Cocoon
         [124682] =  {0.8, 0.8, 0.25},   -- Enveloping Mist
         [191840] =  {0.27, 0.62, 0.7},  -- Essence Font
+        [116841] =  {0.12, 1.00, 0.53},	-- Tiger's Lust (Freedom)
+        [325209] =  {0.3, 0.8, 0.6},	-- Enveloping Breath
     },
     ROGUE = {
         [57934] =   {0.89, 0.09, 0.05}  -- Tricks of the Trade
@@ -265,7 +273,9 @@ local AURAS_INDICATORS = {
         [114030] =  {0.2, 0.2, 1},      -- Vigilance
         [3411] =    {0.89, 0.09, 0.05}  -- Intervene
     },
-    HUNTER = {},
+    HUNTER = {
+        [90361]  = {0.34, 0.47, 0.31},	-- Spirit Mend (HoT)
+    },
     DEMONHUNTER = {},
     WARLOCK = {},
     MAGE = {},
@@ -294,206 +304,3 @@ local AURAS_MISSING = {
     1459    -- Arcane Intellect
 }
 GW.AURAS_MISSING = AURAS_MISSING
-
-local ImportendRaidDebuff = {
-    -- Mythic+ Dungeons
-        -- General Affix
-        [209858] = true, -- Necrotic
-        [226512] = true, -- Sanguine
-        [240559] = true, -- Grievous
-        [240443] = true, -- Bursting
-        -- Shadowlands Affix
-        [342494] = true, -- Belligerent Boast (Prideful)
-
-    -- Shadowlands Dungeons
-        -- Halls of Atonement
-        [335338] = true, -- Ritual of Woe
-        [326891] = true, -- Anguish
-        [329321] = true, -- Jagged Swipe 1
-        [344993] = true, -- Jagged Swipe 2
-        [319603] = true, -- Curse of Stone
-        [319611] = true, -- Turned to Stone
-        [325876] = true, -- Curse of Obliteration
-        [326632] = true, -- Stony Veins
-        [323650] = true, -- Haunting Fixation
-        [326874] = true, -- Ankle Bites
-        [340446] = true, -- Mark of Envy
-        -- Mists of Tirna Scithe
-        [325027] = true, -- Bramble Burst
-        [323043] = true, -- Bloodletting
-        [322557] = true, -- Soul Split
-        [331172] = true, -- Mind Link
-        [322563] = true, -- Marked Prey
-        [322487] = true, -- Overgrowth 1
-        [322486] = true, -- Overgrowth 2
-        [328756] = true, -- Repulsive Visage
-        [325021] = true, -- Mistveil Tear
-        [321891] = true, -- Freeze Tag Fixation
-        [325224] = true, -- Anima Injection
-        [326092] = true, -- Debilitating Poison
-        [325418] = true, -- Volatile Acid
-        -- Plaguefall
-        [336258] = true, -- Solitary Prey
-        [331818] = true, -- Shadow Ambush
-        [329110] = true, -- Slime Injection
-        [325552] = true, -- Cytotoxic Slash
-        [336301] = true, -- Web Wrap
-        [322358] = true, -- Burning Strain
-        [322410] = true, -- Withering Filth
-        [328180] = true, -- Gripping Infection
-        [320542] = true, -- Wasting Blight
-        [340355] = true, -- Rapid Infection
-        [328395] = true, -- Venompiercer
-        [320512] = true, -- Corroded Claws
-        [333406] = true, -- Assassinate
-        [332397] = true, -- Shroudweb
-        [330069] = true, -- Concentrated Plague
-        -- The Necrotic Wake
-        [321821] = true, -- Disgusting Guts
-        [323365] = true, -- Clinging Darkness
-        [338353] = true, -- Goresplatter
-        [333485] = true, -- Disease Cloud
-        [338357] = true, -- Tenderize
-        [328181] = true, -- Frigid Cold
-        [320170] = true, -- Necrotic Bolt
-        [323464] = true, -- Dark Ichor
-        [323198] = true, -- Dark Exile
-        [343504] = true, -- Dark Grasp
-        [343556] = true, -- Morbid Fixation 1
-        [338606] = true, -- Morbid Fixation 2
-        [324381] = true, -- Chill Scythe
-        [320573] = true, -- Shadow Well
-        [333492] = true, -- Necrotic Ichor
-        [334748] = true, -- Drain FLuids
-        [333489] = true, -- Necrotic Breath
-        [320717] = true, -- Blood Hunger
-        -- Theater of Pain
-        [333299] = true, -- Curse of Desolation 1
-        [333301] = true, -- Curse of Desolation 2
-        [319539] = true, -- Soulless
-        [326892] = true, -- Fixate
-        [321768] = true, -- On the Hook
-        [323825] = true, -- Grasping Rift
-        [342675] = true, -- Bone Spear
-        [323831] = true, -- Death Grasp
-        [330608] = true, -- Vile Eruption
-        [330868] = true, -- Necrotic Bolt Volley
-        [323750] = true, -- Vile Gas
-        [323406] = true, -- Jagged Gash
-        [330700] = true, -- Decaying Blight
-        [319626] = true, -- Phantasmal Parasite
-        [324449] = true, -- Manifest Death
-        [341949] = true, -- Withering Blight
-        -- Sanguine Depths
-        [326827] = true, -- Dread Bindings
-        [326836] = true, -- Curse of Suppression
-        [322554] = true, -- Castigate
-        [321038] = true, -- Burden Soul
-        [328593] = true, -- Agonize
-        [325254] = true, -- Iron Spikes
-        [335306] = true, -- Barbed Shackles
-        [322429] = true, -- Severing Slice
-        [334653] = true, -- Engorge
-        -- Spires of Ascension
-        [338729] = true, -- Charged Stomp
-        [338747] = true, -- Purifying Blast
-        [327481] = true, -- Dark Lance
-        [322818] = true, -- Lost Confidence
-        [322817] = true, -- Lingering Doubt
-        [324205] = true, -- Blinding Flash
-        [331251] = true, -- Deep Connection
-        [328331] = true, -- Forced Confession
-        [341215] = true, -- Volatile Anima
-        [323792] = true, -- Anima Field
-        [317661] = true, -- Insidious Venom
-        [330683] = true, -- Raw Anima
-        [328434] = true, -- Intimidated
-        -- De Other Side
-        [320786] = true, -- Power Overwhelming
-        [334913] = true, -- Master of Death
-        [325725] = true, -- Cosmic Artifice
-        [328987] = true, -- Zealous
-        [334496] = true, -- Soporific Shimmerdust
-        [339978] = true, -- Pacifying Mists
-        [323692] = true, -- Arcane Vulnerability
-        [333250] = true, -- Reaver
-        [330434] = true, -- Buzz-Saw 1
-        [320144] = true, -- Buzz-Saw 2
-        [331847] = true, -- W-00F
-        [327649] = true, -- Crushed Soul
-        [331379] = true, -- Lubricate
-        [332678] = true, -- Gushing Wound
-        [322746] = true, -- Corrupted Blood
-        [323687] = true, -- Arcane Lightning
-        [323877] = true, -- Echo Finger Laser X-treme
-        [334535] = true, -- Beak Slice
-
-    -- Castle Nathria
-        -- Shriekwing
-        [328897] = true, -- Exsanguinated
-        [330713] = true, -- Reverberating Pain
-        [329370] = true, -- Deadly Descent
-        [336494] = true, -- Echo Screech
-        -- Huntsman Altimor
-        [335304] = true, -- Sinseeker
-        [334971] = true, -- Jagged Claws
-        [335111] = true, -- Huntsman's Mark 1
-        [335112] = true, -- Huntsman's Mark 2
-        [335113] = true, -- Huntsman's Mark 3
-        [334945] = true, -- Bloody Thrash
-        -- Hungering Destroyer
-        [334228] = true, -- Volatile Ejection
-        [329298] = true, -- Gluttonous Miasma
-        -- Lady Inerva Darkvein
-        [325936] = true, -- Shared Cognition
-        [335396] = true, -- Hidden Desire
-        [324983] = true, -- Shared Suffering
-        [324982] = true, -- Shared Suffering (Partner)
-        [332664] = true, -- Concentrate Anima
-        [325382] = true, -- Warped Desires
-        -- Sun King's Salvation
-        [333002] = true, -- Vulgar Brand
-        [326078] = true, -- Infuser's Boon
-        [325251] = true, -- Sin of Pride
-        -- Artificer Xy'mox
-        [327902] = true, -- Fixate
-        [326302] = true, -- Stasis Trap
-        [325236] = true, -- Glyph of Destruction
-        [327414] = true, -- Possession
-        -- The Council of Blood
-        [327052] = true, -- Drain Essence 1
-        [327773] = true, -- Drain Essence 2
-        [346651] = true, -- Drain Essence Mythic
-        [328334] = true, -- Tactical Advance
-        [330848] = true, -- Wrong Moves
-        [331706] = true, -- Scarlet Letter
-        [331636] = true, -- Dark Recital 1
-        [331637] = true, -- Dark Recital 2
-        -- Sludgefist
-        [335470] = true, -- Chain Slam
-        [339181] = true, -- Chain Slam (Root)
-        [331209] = true, -- Hateful Gaze
-        [335293] = true, -- Chain Link
-        [335270] = true, -- Chain This One!
-        [335295] = true, -- Shattering Chain
-        -- Stone Legion Generals
-        [334498] = true, -- Seismic Upheaval
-        [337643] = true, -- Unstable Footing
-        [334765] = true, -- Heart Rend
-        [333377] = true, -- Wicked Mark
-        [334616] = true, -- Petrified
-        [334541] = true, -- Curse of Petrification
-        [339690] = true, -- Crystalize
-        [342655] = true, -- Volatile Anima Infusion
-        [342698] = true, -- Volatile Anima Infection
-        -- Sire Denathrius
-        [326851] = true, -- Blood Price
-        [327796] = true, -- Night Hunter
-        [327992] = true, -- Desolation
-        [328276] = true, -- March of the Penitent
-        [326699] = true, -- Burden of Sin
-        [329181] = true, -- Wracking Pain
-        [335873] = true, -- Rancor
-        [329951] = true, -- Impale
-}
-GW.ImportendRaidDebuff = ImportendRaidDebuff
