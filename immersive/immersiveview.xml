@@ -4,36 +4,36 @@
 	<Frame name="ImmersiveSettingsTemplate" hidden="true" enableKeyboard="true" movable="true" toplevel="true" virtual="true">
         <Size x="220" y="320"/>
         <Anchors>
-            <Anchor point="TOP" relativeTo="GwSmallSettingsMoverFrame" relativePoint="TOP" x="0" y="-20"></Anchor>
+            <Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" x="0" y="0"/>
         </Anchors>
         <Layers>
             <Layer level="BACKGROUND">
                 <Texture parentKey="background" file="Interface/AddOns/GW2_UI/textures/bag/bagbg">
                     <Size x="220" y="320"/>
                     <Anchors>
-                        <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="0" y="0" />
-                        <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="0" y="0" />
-                        <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="0" y="0" />
-                        <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="0" y="0" />
+                        <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
+                        <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+                        <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+                        <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
                     </Anchors>
                 </Texture>
                 <Texture file="Interface/AddOns/GW2_UI/textures/bag/bagheader">
                     <Size x="220" y="40"/>
                     <Anchors>
-                        <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
                     </Anchors>
                 </Texture>
                 <Texture file="Interface/AddOns/GW2_UI/textures/bag/bagheader-right">
                     <Size x="220" y="32"/>
                     <Anchors>
-                        <Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
                     </Anchors>
                 </Texture>
                 <Texture file="Interface/AddOns/GW2_UI/textures/bag/bagleftpanel">
                     <Size x="16" y="320"/>
                     <Anchors>
-                        <Anchor point="TOPRIGHT" relativePoint="TOPLEFT" x="0" y="0" />
-                        <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" x="0" y="0" />
+                        <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+                        <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
                     </Anchors>
                 </Texture>
             </Layer>
@@ -41,14 +41,14 @@
                 <Texture file="Interface/AddOns/GW2_UI/textures/icons/settingsicon">
                     <Size x="52" y="52"/>
                     <Anchors>
-                        <Anchor point="CENTER" relativePoint="TOPLEFT" x="-7" y="10" />
+                        <Anchor point="CENTER" relativeTo="$parent" relativePoint="TOPLEFT" x="-7" y="10"/>
                     </Anchors>
                 </Texture>
                 <FontString parentKey="headerString" text="Special frame options" inherits="GameFontNormalSmall" justifyH="LEFT">
                     <Size x="220" y="12"/>
                     <Color r="1" b="0.73" g="0.93"/>
                     <Anchors>
-                        <Anchor point="TOPLEFT" x="10" y="17"/>
+                        <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="10" y="17"/>
                     </Anchors>
                 </FontString>
             </Layer>
@@ -57,57 +57,57 @@
 			<Frame parentKey="mover" inherits="GwMoveFrameTemplate">
                 <Size x="220" y="25" />
                 <Anchors>
-                    <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT"></Anchor>
+                    <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
                 </Anchors>
             </Frame>
 			<Button parentKey="advacedMode" inherits="GwGossipCheckButtonTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 				</Anchors>
 			</Button>
 			<Button parentKey="fullScreen" inherits="GwGossipCheckButtonTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-25"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-25"/>
 				</Anchors>
 			</Button>
 			<Button parentKey="forceGossip" inherits="GwGossipCheckButtonTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-50"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-50"/>
 				</Anchors>
 			</Button>
 			<Button parentKey="autoNext" inherits="GwGossipCheckButtonTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-75"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-75"/>
 				</Anchors>
 			</Button>
-			<Button parentKey="styleGW2" inherits="GwGossipCheckButtonTemplate">
+			<Button parentKey="style" inherits="GwGossipCheckButtonTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-100"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-100"/>
 				</Anchors>
 			</Button>
 			<Button parentKey="moveAndScale" inherits="GwGossipCheckButtonTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-125"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-125"/>
 				</Anchors>
 			</Button>
-			<Button parentKey="dinamicBackground" inherits="GwGossipCheckButtonTemplate">
+			<Button parentKey="dinamicArt" inherits="GwGossipCheckButtonTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-150"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-150"/>
 				</Anchors>
 			</Button>
 			<Button parentKey="mouseDialog" inherits="GwGossipCheckButtonTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-175"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-175"/>
 				</Anchors>
 			</Button>
 			<Button parentKey="autoNextTime" inherits="GwGossipSliderTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-200"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-200"/>
 				</Anchors>
 			</Button>
 			<Button parentKey="animationTextSpeed" inherits="GwGossipSliderTemplate">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-250"></Anchor>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-250"/>
 				</Anchors>
 			</Button>
 		</Frames>
@@ -115,59 +115,67 @@
 	
 	<Frame name="GwFullScreenGossipViewFrameTemplate" hidden="true" alpha="0" setAllPoints="true" enableKeyboard="true" ignoreParentAlpha="true" ignoreParentScale="false" frameStrata="FULLSCREEN" enableMouse="true" virtual="true">
 		<Frames>
-			<Frame parentKey="Background" useParentLevel="true" setAllPoints="true">
-				<Layers>
-					<Layer level="BACKGROUND" textureSubLevel="-3">
-						<Texture parentKey="backgroundLayer" hidden="true"> 
-							<Anchors>
-								<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-150"/>
-								<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" y="150"/>
-							</Anchors>
-						</Texture>
-					</Layer>
-					<Layer level="BACKGROUND" textureSubLevel="-2">
-						<Texture parentKey="middlegroundLayer" hidden="true"> 
-							<Anchors>
-								<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-150"/>
-								<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" y="150"/>
-							</Anchors>
-						</Texture>
-					</Layer>
-					<Layer level="BACKGROUND" textureSubLevel="-1">
-						<Texture parentKey="foregroundLayer" hidden="true"> 
-							<Anchors>
-								<Anchor point="TOPLEFT" relativePoint="TOPLEFT" y="-150"/>
-								<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" y="150"/>
-							</Anchors>
-						</Texture>
-					</Layer>
-					<Layer level="BACKGROUND" textureSubLevel="0">
-						<Texture parentKey="Border" setAllPoints="true"/> 
-					</Layer>
-					<Layer frameStrata="BACKGROUND" textureSubLevel="1" >
-						<Texture parentKey="Bottom">
-							<Anchors>
-								<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" y="400"/>
-								<Anchor point="BOTTOMRIGHT"/>
-							</Anchors>
-						</Texture>
+			<Frame parentKey="Background" frameLevel="2" setAllPoints="true">
+				<Frames>
+					<Frame parentKey="Art" useParentLevel="true" setAllPoints="true">
+						<Layers>
+							<Layer level="BACKGROUND" textureSubLevel="-3">
+								<Texture parentKey="backgroundLayer" hidden="true"> 
+									<Anchors>
+										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-150"/>
+										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="150"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="BACKGROUND" textureSubLevel="-2">
+								<Texture parentKey="middlegroundLayer" hidden="true"> 
+									<Anchors>
+										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-150"/>
+										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="150"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+							<Layer level="BACKGROUND" textureSubLevel="-1">
+								<Texture parentKey="foregroundLayer" hidden="true"> 
+									<Anchors>
+										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-150"/>
+										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="150"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers> 
+					</Frame>
+					<Frame parentKey="Border" useParentLevel="true" setAllPoints="true">
+						<Layers>
+							<Layer level="BACKGROUND" textureSubLevel="0">
+								<Texture parentKey="Border" setAllPoints="true"/> 
+							</Layer>
 
-						<Texture parentKey="Top">
-							<Anchors>
-								<Anchor point="TOPLEFT"/>
-								<Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT" y="-400"/>
-							</Anchors>
-						</Texture>
-					</Layer>
-				</Layers>
+							<Layer level="BACKGROUND" textureSubLevel="1">
+								<Texture parentKey="Bottom">
+									<Anchors>
+										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="400"/>
+										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+									</Anchors>
+								</Texture>
+								<Texture parentKey="Top">
+									<Anchors>
+										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="0" y="-400"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+					</Frame>
+				</Frames>
 			</Frame>		
-			<Frame parentKey="Models" useParentLevel="true">
+			<Frame parentKey="Models" frameLevel="3">
 				<Anchors>
-					<Anchor point="TOPLEFT" y="-50"/>
-					<Anchor point="BOTTOMRIGHT"/>
+					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-50"/>
+					<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
 				</Anchors>
 				<Frames>
-					<CinematicModel parentKey="Player" useParentLevel="true" toplevel="true" setAllPoints="true">
+					<CinematicModel parentKey="Player" useParentLevel="true" setAllPoints="true">
 						<Scripts>
 							<OnLoad>
 								self:SetCamDistanceScale(2)
@@ -185,7 +193,7 @@
 							</OnHide>
 						</Scripts>
 					</CinematicModel>
-					<CinematicModel parentKey="Giver" useParentLevel="true" toplevel="true" setAllPoints="true">
+					<CinematicModel parentKey="Giver" useParentLevel="true" setAllPoints="true">
 						<Scripts>
 							<OnLoad>
 								self:SetCamDistanceScale(2)
@@ -209,45 +217,100 @@
 					</CinematicModel>
 				</Frames>
 			</Frame>
-			<Frame parentKey="Title" hidden="true">
+			<Frame parentKey="Title" frameLevel="4">
 				<Anchors>
-					<Anchor point="TOPLEFT" />
-					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Models" relativePoint="TOPRIGHT"/>
+					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Models" relativePoint="TOPRIGHT" x="0" y="0"/>
 				</Anchors>
 				<Layers>
-					<Layer level="OVERLAY">
-						<FontString parentKey="Text" inherits="GameFont_Gigantic" justifyH="CENTER" justifyV="CENTER" wordwrap="true" text="">
+					<Layer level="ARTWORK">
+						<FontString parentKey="Text" inherits="GameFont_Gigantic" setAllPoints="true" justifyH="CENTER" justifyV="CENTER" wordwrap="true"/>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Button parentKey="Dialog" frameLevel="4" registerForClicks="LeftButtonUp, RightButtonUp">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Title" relativePoint="BOTTOM" x="-400" y="0"/>
+					<Anchor point="TOPRIGHT" relativeKey="$parent.Title" relativePoint="BOTTOM" x="400" y="0"/>
+					<Anchor point="BOTTOM" relativeKey="$parent.Title" relativePoint="BOTTOM" x="0" y="-140"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString parentKey="Text" inherits="GameFontHighlightLarge" setAllPoints="true" justifyH="LEFT" justifyV="CENTER" wordwrap="true"/>
+					</Layer>
+				</Layers>
+			</Button>				
+			<ScrollFrame parentKey="Scroll" frameLevel="4" inherits="GwScrollFrameScrollBarLeftTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.Dialog" relativePoint="LEFT" x="0" y="0"/>
+					<Anchor point="RIGHT" relativeKey="$parent.Dialog" relativePoint="RIGHT" x="0" y="0"/>
+					<Anchor point="TOP" relativeKey="$parent" relativePoint="BOTTOM" x="0" y="175"/>
+					<Anchor point="BOTTOM" relativeKey="$parent" relativePoint="BOTTOM" x="0" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString parentKey="Text" inherits="GameFontHighlightLarge" justifyH="LEFT" justifyV="CENTER" wordwrap="true">
+							<Anchors>
+								<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+								<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
+								<Anchor point="TOP" relativeKey="$parent" relativePoint="TOP" x="0" y="20"/>
+							</Anchors>
 						</FontString>
+					</Layer>
+				</Layers>
+				<ScrollChild>
+					<Frame parentKey="ScrollChildFrame">
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+			<StatusBar parentKey="ReputationBar" frameLevel="4" orientation="VERTICAL" hidden="true">
+				<Anchors>
+					<Anchor point="RIGHT" relativeKey="$parent" relativePoint="RIGHT" x="0" y="0"/>
+					<Anchor point="LEFT" relativeKey="$parent" relativePoint="RIGHT" x="-15" y="0"/>
+					<Anchor point="TOP" relativeKey="$parent.Dialog" relativePoint="BOTTOM" x="0" y="0"/>
+					<Anchor point="BOTTOM" relativeKey="$parent.Scroll" relativePoint="TOP" x="0" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<!-- <Texture parentKey="Border" setAllPoints="true" file="Interface\Common\friendship-parts"> 
+							 <Anchors>
+								<Anchor point="TOPLEFT"/>
+								<Anchor point="BOTTOMRIGHT"/>
+							</Anchors>
+						</Texture> -->
+					</Layer>
+					<Layer level="ARTWORK" textureSubLevel="1">
+						<Texture file="Interface\Common\friendship-heart" parentKey="icon">
+							<Size x="32" y="32"/>
+							<Anchors>
+								<Anchor point="BOTTOM" y="-32"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture setAllPoints="true">  <!-- bar fill background -->
+							<Color r="0" g="0" b="0" a="0.5"/>
+						</Texture>
 					</Layer>
 				</Layers>
 				<Scripts>
-					<OnHide>
-						self.Text:SetText("");
-					</OnHide>
+					<OnLoad>
+						self:SetStatusBarTexture(1, 1, 1, "BORDER", -1);
+						self:GetStatusBarTexture():SetGradient("VERTICAL", 8/255, 93/255, 72/255, 11/255, 136/255, 105/255);
+						self:SetStatusBarColor(1, 0, 0);
+					</OnLoad>
+					<OnEnter>
+						ShowFriendshipReputationTooltip(self.friendshipFactionID, self, "ANCHOR_BOTTOMRIGHT");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
 				</Scripts>
-			</Frame>
-			<Button parentKey="Dialog" registerForClicks="LeftButtonUp, RightButtonUp">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.Title" relativePoint="BOTTOM" x="-400"/>
-					<Anchor point="TOPRIGHT" relativeKey="$parent.Title" relativePoint="BOTTOM" x="400"/>
-					<Anchor point="BOTTOM" relativeKey="$parent.Title" relativePoint="BOTTOM" y="-140" />
-				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK" toplevel="true" >
-						<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="CENTER" wordwrap="true" text="">
-							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="5"/>
-								<Anchor point="BOTTOMRIGHT"/>
-							</Anchors>
-							<Color r="1" g="1" b="1"/>
-						</FontString>
-					</Layer>
-				</Layers>
-			</Button>			
-			<Frame parentKey="Detail" toplevel="true" enableMouse="true" movable="true" hidden="true">
+			</StatusBar>
+			<Frame parentKey="Detail" frameLevel="5" enableMouse="true" movable="true" hidden="true">
 				<Size x="256" y="380"/>
 				<Anchors>
-					<Anchor point="TOP" relativeKey="$parent.Dialog" relativePoint="BOTTOM" x="0" y="-30"></Anchor>
+					<Anchor point="TOP" relativeKey="$parent.Dialog" relativePoint="BOTTOM" x="0" y="-30"/>
 				</Anchors>
 				<Layers>
 					<Layer frameStrata="BACKGROUND">
@@ -257,7 +320,7 @@
 						<FontString parentKey="Title" inherits="QuestTitleFont" text="QUEST_OBJECTIVES" justifyH="CENTER" JustifyV="CENTER">
 							<Size x="256" y="8"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" y="-16"/>
+								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-16"/>
 							</Anchors>
 						</FontString>
 					</Layer>
@@ -266,19 +329,19 @@
 					<Frame parentKey="mover" inherits="GwMoveFrameTemplate">
 						<Size x="250" y="32" />
 						<Anchors>
-							<Anchor point="TOPLEFT" x="4" y="-5"></Anchor>
+							<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="4" y="-5"/>
 						</Anchors>
 					</Frame>		
 					<ScrollFrame parentKey="Scroll" inherits="GwScrollFrameScrollBarRightTemplate">
 						<Size x="210" y="305"/>
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent" x="16" y="-40"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="16" y="-40"/>
 						</Anchors>
 						<ScrollChild>
 							<Frame parentKey="ScrollChildFrame" mixin="GwGossipDetailMixin">
 								<Size x="210"/>
 								<Anchors>
-									<Anchor point="TOPLEFT"/>
+									<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 								</Anchors>
 								<Layers>
 									<Layer level="ARTWORK">
@@ -304,7 +367,7 @@
 											<Layer level="OVERLAY">
 												<FontString parentKey="SpellObjectiveLearnLabel" inherits="QuestFontNormalSmall" justifyH="LEFT" text="LEARN_SPELL_OBJECTIVE">
 													<Anchors>										
-														<Anchor point="TOPLEFT"/>
+														<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 													</Anchors>	
 												</FontString>
 											</Layer>
@@ -324,7 +387,7 @@
 											<Layer level="ARTWORK">
 												<FontString parentKey="MoneyText" inherits="QuestFont" justifyH="LEFT">
 													<Anchors>
-														<Anchor point="LEFT" x="0" y="0"/>
+														<Anchor point="LEFT" relativeKey="$parent" relativePoint="LEFT" x="0" y="0"/>
 													</Anchors>
 												</FontString>
 											</Layer>
@@ -349,7 +412,7 @@
 											<Layer level="BACKGROUND">
 												<FontString parentKey="ReceiveText" inherits="QuestFont" text="EXPERIENCE_COLON">
 													<Anchors>
-														<Anchor point="LEFT" x="0" y="0"/>
+														<Anchor point="LEFT" relativeKey="$parent" relativePoint="LEFT" x="0" y="0"/>
 													</Anchors>
 												</FontString>
 												<FontString parentKey="ValueText" inherits="NumberFontNormalLarge" justifyH="LEFT">
@@ -367,18 +430,18 @@
 												<Texture parentKey="CircleBackground" file="Interface\QuestFrame\SkillUp-BG">
 													<Size x="32" y="32"/>
 													<Anchors>
-														<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="12" y="-6"/>
+														<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" relativePoint="BOTTOMRIGHT" x="12" y="-6"/>
 													</Anchors>
 												</Texture>
 												<Texture parentKey="CircleBackgroundGlow" file="Interface\QuestFrame\SkillUp-Glow" alphaMode="ADD" alpha="0.3">
 													<Size x="64" y="64"/>
 													<Anchors>
-														<Anchor point="CENTER" relativeKey="$parent.CircleBackground"/>
+														<Anchor point="CENTER" relativeKey="$parent.CircleBackground" relativePoint="CENTER" x="0" y="0"/>
 													</Anchors>
 												</Texture>
 												<FontString parentKey="ValueText" inherits="GameFontNormalLarge" justifyH="LEFT">
 													<Anchors>
-														<Anchor point="CENTER" relativeKey="$parent.CircleBackground" relativePoint="CENTER" x="3"/>
+														<Anchor point="CENTER" relativeKey="$parent.CircleBackground" relativePoint="CENTER" x="3" y="0"/>
 													</Anchors>
 												</FontString>
 											</Layer>
@@ -401,7 +464,7 @@
 												<Texture parentKey="Overlay" file="Interface\Artifacts\ArtifactPower-QuestBorder">
 													<Size x="64" y="64" />
 													<Anchors>
-														<Anchor point="CENTER" relativeKey="$parent.Icon" />
+														<Anchor point="CENTER" relativeKey="$parent.Icon" relativePoint="CENTER" x="0" y="0"/>
 													</Anchors>
 												</Texture>
 											</Layer>
@@ -425,7 +488,7 @@
 												<Texture parentKey="Icon" file="Interface\Icons\INV_Misc_Note_02">
 													<Size x="40" y="40"/>
 													<Anchors>
-														<Anchor point="TOPLEFT" x="0" y="0"/>
+														<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 													</Anchors>
 												</Texture>
 												<Texture parentKey="FrameLeft" file="Interface\QuestFrame\UI-QuestItemNameFrame">
@@ -454,7 +517,7 @@
 												<FontString parentKey="Name" inherits="GameFontHighlight" justifyH="LEFT">
 													<Size x="150" y="0"/>
 													<Anchors>
-														<Anchor point="LEFT" relativeKey="$parent.FrameLeft" x="8" y="-2"/>
+														<Anchor point="LEFT" relativeKey="$parent.FrameLeft" relativePoint="LEFT" x="8" y="-2"/>
 													</Anchors>
 												</FontString>
 											</Layer>
@@ -463,19 +526,19 @@
 									<Frame parentKey="SealFrame" hidden="true" toplevel="true">
 										<Size x="210" y="60"/>
 										<Anchors>
-											<Anchor point="BOTTOMLEFT" x="0" y="0"/>
+											<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
 										</Anchors>
 										<Layers>
 											<Layer level="ARTWORK">
 												<FontString parentKey="Text" inherits="QuestFont_Huge" justifyH="LEFT">
 													<Anchors>
-														<Anchor point="BOTTOMLEFT" x="5" y="-12"/>
+														<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="5" y="-12"/>
 													</Anchors>
 												</FontString>
 												<Texture parentKey="Texture">
 													<Size x="60" y="60"/>
 													<Anchors>
-														<Anchor point="TOPLEFT" x="150" y="0"/>
+														<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="150" y="0"/>
 													</Anchors>
 												</Texture>
 											</Layer>
@@ -496,14 +559,14 @@
 									<Frame parentKey="ItemHighlight" hidden="true">
 										<Size x="180" y="38"/>
 										<Anchors>
-											<Anchor point="TOPLEFT"/>
+											<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 										</Anchors>
 										<Layers>
 											<Layer level="BACKGROUND">
 												<Texture file="Interface\AddOns\Immersion\Textures\Button_Hilite" alphaMode="ADD" parentKey="Icon">
 													<Size x="52" y="52"/>
 													<Anchors>
-														<Anchor point="TOPLEFT"/>
+														<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 													</Anchors>
 												</Texture>
 												<Texture file="Interface\PVPFrame\PvPMegaQueue" alphaMode="ADD" parentKey="NameTag">
@@ -553,80 +616,7 @@
 						</ScrollChild>
 					</ScrollFrame>
 				</Frames>
-			</Frame>		
-			<ScrollFrame parentKey="Scroll" inherits="GwScrollFrameScrollBarLeftTemplate">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Dialog"  relativePoint="LEFT" />
-					<Anchor point="RIGHT" relativeKey="$parent.Dialog"  relativePoint="RIGHT" />
-					<Anchor point="TOP" relativePoint="BOTTOM" y="175" />
-					<Anchor point="BOTTOM"/>
-				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK" useParentLevel="true">
-						<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="CENTER" wordwrap="true" text="">
-							<Anchors>
-								<Anchor point="BOTTOMLEFT" relativeKey="$parent"  relativePoint="TOPLEFT"/>
-								<Anchor point="BOTTOMRIGHT" relativeKey="$parent"  relativePoint="TOPRIGHT"/>
-								<Anchor point="TOP" relativeKey="$parent"  relativePoint="TOP" y="20"/>
-							</Anchors>
-							<Color r="1" g="1" b="1"/>
-						</FontString>
-					</Layer>
-				</Layers>
-				<ScrollChild>
-					<Frame parentKey="ScrollChildFrame">
-					</Frame>
-				</ScrollChild>
-				<Scripts>
-					<OnHide>
-						self.Text:SetText("");
-					</OnHide>
-				</Scripts>
-			</ScrollFrame>
-			<StatusBar parentKey="ReputationBar" orientation="VERTICAL" hidden="true">
-				<Anchors>
-					<Anchor point="RIGHT"/>
-					<Anchor point="LEFT" relativePoint="RIGHT" x="-15"/>
-					<Anchor point="TOP" relativeKey="$parent.Dialog"  relativePoint="BOTTOM"/>
-					<Anchor point="BOTTOM" relativeKey="$parent.Scroll"  relativePoint="TOP"/>
-				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<!-- <Texture parentKey="Border" setAllPoints="true" file="Interface\Common\friendship-parts"> 
-							 <Anchors>
-								<Anchor point="TOPLEFT"/>
-								<Anchor point="BOTTOMRIGHT"/>
-							</Anchors>
-						</Texture> -->
-					</Layer>
-					<Layer level="ARTWORK" textureSubLevel="1">
-						<Texture file="Interface\Common\friendship-heart" parentKey="icon">
-							<Size x="32" y="32"/>
-							<Anchors>
-								<Anchor point="BOTTOM" y="-32"/>
-							</Anchors>
-						</Texture>
-					</Layer>
-					<Layer level="BACKGROUND">
-						<Texture setAllPoints="true">  <!-- bar fill background -->
-							<Color r="0" g="0" b="0" a="0.5"/>
-						</Texture>
-					</Layer>
-				</Layers>
-				<Scripts>
-					<OnLoad>
-						self:SetStatusBarTexture(1, 1, 1, "BORDER", -1);
-						self:GetStatusBarTexture():SetGradient("VERTICAL", 8/255, 93/255, 72/255, 11/255, 136/255, 105/255);
-						self:SetStatusBarColor(1, 0, 0);
-					</OnLoad>
-					<OnEnter>
-						ShowFriendshipReputationTooltip(self.friendshipFactionID, self, "ANCHOR_BOTTOMRIGHT");
-					</OnEnter>
-					<OnLeave>
-						GameTooltip:Hide();
-					</OnLeave>
-				</Scripts>
-			</StatusBar>
+			</Frame>	
 		</Frames>
 		<Scripts>
 			<OnShow>
@@ -639,65 +629,57 @@
 	</Frame>
 
 	<Frame name="GwGossipViewFrameTemplate" hidden="true" alpha="0" enableKeyboard="true" frameStrata="DIALOG" movable="true" resizable="true" virtual="true">
-	    <Size x="625" y="300"></Size>
+	    <Size x="625" y="300"/>
 		<Anchors>
-			<Anchor point="CENTER"/>
+			<Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" x="0" y="0"/>
 		</Anchors>
 		<Frames>
-			<Frame parentKey="Background" useParentLevel="true" setAllPoints="true">
+			<Frame parentKey="Background" frameLevel="2" setAllPoints="true">
 				<Layers>
             		<Layer level="BACKGROUND">
-            		    <Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_background">
-						    <Size x="637" y="300"></Size>
+            		    <Texture parentKey="Art" file="Interface/AddOns/GW2_UI/textures/questview/gvf_background">
+						    <Size x="637" y="300"/>
             		        <Anchors>
-            		            <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="-12" y="0" />
+            		            <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
             		        </Anchors>
             		    </Texture>
             		    <Texture parentKey="Header" file="Interface/AddOns/GW2_UI/textures/questview/gvf_header">
-            		        <Size x="637" y="40"></Size>
+            		        <Size x="637" y="40"/>
             		        <Anchors>
-            		            <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="-12" y="0" />
+            		            <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
             		        </Anchors>
             		    </Texture>
 					</Layer>
 				</Layers>
 			</Frame>		
-			<Frame parentKey="Models">
-				<Size x="625" y="128"></Size>
+			<Frame parentKey="Models" frameLevel="3">
+				<Size x="625" y="128"/>
 				<Anchors>
-					<Anchor point="TOPLEFT"/>
+					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 				</Anchors>
 				<Frames>
-					<PlayerModel parentKey="Player">
-						<Size x="64" y="64"></Size>
+					<PlayerModel parentKey="Player" useParentLevel="true">
+						<Size x="64" y="64"/>
 					    <Anchors>
-            		         <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT"/>
+            		         <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
             		    </Anchors>
 						<Frames>
 							<Frame parentKey="Name" setAllPoints="true">
-								<Size x="128" y="40"></Size>
+								<Size x="128" y="40"/>
 								<Anchors>
-									<Anchor point="BOTTOMLEFT" x="-50" y="-15"/>
+									<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="-50" y="-15"/>
 								</Anchors>
 								<Layers>
 									<Layer level="BACKGROUND">
-										<Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_name" setAllPoints="true">
-										</Texture>
+										<Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_name" setAllPoints="true"/>
 									</Layer>
 									<Layer level="OVERLAY">
-										<FontString parentKey="Text" inherits="SystemFont_Outline_Small" justifyH="CENTER" justifyV="CENTER">
-											<Anchors>
-												<Anchor point="TOPLEFT"/>
-												<Anchor point="BOTTOMRIGHT"/>
-											</Anchors>
-										</FontString>
+										<FontString parentKey="Text" inherits="SystemFont_Outline_Small" setAllPoints="true" justifyH="CENTER" justifyV="CENTER"/>
 									</Layer>
 								</Layers>
 							</Frame>
 						</Frames>
 						<Scripts>
-							<OnLoad>
-							</OnLoad>
 							<OnShow>
 								self:ClearModel();
 								self:SetUnit("player");
@@ -709,27 +691,26 @@
 							</OnHide>
 						</Scripts>
 					</PlayerModel>
-					<PlayerModel parentKey="Giver">
-						<Size x="128" y="128"></Size>
+					<PlayerModel parentKey="Giver" useParentLevel="true">
+						<Size x="128" y="128"/>
 					    <Anchors>
-            		        <Anchor point="BOTTOMRIGHT"/>
+            		        <Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
             		    </Anchors>
 						<Frames>
 							<Frame parentKey="Name" setAllPoints="true">
-								<Size x="256" y="40"></Size>
+								<Size x="256" y="40"/>
 								<Anchors>
-									<Anchor point="BOTTOMLEFT"/>
+									<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
 								</Anchors>
 								<Layers>
 									<Layer level="BACKGROUND">
-										<Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_name" setAllPoints="true">
-										</Texture>
+										<Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_name" setAllPoints="true"/>
 									</Layer>
 									<Layer level="OVERLAY">
 										<FontString parentKey="Text" inherits="SystemFont_Outline_Small" justifyH="LEFT" justifyV="LEFT">
 											<Anchors>
-												<Anchor point="TOPLEFT" x="10"/>
-												<Anchor point="BOTTOMRIGHT"/>
+												<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="10" y="0"/>
+												<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
 											</Anchors>
 										</FontString>
 									</Layer>
@@ -737,8 +718,6 @@
 							</Frame>
 						</Frames>
 						<Scripts>
-							<OnLoad>
-							</OnLoad>
 							<OnShow>
 								self:ClearModel();
 								if (UnitExists("questnpc")) then
@@ -759,368 +738,48 @@
 					</PlayerModel>
 				</Frames>
 			</Frame>
-			<Frame parentKey="Title" hidden="true">
-				<Size x="625" y="115"></Size>
+			<Frame parentKey="Title" frameLevel="4">
+				<Size x="625" y="115"/>
 				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativeKey="$parent.Models.Player" relativePoint="TOPLEFT" x="-12"/>
+					<Anchor point="BOTTOMLEFT" relativeKey="$parent.Models.Player" relativePoint="TOPLEFT" x="-12" y="0"/>
 				</Anchors>
 				<Layers>
 				    <Layer level="BACKGROUND">
-            		    <Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_title" setAllPoints="true">
-            		    </Texture>
+            		    <Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_title" setAllPoints="true"/>
 					</Layer>
-					<Layer level="OVERLAY">
-						<FontString parentKey="Text" inherits="QuestFont_Outline_Huge" justifyH="CENTER" justifyV="CENTER" wordwrap="true" text="">
+					<Layer level="ARTWORK">
+						<FontString parentKey="Text" inherits="QuestFont_Outline_Huge" justifyH="CENTER" justifyV="CENTER" wordwrap="true">
 							<Size x="465" y="40"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="80" y="-40"/>
+								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="80" y="-40"/>
 							</Anchors>
 						</FontString>
 					</Layer>
 				</Layers>
-				<Scripts>
-					<OnHide>
-						self.Text:SetText("");
-					</OnHide>
-				</Scripts>
 			</Frame>
-			<Button parentKey="Dialog" registerForClicks="LeftButtonUp, RightButtonUp">
+			<Button parentKey="Dialog" frameLevel="4" registerForClicks="LeftButtonUp, RightButtonUp">
 				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Models.Player" relativePoint="LEFT"/>
-					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Models.Giver" relativePoint="BOTTOMLEFT"/>
-					<Anchor point="TOP" y="-15"/>
+					<Anchor point="LEFT" relativeKey="$parent.Models.Player" relativePoint="LEFT" x="0" y="0"/>
+					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Models.Giver" relativePoint="BOTTOMLEFT" x="0" y="0"/>
+					<Anchor point="TOP" relativeKey="$parent" relativePoint="TOP" x="0" y="-15"/>
 				</Anchors>
 				<Layers>
-					<Layer level="ARTWORK" toplevel="true" >
-						<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="TOP" wordwrap="true" text="">
-							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="5"/>
-								<Anchor point="BOTTOMRIGHT"/>
-							</Anchors>
-							<Color r="1" g="1" b="1"/>
-						</FontString>
+					<Layer level="ARTWORK">
+						<FontString parentKey="Text" inherits="GameFontHighlightLarge" setAllPoints="true" justifyH="LEFT" justifyV="TOP" wordwrap="true"/>
 					</Layer>
 				</Layers>
-			</Button>			
-			<Button parentKey="DetailButton" hidden="true" registerForClicks="LeftButtonUp">
-				<Size x="50" y="50"/>
-				<Anchors>
-                    <Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPLEFT" x="-5" y="-15"></Anchor>
-                </Anchors>
-				<Layers>
-					<Layer level="BACKGROUND">
-						<Texture file="Interface\UNITPOWERBARALT\PandarenTrainingLarge_Circular_Frame">
-							<Anchors>
-								<Anchor point="TOPLEFT"/>
-								<Anchor point="BOTTOMRIGHT"/>							
-							</Anchors>
-						</Texture>
-					</Layer>
-				</Layers>
-			</Button>
-			<Frame parentKey="Detail" toplevel="true" enableMouse="true" movable="true" hidden="true">
-				<Size x="256" y="380"/>
-				<Anchors>
-					<Anchor point="TOP" relativeKey="$parent.DetailButton" relativePoint="BOTTOM"></Anchor>
-				</Anchors>
-				<Layers>
-					<Layer frameStrata="BACKGROUND">
-						<Texture parentKey="background" setAllPoints="true"/>			
-					</Layer>
-					<Layer frameStrata="ARTWORK">
-						<FontString parentKey="Title" inherits="QuestTitleFont" text="QUEST_OBJECTIVES" justifyH="CENTER" JustifyV="CENTER">
-							<Size x="256" y="8"/>
-							<Anchors>
-								<Anchor point="TOPLEFT" y="-16"/>
-							</Anchors>
-						</FontString>
-					</Layer>
-				</Layers>
-				<Frames>	
-					<ScrollFrame parentKey="Scroll" inherits="GwScrollFrameScrollBarRightTemplate">
-						<Size x="210" y="305"/>
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent" x="16" y="-40"/>
-						</Anchors>
-						<ScrollChild>
-							<Frame parentKey="ScrollChildFrame">
-								<Size x="210"/>
-								<Frames>
-									<Frame parentKey="Progress" hidden="true">
-										<Size x="210"/>
-										<Anchors>
-											<Anchor point="TOPLEFT"/>
-										</Anchors>
-										<Layers>
-											<Layer frameStrata="ARTWORK">
-												<FontString parentKey="MoneyText" inherits="ItemTextFontNormal" text="Money:"/>
-												<FontString parentKey="ReqItemText" inherits="ItemTextFontNormal" text="Items:"/>
-												<FontString parentKey="ReqCurrencyText" inherits="ItemTextFontNormal" text="Currencies:"/>
-											</Layer>
-										</Layers>
-										<Frames>
-											<Frame parentKey="MoneyFrame" name="$parentMoneyFrame" inherits="MoneyFrameTemplate">
-												<Anchors>
-													<Anchor point="LEFT" relativeKey="$parent.MoneyText" relativePoint="RIGHT" x="10" y="0"/>
-												</Anchors>
-												<Scripts>
-													<OnLoad>
-														SmallMoneyFrame_OnLoad(self);
-														MoneyFrame_SetType(self, "STATIC");
-													</OnLoad>
-												</Scripts>
-											</Frame>
-										</Frames>
-									</Frame>
-									<!-- <Frame parentKey="RewardsFrame" hidden="true">
-										<Size x="285" y="10" />
-										<Anchors>
-											<Anchor point="CENTER"/>
-										</Anchors>
-										<Layers>
-											<Layer level="BACKGROUND">
-												<FontString parentKey="Header" inherits="QuestTitleFont" text="QUEST_REWARDS" justifyH="LEFT">
-													<Size x="285" y="0"/>
-													<Anchors>
-														<Anchor point="TOPLEFT" y="-4"/>
-													</Anchors>
-												</FontString>
-												<FontString parentKey="ItemChooseText" inherits="SystemFont_Shadow_Med2" text="REWARD_CHOICES" hidden="true" justifyH="LEFT">
-													<Size x="285" y="0"/>
-												</FontString>
-												<FontString parentKey="ItemReceiveText" inherits="SystemFont_Shadow_Med2" hidden="true" justifyH="LEFT" />
-												<FontString parentKey="PlayerTitleText" inherits="SystemFont_Shadow_Med2" text="REWARD_TITLE" hidden="true" justifyH="LEFT" />
-											</Layer>
-										</Layers>
-										<Frames>
-											<Button parentKey="HonorFrame" inherits="ImmersionItemButtonTemplate" hidden="true"/>
-											<Button parentArray="Buttons" name="ImmersionQuestInfoItem1" inherits="ImmersionItemButtonTemplate, ImmersionRewardItemCodeTemplate" hidden="true"/>
-											<Frame parentKey="MoneyFrame" name="$parentMoneyFrame" inherits="MoneyFrameTemplate">
-												<Anchors>
-													<Anchor point="LEFT" relativeKey="$parent.ItemReceiveText" relativePoint="RIGHT" x="15" y="0"/>
-												</Anchors>
-												<Scripts>
-													<OnLoad>
-														MoneyFrame_OnLoad(self);
-														MoneyFrame_SetType(self, "STATIC");
-													</OnLoad>
-												</Scripts>
-											</Frame>
-											<Button parentKey="SkillPointFrame" inherits="ImmersionItemButtonTemplate">
-												<Layers>
-													<Layer level="OVERLAY">
-														<Texture parentKey="CircleBackground" file="Interface\QuestFrame\SkillUp-BG">
-															<Size x="32" y="32"/>
-															<Anchors>
-																<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="12" y="-6"/>
-															</Anchors>
-														</Texture>
-														<Texture parentKey="CircleBackgroundGlow" file="Interface\QuestFrame\SkillUp-Glow" alphaMode="ADD" alpha="0.3">
-															<Size x="64" y="64"/>
-															<Anchors>
-																<Anchor point="CENTER" relativeKey="$parent.CircleBackground"/>
-															</Anchors>
-														</Texture>
-														<FontString parentKey="ValueText" inherits="GameFontNormalLarge" justifyH="LEFT">
-															<Anchors>
-																<Anchor point="CENTER" relativeKey="$parent.CircleBackground" relativePoint="CENTER" x="3"/>
-															</Anchors>
-														</FontString>
-													</Layer>
-												</Layers>
-												<Scripts>
-													<OnEnter>
-														if (self.tooltip) then
-															GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-															GameTooltip:SetText(self.tooltip, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
-														end
-													</OnEnter>
-													<OnLeave>
-														GameTooltip:Hide();
-													</OnLeave>
-												</Scripts>
-											</Button>
-											<Frame parentKey="XPFrame">
-												<Size x="280" y="20"/>
-												<Layers>
-													<Layer level="BACKGROUND">
-														<FontString parentKey="ReceiveText" inherits="QuestFont" text="EXPERIENCE_COLON">
-															<Anchors>
-																<Anchor point="LEFT" x="0" y="0"/>
-															</Anchors>
-														</FontString>
-														<FontString parentKey="ValueText" inherits="NumberFontNormalLarge" justifyH="LEFT">
-															<Anchors>
-																<Anchor point="LEFT" relativeKey="$parent.ReceiveText" relativePoint="RIGHT" x="15" y="0"/>
-															</Anchors>
-														</FontString>
-													</Layer>
-												</Layers>
-											</Frame>
-											<Button parentKey="ArtifactXPFrame" inherits="ImmersionItemButtonTemplate" hidden="true">
-												<Layers>
-													<Layer level="BORDER">
-														<Texture parentKey="Overlay" file="Interface\Artifacts\ArtifactPower-QuestBorder">
-															<Size x="64" y="64" />
-															<Anchors>
-																<Anchor point="CENTER" relativeKey="$parent.Icon" />
-															</Anchors>
-														</Texture>
-													</Layer>
-												</Layers>
-												<Scripts>
-													<OnEnter>
-														GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-														GameTooltip:SetText(ARTIFACT_XP_REWARD, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b, nil, true);
-													</OnEnter>
-
-													<OnLeave function="GameTooltip_Hide" />
-												</Scripts>
-											</Button>
-											<Frame parentKey="TitleFrame">
-												<Size x="500" y="39"/>
-												<Layers>
-													<Layer level="BACKGROUND">
-														<Texture parentKey="Icon" file="Interface\Icons\INV_Misc_Note_02">
-															<Size x="39" y="39"/>
-															<Anchors>
-																<Anchor point="TOPLEFT" x="0" y="0"/>
-															</Anchors>
-														</Texture>
-														<Texture parentKey="FrameLeft" file="Interface\QuestFrame\UI-QuestItemNameFrame">
-															<Size x="4" y="40"/>
-															<Anchors>
-																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="2" y="0"/>
-															</Anchors>
-															<TexCoords left="0.078125" right="0.1171875" top="0.15625" bottom="0.828125"/>
-														</Texture>
-														<Texture parentKey="FrameCenter" file="Interface\QuestFrame\UI-QuestItemNameFrame">
-															<Size x="200" y="40"/>
-															<Anchors>
-																<Anchor point="LEFT" relativeKey="$parent.FrameLeft" relativePoint="RIGHT" x="0" y="0"/>
-															</Anchors>
-															<TexCoords left="0.1171875" right="0.828125" top="0.15625" bottom="0.828125"/>
-														</Texture>
-														<Texture parentKey="FrameRight" file="Interface\QuestFrame\UI-QuestItemNameFrame">
-															<Size x="11" y="40"/>
-															<Anchors>
-																<Anchor point="LEFT" relativeKey="$parent.FrameCenter" relativePoint="RIGHT" x="0" y="0"/>
-															</Anchors>
-															<TexCoords left="0.828125" right="0.9140625" top="0.15625" bottom="0.828125"/>
-														</Texture>
-													</Layer>
-													<Layer level="OVERLAY">
-														<FontString parentKey="Name" inherits="GameFontHighlight" justifyH="LEFT">
-															<Size x="200" y="0"/>
-															<Anchors>
-																<Anchor point="LEFT" relativeKey="$parent.FrameLeft" x="8" y="-2"/>
-															</Anchors>
-														</FontString>
-													</Layer>
-												</Layers>
-											</Frame>
-											<Frame parentKey="MoneyIcon" hidden="true">
-												<Size x="20" y="18"/>
-												<Layers>
-													<Layer level="ARTWORK">
-														<Texture parentKey="MoneyIcon" atlas="bags-junkcoin" setAllPoints="true"/>
-													</Layer>
-												</Layers>
-												<Scripts>
-													<OnLoad function="RaiseFrameLevel"/>
-												</Scripts>
-											</Frame>
-											<Frame parentKey="ItemHighlight" hidden="true">
-												<Size x="202" y="48"/>
-												<Anchors>
-													<Anchor point="TOPLEFT"/>
-												</Anchors>
-												<Layers>
-													<Layer level="BACKGROUND">
-														<Texture file="Interface\AddOns\Immersion\Textures\Button_Hilite" alphaMode="ADD" parentKey="Icon">
-															<Size x="52" y="52"/>
-															<Anchors>
-																<Anchor point="TOPLEFT"/>
-															</Anchors>
-														</Texture>
-														<Texture file="Interface\PVPFrame\PvPMegaQueue" alphaMode="ADD" parentKey="NameTag">
-															<Size x="182" y="44"/>
-															<Anchors>
-																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="-8" y="0"/>
-															</Anchors>
-															<TexCoords left="0.00195313" right="0.63867188" top="0.70703125" bottom="0.76757813"/>
-														</Texture>
-													</Layer>
-													<Layer level="ARTWORK">
-														<Texture parentKey="TextSheen" hidden="false" alpha="0.01" alphaMode="ADD" atlas="TalkingHeads-Glow-TextSheen">
-															<Size x="180" y="50"/>
-															<Anchors>
-																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="-4" y="0"/>
-															</Anchors>
-														</Texture>
-													</Layer>
-												</Layers>
-												<Scripts>
-													<OnLoad function="RaiseFrameLevel"/>
-												</Scripts>
-												<Animations>
-													<AnimationGroup parentKey="InAnim" setToFinalAlpha="true">
-														<Alpha childKey="TextSheen" startDelay="0" duration="0.35" order="1" fromAlpha="0" toAlpha="0.7"/>
-														<Scale childKey="TextSheen" startDelay="0" duration="0.35" order="1" fromScaleX="0.25" fromScaleY="1" toScaleX="1" toScaleY="1">
-															<Origin point="LEFT">
-																<Offset x="0" y="0"/>
-															</Origin>
-														</Scale>
-														<Alpha childKey="TextSheen" startDelay="0.5" duration="0.35" order="1" fromAlpha="0.7" toAlpha="0"/>
-														<Scale childKey="Icon" startDelay="0" duration="0.35" order="1" fromScaleX="1.15" fromScaleY="1.15" toScaleX="1" toScaleY="1">
-															<Origin point="CENTER">
-																<Offset x="0" y="0"/>
-															</Origin>
-														</Scale>
-													</AnimationGroup>
-												</Animations>
-											</Frame>
-										</Frames>
-										<Scripts>
-											<OnLoad>
-												self.buttonTemplate = "ImmersionItemButtonTemplate, ImmersionRewardItemCodeTemplate";
-												self.spellRewardPool = CreateFramePool("BUTTON", self, "ImmersionQuestSpellTemplate, ImmersionRewardSpellCodeTemplate");
-												self.followerRewardPool = CreateFramePool("BUTTON", self, "LargeQuestInfoRewardFollowerTemplate");
-												self.spellHeaderPool = CreateFontStringPool(self, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate");
-
-												ImmersionQuestInfoItem1.container = self:GetParent():GetParent()
-												ImmersionQuestInfoItem1.highlight = self.ItemHighlight
-											</OnLoad>
-										</Scripts>
-									</Frame> -->
-								</Frames>
-							</Frame> 
-						</ScrollChild>
-					</ScrollFrame>
-				</Frames>
-				 <Scripts>
-					<OnLoad>
-						self:RegisterForDrag("LeftButton")
-					</OnLoad>
-					<OnDragStart>
-						self:StartMoving()
-					</OnDragStart>
-					<OnDragStop>
-						self:StopMovingOrSizing()
-					</OnDragStop>
-				</Scripts>
-			</Frame>			
-			<ScrollFrame parentKey="Scroll" inherits="GwScrollFrameScrollBarLeftTemplate">
-				<Size x="570" y="160"></Size>
+			</Button>					
+			<ScrollFrame parentKey="Scroll" frameLevel="4" inherits="GwScrollFrameScrollBarLeftTemplate">
+				<Size x="570" y="160"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent.Dialog" relativePoint="BOTTOMLEFT" x="40" y="0"/>
 				</Anchors>
 				<Layers>
-					<Layer level="BACKGROUND" useParentLevel="true" >
+					<Layer level="BACKGROUND">
 						<Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_scroll">
 							<Anchors>
-								<Anchor point="TOPLEFT" x="-33" y="18"/>
-								<Anchor point="BOTTOMRIGHT"/>
+								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-33" y="18"/>
+								<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
 							</Anchors>
 						</Texture>
 						<Texture parentKey="Icon" file="Interface/AddOns/GW2_UI/textures/questview/gvf_player_say" hidden="true">
@@ -1130,14 +789,13 @@
 							</Anchors>
 						</Texture>
 					</Layer>
-					<Layer level="ARTWORK" useParentLevel="true">
-						<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="TOP" wordwrap="true" text="">
+					<Layer level="ARTWORK">
+						<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="TOP" wordwrap="true">
 							<Size x="500" y="32"/>
 							<Anchors>
 								<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="0" y="0"/>
 								<Anchor point="BOTTOM" relativeKey="$parent.$parent" relativePoint="TOP" x="0" y="0"/>
 							</Anchors>
-							<Color r="1" g="1" b="1"/>
 						</FontString>
 					</Layer>
 				</Layers>
@@ -1145,19 +803,13 @@
 					<Frame parentKey="ScrollChildFrame">
 					</Frame>
 				</ScrollChild>
-				<Scripts>
-					<OnHide>
-						self.Text:SetText("");
-						self.Icon:Hide();
-					</OnHide>
-				</Scripts>
 			</ScrollFrame>
-			<StatusBar parentKey="ReputationBar" orientation="VERTICAL" hidden="true">
+			<StatusBar parentKey="ReputationBar" frameLevel="4" orientation="VERTICAL" hidden="true">
 				<Anchors>
-					<Anchor point="RIGHT"/>
-					<Anchor point="LEFT" relativePoint="RIGHT" x="-15"/>
-					<Anchor point="TOP" relativeKey="$parent.Dialog"  relativePoint="BOTTOM"/>
-					<Anchor point="BOTTOM" relativeKey="$parent.Scroll"  relativePoint="TOP"/>
+					<Anchor point="RIGHT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+					<Anchor point="LEFT" relativeKey="$parent" relativePoint="RIGHT" x="-15" y="0"/>
+					<Anchor point="TOP" relativeKey="$parent.Dialog" relativePoint="BOTTOM" x="0" y="0"/>
+					<Anchor point="BOTTOM" relativeKey="$parent.Scroll" relativePoint="TOP" x="0" y="0"/>
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
@@ -1172,7 +824,7 @@
 						<Texture file="Interface\Common\friendship-heart" parentKey="icon">
 							<Size x="32" y="32"/>
 							<Anchors>
-								<Anchor point="BOTTOM" y="-32"/>
+								<Anchor point="BOTTOM" relativeKey="$parent" relativePoint="BOTTOM" x="0" y="-32"/>
 							</Anchors>
 						</Texture>
 					</Layer>
@@ -1196,13 +848,76 @@
 					</OnLeave>
 				</Scripts>
 			</StatusBar>
-			<Frame parentKey="mover" inherits="GwMoveFrameTemplate">
+			<Button parentKey="DetailButton" frameLevel="5" hidden="true" registerForClicks="LeftButtonUp">
+				<Size x="50" y="50"/>
+				<Anchors>
+                    <Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPLEFT" x="-5" y="-15"/>
+                </Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface\UNITPOWERBARALT\PandarenTrainingLarge_Circular_Frame">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+								<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>							
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+			<Frame parentKey="Detail" frameLevel="6" enableMouse="true" movable="true" hidden="true">
+				<Size x="256" y="380"/>
+				<Anchors>
+					<Anchor point="TOP" relativeKey="$parent.DetailButton" relativePoint="BOTTOM" x="0" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer frameStrata="BACKGROUND">
+						<Texture parentKey="background" setAllPoints="true"/>			
+					</Layer>
+					<Layer frameStrata="ARTWORK">
+						<FontString parentKey="Title" inherits="QuestTitleFont" text="QUEST_OBJECTIVES" justifyH="CENTER" JustifyV="CENTER">
+							<Size x="256" y="8"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-16"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>	
+					<ScrollFrame parentKey="Scroll" inherits="GwScrollFrameScrollBarRightTemplate">
+						<Size x="210" y="305"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="16" y="-40"/>
+						</Anchors>
+						<ScrollChild>
+							<Frame parentKey="ScrollChildFrame">
+								<Size x="210"/>
+								<Frames>
+
+								</Frames>
+							</Frame> 
+						</ScrollChild>
+					</ScrollFrame>
+				</Frames>
+				 <Scripts>
+					<OnLoad>
+						self:RegisterForDrag("LeftButton")
+					</OnLoad>
+					<OnDragStart>
+						self:StartMoving()
+					</OnDragStart>
+					<OnDragStop>
+						self:StopMovingOrSizing()
+					</OnDragStop>
+				</Scripts>
+			</Frame>	
+
+			<Frame parentKey="mover" frameLevel="2" inherits="GwMoveFrameTemplate">
                 <Size x="625" y="40" />
                 <Anchors>
-                    <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT"></Anchor>
+                    <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
                 </Anchors>
             </Frame>
-			<Frame parentKey="sizer" inherits="GwSizerFrameTemplate"/>
+			<Frame parentKey="sizer" frameLevel="2" inherits="GwSizerFrameTemplate"/>
 		</Frames>
 	</Frame>
 

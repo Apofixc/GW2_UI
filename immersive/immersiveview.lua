@@ -919,7 +919,11 @@ local function ImmersiveFrameHandleHide(self)
 			function()
 				frame:Hide();
 				frame.Detail:Hide();
-				frame.Scroll.ScrollChildFrame:Hide();
+				if (frame.Scroll.Icon) then
+					frame.Scroll.Icon:Hide();
+				end
+				frame.Scroll.Text:Hide();
+				frame.Scroll.ScrollChildFrame:Hide();			
 			end
 		)
 	end
@@ -1068,16 +1072,17 @@ local function LoadImmersiveView()
 
 	CreateFrame("Frame", "GwImmersiveFrame");
 	GwGossipRegisterEvent(GwImmersiveFrame);
-
 	GwImmersiveFrame:SetScript("OnEvent", GwImmersiveFrameOnEvent);
+	GwImmersiveFrame.ShowGossip = GwImmersiveFrameOnEvent;
+	GwImmersiveFrame.HideGossip = ImmersiveFrameHandleHide;
 
-	GwImmersiveFrame.FullScreenFrame = CreateFrame("Frame", "GwFullScreenGossipViewFrame", UIParent, "GwFullScreenGossipViewFrameTemplate");
-	GwFullScreenGossipViewFrame.Scroll.ScrollChildFrame:SetWidth(GwImmersiveFrame.FullScreenFrame.Scroll:GetWidth());
+	CreateFrame("Frame", "GwFullScreenGossipViewFrame", UIParent, "GwFullScreenGossipViewFrameTemplate");
+	GwFullScreenGossipViewFrame.Scroll.ScrollChildFrame:SetWidth(GwFullScreenGossipViewFrame.Scroll:GetWidth());
 	GwFullScreenGossipViewFrame:SetScript("OnKeyDown", ImmersiveViewOnKeyDown);
 	GwFullScreenGossipViewFrame.Dialog:SetScript("OnClick", DialogOnClick);
 	
-	GwImmersiveFrame.NormalFrame = CreateFrame("Frame", "GwGossipViewFrame", UIParent, "GwGossipViewFrameTemplate");
-	GwGossipViewFrame.Scroll.ScrollChildFrame:SetWidth(GwImmersiveFrame.NormalFrame.Scroll:GetWidth());
+	CreateFrame("Frame", "GwGossipViewFrame", UIParent, "GwGossipViewFrameTemplate");
+	GwGossipViewFrame.Scroll.ScrollChildFrame:SetWidth(GwGossipViewFrame.Scroll:GetWidth());
 	GwGossipViewFrame:SetScript("OnKeyDown", ImmersiveViewOnKeyDown);
 	GwGossipViewFrame.Dialog:SetScript("OnClick", DialogOnClick);
 
@@ -1111,21 +1116,3 @@ local function LoadImmersiveView()
 end
 
 GW.LoadImmersiveView = LoadImmersiveView
-
-local function ImmersiveFrameChange(status)
-	local showFrame = false;
-
-	if (GwImmersiveFrame.GossipFrame and GwImmersiveFrame.GossipFrame:IsShown()) then
-		ImmersiveFrameHandleHide(GwImmersiveFrame);
-		showFrame = true;	
-	end
-
-	GwImmersiveFrame.GossipFrame = status and GwImmersiveFrame.FullScreenFrame or GwImmersiveFrame.NormalFrame;
-	GwImmersiveFrame.maxSizeText = status and 600 or 300;
-
-	if (showFrame) then
-		GwImmersiveFrameOnEvent(GwImmersiveFrame, GwImmersiveFrame.lastEvent);
-	end
-end
-
-GW.ImmersiveFrameChange = ImmersiveFrameChange

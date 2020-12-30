@@ -55,7 +55,7 @@ end
 
 function GwGossipTitleButtonMixin:OnClick()
 	if (self.callBack) then
-		if ((self.buttonType == "BACK" or self.buttonType == "NEXT") and ActiveAnimation("IMMERSIVE_DIALOG_ANIMATION")) then return; end
+		if (ActiveAnimation("IMMERSIVE_DIALOG_ANIMATION")) then return; end
 
 		local parent = self:GetParent():GetParent():GetParent();
 
@@ -88,6 +88,10 @@ function GwGossipTitleButtonMixin:OnShow()
 			self:SetPoint('TOPLEFT', parent, 'TOPLEFT', step, (id - 1) * (-self:GetHeight() - 5))
 		end
 	)	
+end
+
+function GwGossipTitleButtonMixin:OnHide()
+	StopAnimation("IMMERSIVE_TITLE_ANIMATION_".. self:GetID())
 end
 
 function GwGossipTitleButtonMixin:OnEnter()
@@ -413,84 +417,132 @@ local function getCustomZoneBackground(zone)
 	return false;
 end
 
-local function FullScreenFrameStyleOnShow(self)	
-	if (GetSetting("STYLE_GW2")) then
-		local num = math.random(1, 1);
+local function DinamicArt(newStatus)
+	if (newStatus) then
+		local dinamicArt = function (self)
+			if (C_CampaignInfo.IsCampaignQuest(GetQuestID())) then
+				self.backgroundLayer:SetAtlas( "QuestBG-"..UnitFactionGroup("player"));
+				self.backgroundLayer:SetTexCoord(0.2, 0.99, 0.5, 0.95);
+				self.backgroundLayer:Show();
+				self.middlegroundLayer:Hide();
+				self.foregroundLayer:Hide();
+			elseif (getCustomZoneBackground(STATIC_BACKGROUNDS)) then
+				local zoneBackground = getCustomZoneBackground(STATIC_BACKGROUNDS);
+				self.backgroundLayer:SetAtlas(zoneBackground);
+				self.backgroundLayer:Show();
+				self.middlegroundLayer:Hide();
+				self.foregroundLayer:Hide();
+			elseif (getCustomZoneBackground(DYNAMIC_BACKGROUNDS)) then
+				local dynamicBackground = getCustomZoneBackground(DYNAMIC_BACKGROUNDS);
+				self.backgroundLayer:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Back");
+				self.backgroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
+				self.backgroundLayer:Show();
+				self.middlegroundLayer:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Mid");
+				self.middlegroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
+				self.middlegroundLayer:Show();
+				self.foregroundLayer:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Fore");
+				self.foregroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
+				self.foregroundLayer:Show();
+			else
+				local classFilename = select(2, UnitClass("player"));
+				if (classFilename) then
+					self.backgroundLayer:SetAtlas("dressingroom-background-"..classFilename);
+					self.backgroundLayer:SetTexCoord(0, 1, 0.25, 0.75)
+				else
+					self.backgroundLayer:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_bg_default");
+				end
+				self.backgroundLayer:Show();
+				self.middlegroundLayer:Hide();
+				self.foregroundLayer:Hide();
+			end
+		end
 
-		self.Border:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_border_"..num);
-		self.Bottom:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_gw2_bottom_"..num);
-		self.Top:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_gw2_top_"..num);
-
-		self:GetParent().Detail.background:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_gw2_reward");
+		dinamicArt(GwFullScreenGossipViewFrame.Background.Art)
+		GwFullScreenGossipViewFrame.Background.Art:Show();
+		GwFullScreenGossipViewFrame.Background.Art:SetScript("OnShow", dinamicArt);
 	else
-		self.Border:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_border_1");
-		self.Bottom:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_classic_bottom");
-		self.Top:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_classic_top");
+		GwFullScreenGossipViewFrame.Background.Art:Hide();
+		GwFullScreenGossipViewFrame.Background.Art:SetScript("OnShow", nil);
+	end
+end
 
-		self:GetParent().Detail.background:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_classic_reward");
+local function BorderStyle(newStatus)
+	if (newStatus) then
+		local styleGW = function (self)
+			local num = math.random(1, 1);
+	
+			self.Border:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_border_"..num);
+			self.Bottom:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_gw2_bottom_"..num);
+			self.Top:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_gw2_top_"..num);
+		end
+
+		styleGW(GwFullScreenGossipViewFrame.Background.Border)
+		GwFullScreenGossipViewFrame.Detail.background:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_gw2_reward");
+		GwFullScreenGossipViewFrame.Background.Border:SetScript("OnShow", styleGW);
+	else
+		GwFullScreenGossipViewFrame.Background.Border.Border:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_border_1");
+		GwFullScreenGossipViewFrame.Background.Border.Bottom:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_classic_bottom");
+		GwFullScreenGossipViewFrame.Background.Border.Top:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_classic_top");
+
+		GwFullScreenGossipViewFrame.Detail.background:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_classic_reward");
+		GwFullScreenGossipViewFrame.Background.Border:SetScript("OnShow", nil);
+	end
+end
+
+local function DialogClick(newStatus)
+	GwImmersiveFrame.enableClick = newStatus;
+end
+
+local function ChangeFrame(newStatus)
+	GwGossipViewFrame.mover.isMoving = newStatus;
+	GwGossipViewFrame.sizer.isSizing = newStatus;
+	
+	if (newStatus) then
+		GwGossipViewFrame.sizer:Show();
+	else
+		GwGossipViewFrame.sizer:Hide();
+	end
+end
+
+local function ModeFrame(newStatus)
+	local showFrame = false;
+
+	if (GwImmersiveFrame.GossipFrame and GwImmersiveFrame.GossipFrame:IsShown()) then
+		GwImmersiveFrame.HideGossip(GwImmersiveFrame);
+		showFrame = true;	
 	end
 
-	if (GetSetting("DINAMIC_BACKGROUND")) then
-		if (C_CampaignInfo.IsCampaignQuest(GetQuestID())) then
-			self.backgroundLayer:SetAtlas( "QuestBG-"..UnitFactionGroup("player"));
-			self.backgroundLayer:SetTexCoord(0.2, 0.99, 0.5, 0.95);
-			self.backgroundLayer:Show();
-			self.middlegroundLayer:Hide();
-			self.foregroundLayer:Hide();
-		elseif (getCustomZoneBackground(STATIC_BACKGROUNDS)) then
-			local zoneBackground = getCustomZoneBackground(STATIC_BACKGROUNDS);
-			self.backgroundLayer:SetAtlas(zoneBackground);
-			self.backgroundLayer:Show();
-			self.middlegroundLayer:Hide();
-			self.foregroundLayer:Hide();
-		elseif (getCustomZoneBackground(DYNAMIC_BACKGROUNDS)) then
-			local dynamicBackground = getCustomZoneBackground(DYNAMIC_BACKGROUNDS);
-			self.backgroundLayer:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Back");
-			self.backgroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
-			self.backgroundLayer:Show();
-			self.middlegroundLayer:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Mid");
-			self.middlegroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
-			self.middlegroundLayer:Show();
-			self.foregroundLayer:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Fore");
-			self.foregroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
-			self.foregroundLayer:Show();
-		else
-			local classFilename = select(2, UnitClass("player"));
-			if (classFilename) then
-				self.backgroundLayer:SetAtlas("dressingroom-background-"..classFilename);
-				self.backgroundLayer:SetTexCoord(0, 1, 0.25, 0.75)
-			else
-				self.backgroundLayer:SetTexture("Interface/AddOns/GW2_UI/textures/questview/fsgvf_bg_default");
-			end
-			self.backgroundLayer:Show();
-			self.middlegroundLayer:Hide();
-			self.foregroundLayer:Hide();
-		end
+	if (newStatus) then
+		GwImmersiveFrame.GossipFrame = GwFullScreenGossipViewFrame;
+		GwImmersiveFrame.maxSizeText = 600;
 	else
-		self.backgroundLayer:Hide();
-		self.middlegroundLayer:Hide();
-		self.foregroundLayer:Hide();
+		GwImmersiveFrame.GossipFrame = GwGossipViewFrame;
+		GwImmersiveFrame.maxSizeText = 300;
+	end
+
+	if (showFrame) then
+		GwImmersiveFrame.ShowGossip(GwImmersiveFrame, GwImmersiveFrame.lastEvent);
 	end
 end
 
 local function LoadImmersiveCustome()
 	do
-		GwImmersiveFrame.NormalFrame.mover:HookScript("OnDragStop", function(self)
+		GwGossipViewFrame.mover:HookScript("OnDragStop", function(self)
 
 		end)
 
-		GwImmersiveFrame.NormalFrame.sizer:HookScript("OnEnter", function(self)
+		GwGossipViewFrame.sizer:HookScript("OnEnter", function(self)
 			GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 10, 30);
 			GameTooltip:ClearLines();
 			GameTooltip_SetTitle(GameTooltip, L["SIZER_HERO_PANEL"]);
 			GameTooltip:Show();
 		end)
 
-		GwImmersiveFrame.NormalFrame.sizer:HookScript("OnLeave", function(self)
+		GwGossipViewFrame.sizer:HookScript("OnLeave", function(self)
 			GameTooltip_Hide();
 		end)
 
-		GwImmersiveFrame.NormalFrame.sizer:HookScript("OnMouseUp", function(self, btn)
+		GwGossipViewFrame.sizer:HookScript("OnMouseUp", function(self, btn)
 			--SetSetting("HERO_POSITION_SCALE", self:GetParent():GetScale())
 			-- Save hero frame position
 			-- local pos = GetSetting("HERO_POSITION")
@@ -501,24 +553,16 @@ local function LoadImmersiveCustome()
 			-- end
 			-- pos.point, _, pos.relativePoint, pos.xOfs, pos.yOfs = self:GetParent():GetPoint()
 			--SetSetting("HERO_POSITION", pos)
-			GwImmersiveFrame.NormalFrame.Models.Player:RefreshCamera();
-			GwImmersiveFrame.NormalFrame.Models.Giver:RefreshCamera();
+			GwGossipViewFrame.Models.Player:RefreshCamera();
+			GwGossipViewFrame.Models.Giver:RefreshCamera();
 		end)
 	end
 
-	GwImmersiveFrame.FullScreenFrame.Background:SetScript("OnShow", FullScreenFrameStyleOnShow);
-	GW.ImmersiveFrameChange(GetSetting("FULL_SCREEN"));
-	GwImmersiveFrame.enableClick = GetSetting("MOUSE_DIALOG");
-	
-	local moveAndScale = GetSetting("MOVE_AND_SCALE");
-	GwImmersiveFrame.NormalFrame.mover.isMoving = moveAndScale;
-	GwImmersiveFrame.NormalFrame.sizer.isSizing = moveAndScale;
-
-	if (moveAndScale) then
-		GwImmersiveFrame.NormalFrame.sizer:Show();
-	else
-		GwImmersiveFrame.NormalFrame.sizer:Hide();
-	end
+	ModeFrame(GetSetting("FULL_SCREEN"))
+	DinamicArt(GetSetting("DINAMIC_ART"))
+	BorderStyle(GetSetting("STYLE"))
+	DialogClick(GetSetting("MOUSE_DIALOG"));
+	ChangeFrame(GetSetting("MOVE_AND_SCALE"));
 end
 
 GW.LoadImmersiveCustome = LoadImmersiveCustome
@@ -529,8 +573,7 @@ local function LoadImmersiveOption()
 	GwImmersiveSettings.advacedMode.checkbutton:HookScript(
 		"OnClick",
 	   function(self)
-		   local newStatus = not GetSetting("ADVANCED_MODE");
-		   self:SetChecked(newStatus);
+		   local newStatus = self:GetChecked();
 		   SetSetting("ADVANCED_MODE", newStatus)
 		   
 		   C_UI.Reload();
@@ -544,28 +587,25 @@ local function LoadImmersiveOption()
 				return;
 			end
 
-			local newStatus = not GetSetting("FULL_SCREEN");
-            self:SetChecked(newStatus);
+			local newStatus = self:GetChecked();
 			SetSetting("FULL_SCREEN", newStatus)
 			
 			if (GwImmersiveFrame) then
-				GW.ImmersiveFrameChange(newStatus)
+				ModeFrame(newStatus)
 			end
          end
     )
 	GwImmersiveSettings.forceGossip.checkbutton:HookScript(
          "OnClick",
 		function(self)
-            local newStatus = not GetSetting("FORCE_GOSSIP");
-            self:SetChecked(newStatus);
-            SetSetting("FORCE_GOSSIP", newStatus)
+            local newStatus = self:GetChecked();
+			SetSetting("FORCE_GOSSIP", newStatus)
          end
 	)
 	GwImmersiveSettings.autoNext.checkbutton:HookScript(
          "OnClick",
 		function(self)
-            local newStatus = not GetSetting("AUTO_NEXT");
-            self:SetChecked(newStatus);
+            local newStatus = self:GetChecked();
             SetSetting("AUTO_NEXT", newStatus)
          end
 	)
@@ -628,55 +668,44 @@ local function LoadImmersiveOption()
 	GwImmersiveSettings.moveAndScale.checkbutton:HookScript(
 		"OnClick",
 		function(self)
-			local newStatus = not GetSetting("MOVE_AND_SCALE");
-            self:SetChecked(newStatus);
+			local newStatus = self:GetChecked();
             SetSetting("MOVE_AND_SCALE", newStatus)
 
-			if (GwImmersiveFrame and GwImmersiveFrame.NormalFrame) then
-				GwImmersiveFrame.NormalFrame.mover.isMoving = newStatus;
-				GwImmersiveFrame.NormalFrame.sizer.isSizing = newStatus;
-				
-				if (newStatus) then
-					GwImmersiveFrame.NormalFrame.sizer:Show();
-				else
-					GwImmersiveFrame.NormalFrame.sizer:Hide();
-				end
+			if (GwGossipViewFrame) then
+				ChangeFrame(newStatus)
 			end
 		end
 	)
-	GwImmersiveSettings.styleGW2.checkbutton:HookScript(
+	GwImmersiveSettings.style.checkbutton:HookScript(
 		"OnClick",
 		function(self)
-			local newStatus = not GetSetting("STYLE_GW2");
-            self:SetChecked(newStatus);
-            SetSetting("STYLE_GW2", newStatus)
+			local newStatus = self:GetChecked();
+            SetSetting("STYLE", newStatus)
              
-			if (GwImmersiveFrame and GwImmersiveFrame.FullScreenFrame and GwImmersiveFrame.FullScreenFrame:IsShown()) then
-				FullScreenFrameStyleOnShow(GwImmersiveFrame.FullScreenFrame.Background);
+			if (GwFullScreenGossipViewFrame) then
+				BorderStyle(GetSetting("STYLE"))
 			end
 		end
 	)
-	GwImmersiveSettings.dinamicBackground.checkbutton:HookScript(
+	GwImmersiveSettings.dinamicArt.checkbutton:HookScript(
 		"OnClick",
 		function(self)
-			local newStatus = not GetSetting("DINAMIC_BACKGROUND");
-            self:SetChecked(newStatus);
-			SetSetting("DINAMIC_BACKGROUND", newStatus)
+			local newStatus = self:GetChecked();
+			SetSetting("DINAMIC_ART", newStatus)
 			
-			if (GwImmersiveFrame and GwImmersiveFrame.FullScreenFrame and GwImmersiveFrame.FullScreenFrame:IsShown()) then
-				FullScreenFrameStyleOnShow(GwImmersiveFrame.FullScreenFrame.Background);
+			if (GwFullScreenGossipViewFrame) then
+				DinamicArt(newStatus);
 			end
 		end
 	)
 	GwImmersiveSettings.mouseDialog.checkbutton:HookScript(
          "OnClick",
 		function(self)              
-            local newStatus = not GetSetting("MOUSE_DIALOG");
-            self:SetChecked(newStatus);
+			local newStatus = self:GetChecked();
             SetSetting("MOUSE_DIALOG", newStatus)
 
 			if (GwImmersiveFrame) then
-				GwImmersiveFrame.enableClick = newStatus;
+				DialogClick(newStatus)
 			end
          end
 	)
@@ -693,9 +722,9 @@ local function LoadImmersiveOption()
 	GwImmersiveSettings.animationTextSpeed.slider:SetValueStep(0.005);
 	GwImmersiveSettings.animationTextSpeed.slider:SetValue(GetSetting("ANIMATION_TEXT_SPEED"));
 	GwImmersiveSettings.animationTextSpeed.input:SetText(GetSetting("ANIMATION_TEXT_SPEED"));
-	GwImmersiveSettings.moveAndScale.checkbutton:SetChecked(MOVE_AND_SCALE);
-	GwImmersiveSettings.styleGW2.checkbutton:SetChecked(GetSetting("STYLE_GW2"));
-	GwImmersiveSettings.dinamicBackground.checkbutton:SetChecked(GetSetting("DINAMIC_BACKGROUND"));
+	GwImmersiveSettings.moveAndScale.checkbutton:SetChecked(GetSetting("MOVE_AND_SCALE"));
+	GwImmersiveSettings.style.checkbutton:SetChecked(GetSetting("STYLE"));
+	GwImmersiveSettings.dinamicArt.checkbutton:SetChecked(GetSetting("DINAMIC_ART"));
 	GwImmersiveSettings.mouseDialog.checkbutton:SetChecked(GetSetting("MOUSE_DIALOG"));
 
 	GwImmersiveSettings.advacedMode.title:SetText("Advanced Mode");
@@ -705,8 +734,8 @@ local function LoadImmersiveOption()
 	GwImmersiveSettings.autoNextTime.title:SetText("Speed Auto Next");
 	GwImmersiveSettings.animationTextSpeed.title:SetText("Speed Text Animation");
 	GwImmersiveSettings.moveAndScale.title:SetText("Move And Scale");
-	GwImmersiveSettings.styleGW2.title:SetText("Style GW2");
-	GwImmersiveSettings.dinamicBackground.title:SetText("Dinamic Background");
+	GwImmersiveSettings.style.title:SetText("Style GW2");
+	GwImmersiveSettings.dinamicArt.title:SetText("Dinamic Background");
 	GwImmersiveSettings.mouseDialog.title:SetText("Control Dialog with Mouse");
 
 	tinsert(UISpecialFrames, GwImmersiveSettings:GetName())

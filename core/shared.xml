@@ -78,5 +78,100 @@
             </Slider>
         </Frames>
     </ScrollFrame>
+    
+	<Slider name="GwScrollBarTemplate" parentKey="ScrollBar" virtual="true">
+        <Size x="12" y="0"></Size>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="trackBG" file="Interface/AddOns/GW2_UI/textures/uistuff/scrollbg">
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" x="-3"></Anchor>
+                        <Anchor point="BOTTOMRIGHT" x="-3"></Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button parentKey="ScrollUpButton">
+                <Size x="12" y="12"></Size>
+                <Anchors>
+                    <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="0" y="12"></Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer>
+                        <Texture file="Interface/AddOns/GW2_UI/textures/uistuff/scrollbutton">
+                            <Size x="12" y="12"></Size>
+                            <Anchors>
+                                <Anchor point="TOP" relativePoint="TOP"></Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick function="UIPanelScrollBarScrollUpButton_OnClick"/>
+                </Scripts>
+            </Button>
 
+            <Button parentKey="ScrollDownButton">
+                <Size x="12" y="12"></Size>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="0" y="-12"></Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer>
+                        <Texture file="Interface/AddOns/GW2_UI/textures/uistuff/scrollbutton">
+                            <Size x="12" y="12"></Size>
+                            <Anchors>
+                                <Anchor point="TOP" relativePoint="TOP"></Anchor>
+                            </Anchors>
+                            <TexCoords left="0" right="1" top="1" bottom="0" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick function="UIPanelScrollBarScrollDownButton_OnClick"/>
+                </Scripts>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnValueChanged function="UIPanelScrollBar_OnValueChanged"/>
+        </Scripts>
+        <ThumbTexture parentKey="ThumbTexture" file="Interface/AddOns/GW2_UI/textures/uistuff/scrollbarmiddle">
+            <Size x="12" y="18"/>
+        </ThumbTexture>
+    </Slider>
+
+    <ScrollFrame name="GwScrollFrameScrollBarRightTemplate" inherits="UIPanelScrollFrameCodeTemplate" virtual="true">
+    	<Frames>
+			<Slider inherits="GwScrollBarTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-15"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="15"/>
+				</Anchors>
+			</Slider>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				ScrollFrame_OnLoad(self);
+				self.scrollBarHideable = true;
+			</OnLoad>
+		</Scripts>
+    </ScrollFrame>
+
+    <ScrollFrame name="GwScrollFrameScrollBarLeftTemplate" inherits="UIPanelScrollFrameCodeTemplate" virtual="true">
+    	<Frames>
+			<Slider parentKey="ScrollBar" inherits="GwScrollBarTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="0" y="-15"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="0" y="15"/>
+				</Anchors>
+			</Slider>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				ScrollFrame_OnLoad(self);
+				self.scrollBarHideable = true;
+			</OnLoad>
+		</Scripts>
+    </ScrollFrame>
 </Ui>
