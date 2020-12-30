@@ -110,6 +110,7 @@ local function TitleButtonShow(self, event, start, finish, current)
 	local firstElement = current == start;
 	local lastElement = current == finish;
 	local moveElement = current > start and current < finish;
+	local totalHeight = 0;
 
 	local ShowElement = {
 		{ name = "NEXT", show = multiElement and (firstElement or moveElement) },
@@ -124,37 +125,31 @@ local function TitleButtonShow(self, event, start, finish, current)
 		{ name = "CANCEL", show = event == 'QUEST_GREETING' or event == 'QUEST_PROGRESS' or event == 'QUEST_COMPLETE' },
 		{ name = "EXIT", show = event == 'GOSSIP_SHOW' },
 	}
-
+	
 	GwImmersiveFrame.titleButtons = ReleaseAll(GwImmersiveFrame.titlePool);
-	local Scroll = self.Scroll;
-	local totalHeight = 0;
+
+	self.Scroll.ScrollChildFrame:Hide();
+	self.Scroll.ScrollBar:SetValue(0);
+	self.Scroll.ScrollBar:SetAlpha(0);
 	
 	for _, value in ipairs(ShowElement) do
 		if (value.show) then
 			for _, item in ipairs(GwImmersiveFrame.buttonTitleInfo[value.name]) do
-				local button = GetItemButton(GwImmersiveFrame.titlePool, GwImmersiveFrame.titleButtons, Scroll.ScrollChildFrame);	
+				local button = GetItemButton(GwImmersiveFrame.titlePool, GwImmersiveFrame.titleButtons, self.Scroll.ScrollChildFrame);	
 				local key = #GwImmersiveFrame.titleButtons;
 				local titleText = item.titleText or GW_INTERACTIVE_TEXT[item.buttonType][math.random(1, #GW_INTERACTIVE_TEXT[item.buttonType])];
 
-				button:SetInfo(item.buttonType, (key < 11 and key..". "..titleText) or titleText, item.specID, item.info, item.callBack);
+				button:SetInfo(key, item.buttonType, (key < 11 and key..". "..titleText) or titleText, item.specID, item.info, item.callBack);
+				button:Resize(self.Scroll.ScrollChildFrame:GetWidth());	
 
-				if (key > 1) then
-					button:SetPoint('TOPLEFT', GwImmersiveFrame.titleButtons[key - 1], 'BOTTOMLEFT', 0, -5);
-				else
-					button:SetPoint('TOPLEFT', Scroll.ScrollChildFrame, 'TOPLEFT', 5, -5);
-				end
-				
-				button:Resize(Scroll.ScrollChildFrame:GetWidth());
 				button:Show();
 
 				totalHeight = totalHeight + button:GetHeight() + 5;
 			end
 		end
 	end
-
-	Scroll.ScrollChildFrame:SetHeight(totalHeight);
-	Scroll.ScrollBar:SetValue(0);
-	Scroll.ScrollBar:SetAlpha(0);
+	print(totalHeight)
+	self.Scroll.ScrollChildFrame:SetHeight(totalHeight);
 
 	if ((event == "QUEST_PROGRESS" or event == "QUEST_DETAIL" or event == "QUEST_COMPLETE") and lastElement) then
 		if (not self.Detail:IsShown()) then
@@ -281,7 +276,6 @@ local function ResetDialog(self)
 	self.nextFunc = NextDialog;
 	self.numPartDialog = 0;
 
-	self.GossipFrame.Scroll.ScrollChildFrame:Hide();
 	NextDialog(self)
 end
 
@@ -859,10 +853,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------
 GwGossipTitleButtonMixin = {}
 
-function GwGossipTitleButtonMixin:SetInfo(buttonType, titleText, specID, info, callBack)
+function GwGossipTitleButtonMixin:SetInfo(key, buttonType, titleText, specID, info, callBack)
 	local isIgnored = info and info.isIgnored;
 	local isTrivial = info and info.isTrivial;
 
+	self:SetID(key);
 	self.buttonType = buttonType;
 	self.specID = specID;
 	self.callBack = callBack;
@@ -905,8 +900,6 @@ function GwGossipTitleButtonMixin:OnClick()
 
 		local parent = self:GetParent():GetParent():GetParent();
 
-		parent.Scroll.ScrollChildFrame:Hide();
-
 		local unitName = "";
 		if (GetSetting("FULL_SCREEN")) then
 			unitName = "|cFFFF5A00"..UnitName("player")..":|r";
@@ -921,6 +914,22 @@ function GwGossipTitleButtonMixin:OnClick()
 		PlaySound(self.callBack.playSound);		
 	end
 end 
+
+function GwGossipTitleButtonMixin:OnShow()
+	local id = self:GetID();
+	local parent = self:GetParent()
+
+	AddToAnimation(
+		"IMMERSIVE_TITLE_ANIMATION_"..id,
+		self:GetWidth(),
+		0,
+		GetTime(),
+		0.6 * id * 0.5,
+		function(step)
+			self:SetPoint('TOPLEFT', parent, 'TOPLEFT', step, (id - 1) * -(self:GetHeight() + 5))
+		end
+	)	
+end
 
 function GwGossipTitleButtonMixin:OnEnter()
 	if (self.specID) then
@@ -1009,7 +1018,6 @@ local function ImmersiveFrameHandleHide(self)
 		self.customFrame:Hide()
 		self.customFrame = nil;		
 	else
-		
 		GwImmersiveSettings:Hide();
 		StopAnimation("DIALOG_ANIMATION");
 		self.splitDialog = nil;
@@ -1031,6 +1039,7 @@ local function ImmersiveFrameHandleHide(self)
 			function()
 				frame:Hide();
 				frame.Detail:Hide();
+				frame.Scroll.ScrollChildFrame:Hide();
 			end
 		)
 	end
@@ -1184,13 +1193,11 @@ local function LoadImmersiveView()
 
 	GwImmersiveFrame.FullScreenFrame = CreateFrame("Frame", "GwFullScreenGossipViewFrame", UIParent, "GwFullScreenGossipViewFrameTemplate");
 	GwFullScreenGossipViewFrame.Scroll.ScrollChildFrame:SetWidth(GwImmersiveFrame.FullScreenFrame.Scroll:GetWidth());
-	GwFullScreenGossipViewFrame.Scroll.ScrollChildFrame:Hide();
 	GwFullScreenGossipViewFrame:SetScript("OnKeyDown", ImmersiveViewOnKeyDown);
 	GwFullScreenGossipViewFrame.Dialog:SetScript("OnClick", DialogOnClick);
 	
 	GwImmersiveFrame.NormalFrame = CreateFrame("Frame", "GwGossipViewFrame", UIParent, "GwGossipViewFrameTemplate");
 	GwGossipViewFrame.Scroll.ScrollChildFrame:SetWidth(GwImmersiveFrame.NormalFrame.Scroll:GetWidth());
-	GwGossipViewFrame.Scroll.ScrollChildFrame:Hide();
 	GwGossipViewFrame:SetScript("OnKeyDown", ImmersiveViewOnKeyDown);
 	GwGossipViewFrame.Dialog:SetScript("OnClick", DialogOnClick);
 

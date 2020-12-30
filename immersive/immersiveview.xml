@@ -1111,15 +1111,15 @@
 				</Scripts>
 			</Frame>			
 			<ScrollFrame parentKey="Scroll" inherits="GwScrollFrameScrollBarLeftTemplate">
-				<Size x="590" y="160"></Size>
+				<Size x="570" y="160"></Size>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.Dialog" relativePoint="BOTTOMLEFT" x="23" y="0"/>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Dialog" relativePoint="BOTTOMLEFT" x="40" y="0"/>
 				</Anchors>
 				<Layers>
 					<Layer level="BACKGROUND" useParentLevel="true" >
 						<Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_scroll">
 							<Anchors>
-								<Anchor point="TOPLEFT" x="-15" y="15"/>
+								<Anchor point="TOPLEFT" x="-33" y="18"/>
 								<Anchor point="BOTTOMRIGHT"/>
 							</Anchors>
 						</Texture>
@@ -1141,7 +1141,7 @@
 						</FontString>
 					</Layer>
 				</Layers>
-				<ScrollChild>
+				<ScrollChild>				
 					<Frame parentKey="ScrollChildFrame">
 					</Frame>
 				</ScrollChild>
