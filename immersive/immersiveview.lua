@@ -21,12 +21,13 @@ local GW_INTERACTIVE_TEXT = {
 ----------------------------------------- API / OTHER FUNCTION ------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
 
-local function GetItemButton(pool, buttons, parentButton)
+local function GetItemButton(pool, buttons, parentButton, width)
 	local button = pool:Acquire();
 	button:SetParent(parentButton);
+	button:SetWidth(width or button:GetWidth());
 	table.insert(buttons, button);
 
-	return button;
+	return button, pool:GetNumActive();
 end
 
 local function ReleaseAll(pool)
@@ -88,21 +89,19 @@ local function IsQuestAutoAccepted(questStartItemID)
 	return false;
 end
 
-local function TitleButtonUpdate(buttonTitleInfo, info, buttonType, func, arg1, playSound)
+local function TitleButtonUpdate(buttonTitleInfo, info, buttonType, func, arg, playSound)
 	local titleInfo = buttonTitleInfo[buttonType];
 	if (not titleInfo) then
 		buttonTitleInfo[buttonType] = {}
 		titleInfo = buttonTitleInfo[buttonType];
 	end
 
-	local item = {}
-	item.specID = info and (info.spellID or info.questID);
-	item.titleText = info and (info.name or info.title);
-	item.info = info;
-	item.buttonType = buttonType;
-	item.callBack = {func = func, arg1 = arg1, playSound = playSound }
+	info.buttonType = buttonType;
+	info.func = func;
+	info.arg = arg;
+	info.playSound = playSound;
 
-	table.insert(titleInfo, item);
+	table.insert(titleInfo, info);
 end
 
 local function TitleButtonShow(self, event, start, finish, current)
@@ -110,6 +109,7 @@ local function TitleButtonShow(self, event, start, finish, current)
 	local firstElement = current == start;
 	local lastElement = current == finish;
 	local moveElement = current > start and current < finish;
+	local width = self.Scroll.ScrollChildFrame:GetWidth()
 	local totalHeight = 0;
 
 	local ShowElement = {
@@ -127,22 +127,32 @@ local function TitleButtonShow(self, event, start, finish, current)
 	}
 	
 	GwImmersiveFrame.titleButtons = ReleaseAll(GwImmersiveFrame.titlePool);
-
-	self.Scroll.ScrollChildFrame:Hide();
-	self.Scroll.ScrollBar:SetValue(0);
-	self.Scroll.ScrollBar:SetAlpha(0);
 	
 	for _, value in ipairs(ShowElement) do
 		if (value.show) then
-			for _, item in ipairs(GwImmersiveFrame.buttonTitleInfo[value.name]) do
-				local button = GetItemButton(GwImmersiveFrame.titlePool, GwImmersiveFrame.titleButtons, self.Scroll.ScrollChildFrame);	
-				local key = #GwImmersiveFrame.titleButtons;
-				local titleText = item.titleText or GW_INTERACTIVE_TEXT[item.buttonType][math.random(1, #GW_INTERACTIVE_TEXT[item.buttonType])];
+			for _, info in ipairs(GwImmersiveFrame.buttonTitleInfo[value.name]) do
+				local button, key = GetItemButton(GwImmersiveFrame.titlePool, GwImmersiveFrame.titleButtons, self.Scroll.ScrollChildFrame, width);	
+				local keyTitle = key < 11 and key..". " or "";
 
-				button:SetInfo(key, item.buttonType, (key < 11 and key..". "..titleText) or titleText, item.specID, item.info, item.callBack);
-				button:Resize(self.Scroll.ScrollChildFrame:GetWidth());	
+				if (info.buttonType == "AVAILABLE") then
+					button:SetQuest(keyTitle..info.title, info.questLevel, info.isTrivial, info.frequency, info.repeatable, info.isLegendary, info.isIgnored, info.questID);
+				elseif (info.buttonType == "ACTIVE") then
+					button:SetActiveQuest(keyTitle..info.title, info.questLevel, info.isTrivial, info.isComplete, info.isLegendary, info.isIgnored, info.questID);
+				elseif (info.buttonType == "GOSSIP") then
+					button:SetOption(keyTitle..info.name, info.type, info.spellID);
+				else
+					button:SetAction(keyTitle..GW_INTERACTIVE_TEXT[info.buttonType][math.random(1, #GW_INTERACTIVE_TEXT[info.buttonType])], info.buttonType);
+				end
+
+				button:SetFunction(key, info.func, info.arg, info.playSound);
+
+				if (key > 1) then
+					button:SetPoint('TOPLEFT', GwImmersiveFrame.titleButtons[key - 1], 'BOTTOMLEFT', width, -5);
+				else
+					button:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'TOPLEFT', width, 0);
+				end
+
 				button:Show();
-
 				totalHeight = totalHeight + button:GetHeight() + 5;
 			end
 		end
@@ -172,11 +182,11 @@ local function Split(self, text)
 	if (GetSetting("FULL_SCREEN")) then
 		unitName = UnitName("npc");
 		if (unitName) then
-			self.startAnimation = strlenutf8(unitName);
+			self.startAnimationDialog = strlenutf8(unitName);
 			unitName = "|cFFFF5A00"..unitName..":|r ";
 		end 
 	else
-		self.startAnimation = 0;
+		self.startAnimationDialog = 0;
 	end
 
 	for _, value in ipairs({ strsplit('\n', text)}) do
@@ -229,13 +239,13 @@ local function Dialog(self, numPart)
 		self.numPartDialog = numPart;
 		self.GossipFrame.Dialog.Text:SetText(self.splitDialog[numPart]);
 		
-		local lenght = strlenutf8(self.GossipFrame.Dialog.Text:GetText()) - self.startAnimation;
+		local lenghtAnimationDialog = strlenutf8(self.GossipFrame.Dialog.Text:GetText()) - self.startAnimationDialog;
 		AddToAnimation(
 			"IMMERSIVE_DIALOG_ANIMATION",
-			self.startAnimation,
-			lenght,
+			self.startAnimationDialog,
+			lenghtAnimationDialog,
 			GetTime(),
-			GetSetting("ANIMATION_TEXT_SPEED") * lenght,
+			GetSetting("ANIMATION_TEXT_SPEED") * lenghtAnimationDialog,
 			function(step)
 				self.GossipFrame.Dialog.Text:SetAlphaGradient(step, 1);
 			end,
@@ -243,7 +253,9 @@ local function Dialog(self, numPart)
 			function()
 				if (self.nextFunc and numPart < #self.splitDialog) then
 					C_Timer.After(GetSetting("AUTO_NEXT_TIME"), function() 
-						self.nextFunc(self);	
+						if (self.nextFunc) then
+							self.nextFunc(self);
+						end	
 					end);
 				else
 					StopAnimationDialog(GwImmersiveFrame)
@@ -886,8 +898,14 @@ local function ImmersiveFrameHandleShow(self, title, dialog)
 			self.GossipFrame:SetAlpha(step)
 		end
 	)
+	
+	if (title) then
+		self.GossipFrame.Title.Text:SetText(title);
+		self.GossipFrame.Title:Show();
+	else
+		self.GossipFrame.Title:Hide();
+	end
 
-	self.GossipFrame.Title.Text:SetText(title);
 	Split(self, dialog);
 
 	ResetDialog(self);
@@ -900,9 +918,10 @@ local function ImmersiveFrameHandleHide(self)
 	else
 		GwImmersiveSettings:Hide();
 		StopAnimation("IMMERSIVE_DIALOG_ANIMATION");
+		StopAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLEBUTTON");
 		self.splitDialog = nil;
 		self.numPartDialog = nil;
-		self.startAnimation = nil;
+		self.startAnimationDialog = nil;
 		
 		local frame = self.GossipFrame;
 		
@@ -923,6 +942,8 @@ local function ImmersiveFrameHandleHide(self)
 					frame.Scroll.Icon:Hide();
 				end
 				frame.Scroll.Text:Hide();
+				frame.Scroll.ScrollBar:SetValue(0);
+				frame.Scroll.ScrollBar:SetAlpha(0);
 				frame.Scroll.ScrollChildFrame:Hide();			
 			end
 		)
@@ -979,7 +1000,7 @@ end
 
 local function ImmersiveViewOnKeyDown(self, button)
 	if (button == 'ESCAPE') then
-		if (not QuestGetAutoAccept()) then
+		if (not QuestGetAutoAccept() --[[ and GwImmersiveSettings:Hide() ]]) then
 			CloseItemText();
 			CloseQuest();
 			C_GossipInfo.CloseGossip();
@@ -1086,17 +1107,12 @@ local function LoadImmersiveView()
 	GwGossipViewFrame:SetScript("OnKeyDown", ImmersiveViewOnKeyDown);
 	GwGossipViewFrame.Dialog:SetScript("OnClick", DialogOnClick);
 
-	if CustomGossipManagerMixin then
-		GwImmersiveFrame.RegisterHandler = CustomGossipManagerMixin.RegisterHandler
-		GwImmersiveFrame.GetGossipHandler = CustomGossipManagerMixin.GetHandler
-		CustomGossipManagerMixin.OnLoad(GwImmersiveFrame)
+	GwImmersiveFrame.RegisterHandler = CustomGossipManagerMixin.RegisterHandler
+	GwImmersiveFrame.GetGossipHandler = CustomGossipManagerMixin.GetHandler
+	CustomGossipManagerMixin.OnLoad(GwImmersiveFrame)
+	CustomGossipFrameManager:UnregisterAllEvents()
 
-		if CustomGossipFrameManager then
-			CustomGossipFrameManager:UnregisterAllEvents()
-		end
-	end
-
-	GwImmersiveFrame.titlePool = CreateFramePool("BUTTON", nil, "GwChoiceTitleButtonTemplate");
+	GwImmersiveFrame.titlePool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate");
 	GwImmersiveFrame.rewardPool = CreateFramePool("BUTTON", nil, "GwGossipItemButtonTemplate, GwGossipRewardItemCodeTemplate");
 	GwImmersiveFrame.rewardSpellPool = CreateFramePool("BUTTON", nil, "GwQuestSpellTemplate, GwRewardSpellCodeTemplate");
 	GwImmersiveFrame.rewardFollowerPool = CreateFramePool("BUTTON", nil, "LargeQuestInfoRewardFollowerTemplate");
@@ -1105,14 +1121,14 @@ local function LoadImmersiveView()
 	C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end;
 	
 	GwImmersiveFrame.buttonTitleInfo = {}
-	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, nil, "NEXT", NextDialog, GwImmersiveFrame, SOUNDKIT.IG_QUEST_LIST_OPEN);
-	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, nil, "BACK", BackDialog, GwImmersiveFrame, SOUNDKIT.IG_QUEST_LIST_OPEN);
-	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, nil, "ACCEPT", GetQuest, nil, SOUNDKIT.IG_QUEST_LIST_OPEN);
-	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, nil, "DECLINE", DeclineQuest, nil, SOUNDKIT.IG_QUEST_CANCEL);
-	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, nil, "COMPLETE", CompleteQuest, nil, SOUNDKIT.IG_QUEST_LIST_OPEN);
-	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, nil, "FINISH", GetReward, nil, SOUNDKIT.IG_QUEST_LIST_OPEN);
-	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, nil, "CANCEL", CloseQuest, nil, SOUNDKIT.IG_QUEST_LIST_CLOSE);
-	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, nil, "EXIT", C_GossipInfo.CloseGossip, nil, SOUNDKIT.IG_QUEST_LIST_CLOSE);
+	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, {}, "NEXT", NextDialog, GwImmersiveFrame, SOUNDKIT.IG_QUEST_LIST_OPEN);
+	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, {}, "BACK", BackDialog, GwImmersiveFrame, SOUNDKIT.IG_QUEST_LIST_OPEN);
+	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, {}, "ACCEPT", GetQuest, nil, SOUNDKIT.IG_QUEST_LIST_OPEN);
+	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, {}, "DECLINE", DeclineQuest, nil, SOUNDKIT.IG_QUEST_CANCEL);
+	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, {}, "COMPLETE", CompleteQuest, nil, SOUNDKIT.IG_QUEST_LIST_OPEN);
+	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, {}, "FINISH", GetReward, nil, SOUNDKIT.IG_QUEST_LIST_OPEN);
+	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, {}, "CANCEL", CloseQuest, nil, SOUNDKIT.IG_QUEST_LIST_CLOSE);
+	TitleButtonUpdate(GwImmersiveFrame.buttonTitleInfo, {}, "EXIT", C_GossipInfo.CloseGossip, nil, SOUNDKIT.IG_QUEST_LIST_CLOSE);
 end
 
 GW.LoadImmersiveView = LoadImmersiveView

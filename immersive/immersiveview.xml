@@ -621,9 +621,11 @@
 		<Scripts>
 			<OnShow>
 				UIFrameFadeOut(UIParent, 0.5, 1, 0);
+				GameTooltip:SetIgnoreParentAlpha(true);
 			</OnShow>
 			<OnHide>
 				UIFrameFadeIn(UIParent, 0.2, 0, 1);
+				GameTooltip:SetIgnoreParentAlpha(false);
 			</OnHide>
 		</Scripts>
 	</Frame>
@@ -920,5 +922,4 @@
 			<Frame parentKey="sizer" frameLevel="2" inherits="GwSizerFrameTemplate"/>
 		</Frames>
 	</Frame>
-
 </Ui>

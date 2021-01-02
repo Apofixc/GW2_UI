@@ -7,130 +7,6 @@ local ActiveAnimation = GW.ActiveAnimation
 local StopAnimation = GW.StopAnimation
 
 ---------------------------------------------------------------------------------------------------------------------
----------------------------------------- GOSSIP TITLE BUTTON MIXIN --------------------------------------------------
----------------------------------------------------------------------------------------------------------------------
-
-GwGossipTitleButtonMixin = {}
-
-function GwGossipTitleButtonMixin:SetInfo(id, buttonType, titleText, specID, info, callBack)
-	local isIgnored = info and info.isIgnored;
-	local isTrivial = info and info.isTrivial;
-
-	self:SetID(id);
-	self.buttonType = buttonType;
-	self.specID = specID;
-	self.callBack = callBack;
-
-	if (buttonType == "ACTIVE") then
-		QuestUtil.ApplyQuestIconActiveToTexture(self.Icon, info.isComplete, info.isLegendary, info.frequency, info.isRepeatable, QuestUtil.ShouldQuestIconsUseCampaignAppearance(info.questID), C_QuestLog.IsQuestCalling(info.questID));
-	elseif (buttonType == "AVAILABLE") then
-		QuestUtil.ApplyQuestIconOfferToTexture(self.Icon, info.isLegendary, info.frequency, info.isRepeatable, QuestUtil.ShouldQuestIconsUseCampaignAppearance(info.questID), C_QuestLog.IsQuestCalling(info.questID))
-	elseif (buttonType == "GOSSIP") then
-		self.Icon:SetTexture("Interface/GossipFrame/" .. info.type .. "GossipIcon");
-	else
-		self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/icons/icon-"..buttonType);
-	end
-
-	self:UpdateTitle(titleText, isIgnored, isTrivial);
-end
-
-function GwGossipTitleButtonMixin:UpdateTitle(titleText, isIgnored, isTrivial)
-	if (isIgnored) then
-		self.Label:SetFormattedText("|cFF8C8C8C%s|r", titleText);
-		self.Icon:SetVertexColor(0.5,0.5,0.5);
-	elseif (isTrivial) then
-		self.Label:SetFormattedText("|cffffffff%s|r", titleText);
-		self.Icon:SetVertexColor(0.5,0.5,0.5);
-	elseif (self.buttonType == "AVAILABLE" or self.buttonType == "ACTIVE") then
-		self.Label:SetFormattedText("|cFFFF5A00%s|r",titleText);
-		self.Icon:SetVertexColor(1,1,1);
-	elseif (self.buttonType == "GOSSIP") then
-		self.Label:SetFormattedText(titleText);
-		self.Icon:SetVertexColor(1,1,1);
-	else
-		self.Label:SetFormattedText("|cFF8C00FF%s|r", titleText);
-		self.Icon:SetVertexColor(1,1,1);
-	end
-end
-
-function GwGossipTitleButtonMixin:OnClick()
-	if (self.callBack) then
-		if (ActiveAnimation("IMMERSIVE_DIALOG_ANIMATION")) then return; end
-
-		local parent = self:GetParent():GetParent():GetParent();
-
-		local unitName = "";
-		if (GetSetting("FULL_SCREEN")) then
-			unitName = "|cFFFF5A00"..UnitName("player")..":|r";
-		else
-			parent.Scroll.Icon:Show();
-		end
-
-		parent.Scroll.Text:SetText(unitName..self.Label:GetText():gsub("^.+%d.", ""));
-	
-		self.callBack.func(self.callBack.arg1);
-		
-		PlaySound(self.callBack.playSound);		
-	end
-end 
-
-function GwGossipTitleButtonMixin:OnShow()
-	local id = self:GetID();
-	local parent = self:GetParent()
-
-	AddToAnimation(
-		"IMMERSIVE_TITLE_ANIMATION_"..id,
-		self:GetWidth(),
-		0,
-		GetTime(),
-		0.4 * id,
-		function(step)
-			self:SetPoint('TOPLEFT', parent, 'TOPLEFT', step, (id - 1) * (-self:GetHeight() - 5))
-		end
-	)	
-end
-
-function GwGossipTitleButtonMixin:OnHide()
-	StopAnimation("IMMERSIVE_TITLE_ANIMATION_".. self:GetID())
-end
-
-function GwGossipTitleButtonMixin:OnEnter()
-	if (self.specID) then
-		GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT");
-		if (self.buttonType == "GOSSIP") then 
-			GameTooltip:SetSpellByID(self.specID);
-		elseif (self.buttonType == "ACTIVE") then
-			local level = C_QuestLog.GetQuestDifficultyLevel(self.specID) ;
-			GameTooltip:SetText(string.format("Рекомендуемый уровень: %d", level));
-		elseif (self.buttonType == "AVAILABLE") then
-			local level =  C_QuestLog.GetQuestDifficultyLevel(self.specID) ;
-			local num = C_QuestLog.GetSuggestedGroupSize(self.specID);
-			num = num == 0 and 1;
-			GameTooltip:SetText(string.format("Рекомендуемый уровень: %d", level));
-			GameTooltip:AddLine(QUEST_SUGGESTED_GROUP_NUM:format(num));
-		end
-		GameTooltip:Show(); 
-		GameTooltip:SetIgnoreParentAlpha(true);
-	end
-end 
-
-function GwGossipTitleButtonMixin:OnLeave()
-	GameTooltip:SetIgnoreParentAlpha(false);
-	GameTooltip:Hide(); 
-end 
-
-function GwGossipTitleButtonMixin:Resize(width)
-	self:SetWidth(width);
-	self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()));
-	
-	if (GetSetting("FULL_SCREEN")) then
-		self:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight")
-	else
-		self:SetHighlightTexture("Interface/AddOns/GW2_UI/textures/questview/gvf_scroll_buttom")
-	end 
-end
-
----------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------- MODEL ------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
 
@@ -458,11 +334,11 @@ local function DinamicArt(newStatus)
 		end
 
 		dinamicArt(GwFullScreenGossipViewFrame.Background.Art)
-		GwFullScreenGossipViewFrame.Background.Art:Show();
 		GwFullScreenGossipViewFrame.Background.Art:SetScript("OnShow", dinamicArt);
+		GwFullScreenGossipViewFrame.Background.Art:Show();	
 	else
-		GwFullScreenGossipViewFrame.Background.Art:Hide();
 		GwFullScreenGossipViewFrame.Background.Art:SetScript("OnShow", nil);
+		GwFullScreenGossipViewFrame.Background.Art:Hide();
 	end
 end
 
@@ -493,7 +369,7 @@ local function DialogClick(newStatus)
 	GwImmersiveFrame.enableClick = newStatus;
 end
 
-local function ChangeFrame(newStatus)
+local function PositionFrame(newStatus)
 	GwGossipViewFrame.mover.isMoving = newStatus;
 	GwGossipViewFrame.sizer.isSizing = newStatus;
 	
@@ -505,6 +381,16 @@ local function ChangeFrame(newStatus)
 end
 
 local function ModeFrame(newStatus)
+	local function ApplyChangeToCreate(self, name, mixin)
+		for obj, _ in self:EnumerateActive() do
+			obj[name] = mixin[name];
+		end	
+
+		for _, obj in self:EnumerateInactive() do
+			obj[name] = mixin[name];
+		end	
+	end
+
 	local showFrame = false;
 
 	if (GwImmersiveFrame.GossipFrame and GwImmersiveFrame.GossipFrame:IsShown()) then
@@ -515,9 +401,55 @@ local function ModeFrame(newStatus)
 	if (newStatus) then
 		GwImmersiveFrame.GossipFrame = GwFullScreenGossipViewFrame;
 		GwImmersiveFrame.maxSizeText = 600;
+
+		function GossipTitleButtonMixin:SetHighlight()
+			self:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight")
+		end
+		ApplyChangeToCreate(GwImmersiveFrame.titlePool, "SetHighlight", GossipTitleButtonMixin)
+
+		function GossipTitleButtonMixin:SetAnimationText()
+			local playerName = UnitName("player");
+			local text = self:GetText():gsub("^.+%d+%p%s", "");
+
+			self.startAnimationText = strlenutf8(playerName);
+			self.lenghtAnimationText = strlenutf8(text) - self.startAnimationText;
+			self.frameAnimationText  = self:GetParent():GetParent():GetParent().Scroll;
+
+			self.frameAnimationText.ScrollBar:SetValue(0);
+			self.frameAnimationText.ScrollBar:SetAlpha(0);
+			self.frameAnimationText.ScrollChildFrame:Hide();
+			self.frameAnimationText.Text:Show();
+			self.frameAnimationText.Text:SetText("|cFFFF5A00"..playerName..":|r "..text);
+
+			return self.startAnimationText and self.lenghtAnimationText and self.frameAnimationText;
+		end
+		ApplyChangeToCreate(GwImmersiveFrame.titlePool, "SetAnimationText", GossipTitleButtonMixin)
 	else
 		GwImmersiveFrame.GossipFrame = GwGossipViewFrame;
 		GwImmersiveFrame.maxSizeText = 300;
+
+		function GossipTitleButtonMixin:SetHighlight()
+			self:SetHighlightTexture("Interface/AddOns/GW2_UI/textures/questview/gvf_scroll_buttom")
+		end
+		ApplyChangeToCreate(GwImmersiveFrame.titlePool, "SetHighlight", GossipTitleButtonMixin)
+
+		function GossipTitleButtonMixin:SetAnimationText()
+			local text = self:GetText():gsub("^.+%d+%p%s", "");
+
+			self.startAnimationText = 0;
+			self.lenghtAnimationText  = strlenutf8(text) - self.startAnimationText;
+			self.frameAnimationText = self:GetParent():GetParent():GetParent().Scroll;
+
+			self.frameAnimationText.ScrollBar:SetValue(0);
+			self.frameAnimationText.ScrollBar:SetAlpha(0);
+			self.frameAnimationText.ScrollChildFrame:Hide();
+			self.frameAnimationText.Icon:Show();
+			self.frameAnimationText.Text:Show();
+			self.frameAnimationText.Text:SetText(text);
+
+			return self.startAnimationText and self.lenghtAnimationText and self.frameAnimationText;
+		end
+		ApplyChangeToCreate(GwImmersiveFrame.titlePool, "SetAnimationText", GossipTitleButtonMixin)
 	end
 
 	if (showFrame) then
@@ -558,11 +490,107 @@ local function LoadImmersiveCustome()
 		end)
 	end
 
+	function GossipTitleButtonMixin:SetAction(titleText, iconName)
+		self.type = "Action";
+
+		self:SetFormattedText(ACTION_DISPLAY, titleText);
+		self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/icons/icon-"..iconName);
+		self.Icon:SetVertexColor(1, 1, 1, 1);
+	
+		self:Resize();
+	end
+	
+	function GossipTitleButtonMixin:SetFunction(id, func, arg, playSound)
+		self:SetID(id);
+
+		self.func = func;
+		self.arg = arg;
+		self.playSound = playSound;
+
+		self:SetHighlight();
+	end
+
+	function GossipTitleButtonMixin:SetHighlight()
+		self:SetHighlightTexture(nil)
+	end
+
+	function GossipTitleButtonMixin:SetAnimationText()
+		self.frameAnimationText = self:GetParent():GetParent():GetParent().Scroll;
+
+		self.frameAnimationText.ScrollBar:SetValue(0);
+		self.frameAnimationText.ScrollBar:SetAlpha(0);
+		self.frameAnimationText.ScrollChildFrame:Hide();
+
+		return false;
+	end
+	
+	function GossipTitleButtonMixin:OnClick()
+		if (not ActiveAnimation("IMMERSIVE_DIALOG_ANIMATION") and self.func) then
+			local finishFunc = function()
+				self.func(self.arg);
+
+				if (self.playSound) then
+					PlaySound(self.playSound);	
+				end
+			end	
+			
+			if (self:SetAnimationText()) then
+				AddToAnimation(
+					"IMMERSIVE_DIALOG_ANIMATION_TITLEBUTTON",
+					self.startAnimationText,
+					self.lenghtAnimationText,
+					GetTime(),
+					GetSetting("ANIMATION_TEXT_SPEED") * self.lenghtAnimationText,
+					function(step)
+						self.frameAnimationText.Text:SetAlphaGradient(step, 1);
+					end,
+					true,
+					finishFunc
+				)	
+			else
+				finishFunc();	
+			end
+		end
+	end 
+
+	function GossipTitleButtonMixin:OnShowAnimation()
+		local id = self:GetID();
+		local point, relativeTo, relativePoint, _, yOfs = self:GetPoint()
+
+		if (id and id > 0) then
+			AddToAnimation(
+				"IMMERSIVE_TITLE_ANIMATION_"..id,
+				self:GetWidth(),
+				0,
+				GetTime(),
+				0.4 * id,
+				function(step)
+					self:SetPoint(point, relativeTo, relativePoint, step, yOfs)
+				end
+			)	
+		else
+			self:SetPoint(point, relativeTo, relativePoint, 0, yOfs)
+		end
+	end
+	
+	function GossipTitleButtonMixin:OnHideAnimation()
+		local id = self:GetID();
+
+		if (id and id > 0) then
+			StopAnimation("IMMERSIVE_TITLE_ANIMATION_"..id)
+		end
+	end
+
 	ModeFrame(GetSetting("FULL_SCREEN"))
 	DinamicArt(GetSetting("DINAMIC_ART"))
 	BorderStyle(GetSetting("STYLE"))
 	DialogClick(GetSetting("MOUSE_DIALOG"));
-	ChangeFrame(GetSetting("MOVE_AND_SCALE"));
+	PositionFrame(GetSetting("MOVE_AND_SCALE"));
+
+	IGNORED_QUEST_DISPLAY = "|cFF8C8C8C%s";
+	TRIVIAL_QUEST_DISPLAY = "|cffffffff%s";
+	NORMAL_QUEST_DISPLAY = "|cFFFF5A00%s";
+	ACTION_DISPLAY = "|cFF8C00FF%s";
 end
 
 GW.LoadImmersiveCustome = LoadImmersiveCustome
@@ -672,7 +700,7 @@ local function LoadImmersiveOption()
             SetSetting("MOVE_AND_SCALE", newStatus)
 
 			if (GwGossipViewFrame) then
-				ChangeFrame(newStatus)
+				PositionFrame(newStatus)
 			end
 		end
 	)

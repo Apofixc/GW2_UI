@@ -1,31 +1,32 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 
-    <Button name="GwChoiceTitleButtonTemplate" hidden="true" virtual="true" mixin="GwGossipTitleButtonMixin">
+    <Button name="GwTitleButtonTemplate" hidden="true" virtual="true" mixin="GossipTitleButtonMixin">
 		<Layers>
-			<Layer level="OVERLAY">
-				<Texture parentKey="Icon">
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon" file="Interface\QuestFrame\UI-Quest-BulletPoint">
 					<Size x="20" y="20"/>
 					<Anchors>
 						<Anchor point="LEFT" x="16"/> 
 					</Anchors>
 				</Texture>
 			</Layer>
-			<Layer level="ARTWORK">
-				<FontString parentKey="Label" inherits="DialogButtonHighlightText" justifyH="LEFT" wordwrap="true">
-					<Anchors>
-						<Anchor point="LEFT" x="42"/>
-						<Anchor point="RIGHT"/>
-					</Anchors>
-				</FontString>
-			</Layer>
 		</Layers>
 		<Scripts>
 			<OnClick method="OnClick"/>
-			<OnShow method="OnShow"/>
+			<OnShow method="OnShowAnimation"/>
+			<OnHide method="OnHideAnimation"/>
 			<OnEnter method="OnEnter"/>
 			<OnLeave method="OnLeave"/>
 		</Scripts>
+		<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+		<ButtonText>
+			<Anchors>
+				<Anchor point="LEFT" x="42" y="0"/>
+			</Anchors>
+			<Color a="1" r="1" g="1" b="1"/>
+		</ButtonText>
+		<NormalFont style="QuestFontLeft"/>
 	</Button>
 	<!--inherits="QuestInfoRewardSpellCodeTemplate" -->
 	<Button name="GwRewardSpellCodeTemplate"  virtual="true">
@@ -198,87 +199,6 @@
 			</Layer>
 		</Layers>									
 	</Button>
-	
-	<Frame name="GwMoveFrameTemplate" enableMouse="true" movable="true" virtual="true">
-		<Scripts>
-			<OnLoad>
-				self:RegisterForDrag("LeftButton");
-				self.isMoving = true; 
-			</OnLoad>
-			<OnDragStart>
-				if not self.isMoving then
-					return;
-				end
-
-				self:GetParent():StartMoving();
-			</OnDragStart>
-			<OnDragStop>
-				self:GetParent():StopMovingOrSizing();
-			</OnDragStop>
-		</Scripts>
-	</Frame>
-
-	<Frame name="GwSizerFrameTemplate" enableMouse="true" virtual="true">
-	    <Size x="32" y="32"></Size>
-        <Anchors>
-            <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="0" y="0"></Anchor>
-         </Anchors>
-		 <Layers>
-             <Layer level="OVERLAY">
-                <Texture parentKey="texture" file="Interface/AddOns/GW2_UI/textures/uistuff/resize">
-                	 <Size x="32" y="32"></Size>
-                     <Anchors>
-                         <Anchor point="BOTTOMRIGHT" x="0" y="0"></Anchor>
-                     </Anchors>
-                </Texture>
-            </Layer>
-        </Layers>
-		<Scripts>
-			<OnLoad>
-				self.texture:SetDesaturated(true);
-				self.isSizing = true; 
-			</OnLoad>
-			<OnEnter>
-				self.texture:SetDesaturated(false);
-			</OnEnter>
-			<OnLeave>
-				self.texture:SetDesaturated(true);
-			</OnLeave>
-			<OnMouseDown>
-				if not self.isSizing or button~= "RightButton" then
-					return;
-				end
-				
-				self.GetScaleDistance = function ()
-					local left, top = self.Left, self.Top;
-					local scale = self.effectiveScale;
-					local x, y = GetCursorPosition();
-					x = x / scale - left;
-					y = top - y / scale;
-					return sqrt(x * x + y * y);
-				end
-
-                self.normalScale = self:GetParent():GetScale();
-				self.effectiveScale = self:GetParent():GetEffectiveScale();
-				self.Left = self:GetParent():GetLeft();
-				self.Top = self:GetParent():GetTop();
-				self.moveDistance = self.GetScaleDistance();
-
-                self:SetScript("OnUpdate",function(self,elapsed)
-					local scale = self.GetScaleDistance() / self.moveDistance * self.normalScale;
-					self:GetParent():SetScale(scale);
-                end)
-			</OnMouseDown>
-			<OnMouseUp>
-				self:SetScript("OnUpdate", nil);
-				self.normalScale = nil;
-				self.effectiveScale = nil;
-				self.Left = nil;
-				self.Top = nil;
-				self.moveDistance = nil;
-			</OnMouseUp>
-		</Scripts>
-	</Frame>
 
 	<Button name="GwGossipCheckButtonTemplate" virtual="true">
 		<Size x="200" y="30"></Size>
