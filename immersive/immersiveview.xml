@@ -1,116 +1,226 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 
-	<Frame name="ImmersiveSettingsTemplate" hidden="true" enableKeyboard="true" movable="true" toplevel="true" virtual="true">
-        <Size x="220" y="320"/>
-        <Anchors>
-            <Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" x="0" y="0"/>
-        </Anchors>
-        <Layers>
-            <Layer level="BACKGROUND">
-                <Texture parentKey="background" file="Interface/AddOns/GW2_UI/textures/bag/bagbg">
-                    <Size x="220" y="320"/>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
-                        <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
-                        <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-                        <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
-                    </Anchors>
-                </Texture>
-                <Texture file="Interface/AddOns/GW2_UI/textures/bag/bagheader">
-                    <Size x="220" y="40"/>
-                    <Anchors>
-                        <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-                    </Anchors>
-                </Texture>
-                <Texture file="Interface/AddOns/GW2_UI/textures/bag/bagheader-right">
-                    <Size x="220" y="32"/>
-                    <Anchors>
-                        <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
-                    </Anchors>
-                </Texture>
-                <Texture file="Interface/AddOns/GW2_UI/textures/bag/bagleftpanel">
-                    <Size x="16" y="320"/>
-                    <Anchors>
-                        <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-                        <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
-                    </Anchors>
-                </Texture>
-            </Layer>
-            <Layer textureSubLevel="3">
-                <Texture file="Interface/AddOns/GW2_UI/textures/icons/settingsicon">
-                    <Size x="52" y="52"/>
-                    <Anchors>
-                        <Anchor point="CENTER" relativeTo="$parent" relativePoint="TOPLEFT" x="-7" y="10"/>
-                    </Anchors>
-                </Texture>
-                <FontString parentKey="headerString" text="Special frame options" inherits="GameFontNormalSmall" justifyH="LEFT">
-                    <Size x="220" y="12"/>
-                    <Color r="1" b="0.73" g="0.93"/>
-                    <Anchors>
-                        <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="10" y="17"/>
-                    </Anchors>
-                </FontString>
-            </Layer>
-        </Layers>
-		<Frames>
-			<Frame parentKey="mover" inherits="GwMoveFrameTemplate">
-                <Size x="220" y="25" />
-                <Anchors>
-                    <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-                </Anchors>
-            </Frame>
-			<Button parentKey="advacedMode" inherits="GwGossipCheckButtonTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button parentKey="fullScreen" inherits="GwGossipCheckButtonTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-25"/>
-				</Anchors>
-			</Button>
-			<Button parentKey="forceGossip" inherits="GwGossipCheckButtonTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-50"/>
-				</Anchors>
-			</Button>
-			<Button parentKey="autoNext" inherits="GwGossipCheckButtonTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-75"/>
-				</Anchors>
-			</Button>
-			<Button parentKey="style" inherits="GwGossipCheckButtonTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-100"/>
-				</Anchors>
-			</Button>
-			<Button parentKey="moveAndScale" inherits="GwGossipCheckButtonTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-125"/>
-				</Anchors>
-			</Button>
-			<Button parentKey="dinamicArt" inherits="GwGossipCheckButtonTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-150"/>
-				</Anchors>
-			</Button>
-			<Button parentKey="mouseDialog" inherits="GwGossipCheckButtonTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-175"/>
-				</Anchors>
-			</Button>
-			<Button parentKey="autoNextTime" inherits="GwGossipSliderTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-200"/>
-				</Anchors>
-			</Button>
-			<Button parentKey="animationTextSpeed" inherits="GwGossipSliderTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="-250"/>
-				</Anchors>
-			</Button>
-		</Frames>
+
+	<Button name="GwTitleButtonTemplate" hidden="true" virtual="true" mixin="GossipTitleButtonMixin">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon" file="Interface\QuestFrame\UI-Quest-BulletPoint">
+					<Size x="20" y="20"/>
+					<Anchors>
+						<Anchor point="LEFT" x="16"/> 
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick method="OnClick"/>
+			<OnShow method="OnShowAnimation"/>
+			<OnHide method="OnHideAnimation"/>
+			<OnEnter method="OnEnter"/>
+			<OnLeave method="OnLeave"/>
+		</Scripts>
+		<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+		<ButtonText>
+			<Anchors>
+				<Anchor point="LEFT" x="42" y="0"/>
+			</Anchors>
+			<Color a="1" r="1" g="1" b="1"/>
+		</ButtonText>
+		<NormalFont style="QuestFontLeft"/>
+	</Button>
+	
+	<!--inherits="QuestInfoRewardSpellCodeTemplate" -->
+	<Button name="GwRewardSpellCodeTemplate"  virtual="true">
+		<Scripts>
+			<OnEnter>
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+				GameTooltip:SetQuestRewardSpell(self.rewardSpellIndex);
+			</OnEnter>
+			<OnClick>
+				if (IsModifiedClick("CHATLINK")) then
+					ChatEdit_InsertLink(GetQuestSpellLink(self.rewardSpellIndex));
+				end
+			</OnClick>
+			<OnLeave>
+				GameTooltip:Hide();
+				ResetCursor();
+			</OnLeave>
+		</Scripts>
+	</Button>
+
+	<!--inherits="QuestInfoRewardItemCodeTemplate" -->
+	<Button name="GwGossipRewardItemCodeTemplate" virtual="true">
+		<Scripts>
+			<OnEnter>
+				GameTooltip:SetIgnoreParentAlpha(true);
+				GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0);
+				if (self.objectType == "item") then
+					GameTooltip:SetQuestItem(self.type, self:GetID());
+					GameTooltip_ShowCompareItem(GameTooltip);
+				elseif (self.objectType == "currency") then
+					GameTooltip:SetQuestCurrency(self.type, self:GetID());
+				elseif (self.objectType == "questSessionBonusReward") then
+					GameTooltip:SetItemByID(self:GetID());
+					GameTooltip_ShowCompareItem(GameTooltip);
+				end
+				CursorUpdate(self);
+			</OnEnter>
+			<OnClick>
+				if  (IsModifiedClick() and self.objectType == "item") then
+					HandleModifiedItemClick(GetQuestItemLink(self.type, self:GetID()));
+				else
+					if (self:GetParent() and self:GetParent().chooseItems and self.type == "choice" ) then
+						self:GetParent().ItemHighlight:SetPoint('TOPLEFT', self, 0, 0);
+						self:GetParent().ItemHighlight:Show();
+						self:GetParent().ItemHighlight.InAnim:Stop();
+						self:GetParent().ItemHighlight.InAnim:Play();
+					end
+				end
+			</OnClick>
+			<OnDoubleClick>
+				if (not IsModifiedClick() and self:GetParent() and self:GetParent().chooseItems and self.type == "choice") then
+					GetQuestReward(self:GetID());
+				end
+			</OnDoubleClick>
+			<OnLeave>
+				GameTooltip:SetIgnoreParentAlpha(false);
+				GameTooltip:Hide();
+				ResetCursor();
+			</OnLeave>
+			<OnUpdate>
+				CursorOnUpdate(self, elapsed);
+			</OnUpdate>
+		</Scripts>
+	</Button>
+	
+	<!--inherits="QuestSpellTemplate" -->
+	<Button name="GwQuestSpellTemplate" hidden="true" virtual="true">
+		<Size x="180" y="38"/>
+		<HitRectInsets left="0" right="0" top="0" bottom="14"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon" name="$parentIconTexture">
+					<Size x="38" y="38"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="10" y="-2"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="NameFrame" name="$parentNameFrame" file="Interface\QuestFrame\UI-QuestItemNameFrame">
+					<Size x="190" y="42"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="-20" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture name="$parentSpellBorder"  file="Interface\Spellbook\Spellbook-Parts">
+					<Size x="70" y="65"/>
+					<TexCoords left="0.00390625" right="0.27734375" top="0.44140625" bottom="0.69531250"/>
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent.Icon" x="2" y="0"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="Name" name="$parentName" inherits="GameFontHighlight" justifyH="LEFT" >
+					<Size  x="130" y="38"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.NameFrame" x="30" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnEnter>
+				if (self.spellID) then
+					GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+					GameTooltip:SetSpellByID(self.spellID);
+				end
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+			<OnClick>
+				if ( IsModifiedClick("CHATLINK") and self.spellID) then
+					local spellLink = GetSpellLink(self.spellID);
+					ChatEdit_InsertLink(spellLink);
+				end
+			</OnClick>
+		</Scripts>
+	</Button>
+
+	<Button name="GwGossipItemButtonTemplate" registerForClicks="LeftButtonUp, RightButtonUp" virtual="true">
+		<Size x="180" y="38" />
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="1">
+				<Texture parentKey="Icon">
+					<Size x="38" y="38" />
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+
+			<Layer level="BACKGROUND" textureSubLevel="0">
+				 <Texture parentKey="NameFrame" file="Interface\QuestFrame\UI-QuestItemNameFrame" >
+					<Size x="190" y="42" />
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="CENTER" x="-10" y="0" />
+					</Anchors>
+				</Texture> 
+			</Layer>
+
+			<Layer level="OVERLAY">
+				<Texture parentKey="IconOverlay" hidden="true">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Icon"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+
+			<Layer level="BORDER">
+				<FontString inherits="GameFontHighlight" justifyH="LEFT" parentKey="Name" wordwrap="true">
+					<Size x="130" y="38" />
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="8" y="0" />
+					</Anchors>
+				</FontString>
+			</Layer>
+
+			<Layer level="ARTWORK">
+				<Texture parentKey="IconBorder" file="Interface/AddOns/GW2_UI/textures/questview/advanced/fs_item_icon_border">
+				<Size x="38" y="38" />
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent.Icon" relativePoint="CENTER"/>
+					</Anchors>
+				</Texture>
+
+				<FontString name="$parentCount" inherits="NumberFontNormal" justifyH="RIGHT" parentKey="Count">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="-3" y="4" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>									
+	</Button>
+
+    <Frame name="GwMoveFrameTemplate" enableMouse="true" movable="true" virtual="true">
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self.isMoving = true; 
+			</OnLoad>
+			<OnDragStart>
+				if not self.isMoving then
+					return;
+				end
+
+				self:GetParent():StartMoving();
+			</OnDragStart>
+			<OnDragStop>
+				self:GetParent():StopMovingOrSizing();
+			</OnDragStop>
+		</Scripts>
 	</Frame>
 	
 	<Frame name="GwFullScreenGossipViewFrameTemplate" hidden="true" alpha="0" setAllPoints="true" enableKeyboard="true" ignoreParentAlpha="true" ignoreParentScale="false" frameStrata="FULLSCREEN" enableMouse="true" virtual="true">
@@ -148,7 +258,7 @@
 					<Frame parentKey="Border" useParentLevel="true" setAllPoints="true">
 						<Layers>
 							<Layer level="BACKGROUND" textureSubLevel="0">
-								<Texture parentKey="Border" setAllPoints="true"/> 
+								<Texture parentKey="Side" setAllPoints="true"/> 
 							</Layer>
 
 							<Layer level="BACKGROUND" textureSubLevel="1">
@@ -178,41 +288,15 @@
 					<CinematicModel parentKey="Player" useParentLevel="true" setAllPoints="true">
 						<Scripts>
 							<OnLoad>
-								self:SetCamDistanceScale(2)
-								self:SetTargetDistance(.3);
-								self:SetHeightFactor(.39);
-								self:SetFacing(1.7);
-								self:InitializeCamera(.8);
+								self.typeUnit = "player"
 							</OnLoad>
-							<OnShow>
-								self:ClearModel();
-								self:SetUnit("player");
-							</OnShow>
-							<OnHide>
-								self:SetUnit("none");
-							</OnHide>
 						</Scripts>
 					</CinematicModel>
 					<CinematicModel parentKey="Giver" useParentLevel="true" setAllPoints="true">
 						<Scripts>
 							<OnLoad>
-								self:SetCamDistanceScale(2)
-								self:SetTargetDistance(-.3);
-								self:SetHeightFactor(.37);
-								self:SetFacing(-.8);
-								self:InitializeCamera(.8);
+								self.typeUnit = "giver"
 							</OnLoad>
-							<OnShow>
-								self:ClearModel();
-								if (UnitExists("questnpc")) then
-									self:SetUnit("questnpc");
-								elseif (UnitExists("npc")) then
-									self:SetUnit("npc");
-								end
-							</OnShow>
-							<OnHide>
-								self:SetUnit("none");
-							</OnHide>
 						</Scripts>
 					</CinematicModel>
 				</Frames>
@@ -248,12 +332,19 @@
 					<Anchor point="BOTTOM" relativeKey="$parent" relativePoint="BOTTOM" x="0" y="0"/>
 				</Anchors>
 				<Layers>
-					<Layer level="ARTWORK">
-						<FontString parentKey="Text" inherits="GameFontHighlightLarge" justifyH="LEFT" justifyV="CENTER" wordwrap="true">
+					<Layer level="BACKGROUND">
+						<FontString parentKey="Icon" inherits="GameFontHighlightLarge" justifyH="LEFT" justifyV="CENTER" wordwrap="true" hidden="true">
 							<Anchors>
 								<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+					<Layer level="ARTWORK">
+						<FontString parentKey="Text" inherits="GameFontHighlightLarge" justifyH="LEFT" justifyV="CENTER" wordwrap="true" hidden="true">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Icon" relativePoint="TOPRIGHT" x="0" y="0"/>
 								<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
-								<Anchor point="TOP" relativeKey="$parent" relativePoint="TOP" x="0" y="20"/>
 							</Anchors>
 						</FontString>
 					</Layer>
@@ -619,6 +710,10 @@
 			</Frame>	
 		</Frames>
 		<Scripts>
+			<OnLoad>
+				self.maxSizeText = 600
+				self.TitleHighlightTexture = "Interface/QuestFrame/UI-QuestTitleHighlight"
+			</OnLoad>
 			<OnShow>
 				UIFrameFadeOut(UIParent, 0.5, 1, 0);
 				GameTooltip:SetIgnoreParentAlpha(true);
@@ -631,22 +726,19 @@
 	</Frame>
 
 	<Frame name="GwGossipViewFrameTemplate" hidden="true" alpha="0" enableKeyboard="true" frameStrata="DIALOG" movable="true" resizable="true" virtual="true">
-	    <Size x="625" y="300"/>
-		<Anchors>
-			<Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" x="0" y="0"/>
-		</Anchors>
+	    <Size x="700" y="300"/>
 		<Frames>
 			<Frame parentKey="Background" frameLevel="2" setAllPoints="true">
 				<Layers>
             		<Layer level="BACKGROUND">
-            		    <Texture parentKey="Art" file="Interface/AddOns/GW2_UI/textures/questview/gvf_background">
-						    <Size x="637" y="300"/>
+            		    <Texture parentKey="Art" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_background">
+						    <Size x="700" y="300"/>
             		        <Anchors>
             		            <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
             		        </Anchors>
             		    </Texture>
-            		    <Texture parentKey="Header" file="Interface/AddOns/GW2_UI/textures/questview/gvf_header">
-            		        <Size x="637" y="40"/>
+            		    <Texture parentKey="Header" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_header">
+            		        <Size x="700" y="40"/>
             		        <Anchors>
             		            <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
             		        </Anchors>
@@ -655,12 +747,12 @@
 				</Layers>
 			</Frame>		
 			<Frame parentKey="Models" frameLevel="3">
-				<Size x="625" y="128"/>
+				<Size x="700" y="128"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 				</Anchors>
 				<Frames>
-					<PlayerModel parentKey="Player" useParentLevel="true">
+					<CinematicModel parentKey="Player" useParentLevel="true">
 						<Size x="64" y="64"/>
 					    <Anchors>
             		         <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
@@ -673,7 +765,7 @@
 								</Anchors>
 								<Layers>
 									<Layer level="BACKGROUND">
-										<Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_name" setAllPoints="true"/>
+										<Texture file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_name" setAllPoints="true"/>
 									</Layer>
 									<Layer level="OVERLAY">
 										<FontString parentKey="Text" inherits="SystemFont_Outline_Small" setAllPoints="true" justifyH="CENTER" justifyV="CENTER"/>
@@ -681,20 +773,9 @@
 								</Layers>
 							</Frame>
 						</Frames>
-						<Scripts>
-							<OnShow>
-								self:ClearModel();
-								self:SetUnit("player");
-								self.Name.Text:SetText(UnitName("player"));
-							</OnShow>
-							<OnHide>
-								self:SetUnit("none");
-								self.Name.Text:SetText("");
-							</OnHide>
-						</Scripts>
-					</PlayerModel>
-					<PlayerModel parentKey="Giver" useParentLevel="true">
-						<Size x="128" y="128"/>
+					</CinematicModel>
+					<CinematicModel parentKey="Giver" useParentLevel="true">
+						<Size x="203" y="128"/>
 					    <Anchors>
             		        <Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
             		    </Anchors>
@@ -702,11 +783,11 @@
 							<Frame parentKey="Name" setAllPoints="true">
 								<Size x="256" y="40"/>
 								<Anchors>
-									<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
+									<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 								</Anchors>
 								<Layers>
 									<Layer level="BACKGROUND">
-										<Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_name" setAllPoints="true"/>
+										<Texture file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_name" setAllPoints="true"/>
 									</Layer>
 									<Layer level="OVERLAY">
 										<FontString parentKey="Text" inherits="SystemFont_Outline_Small" justifyH="LEFT" justifyV="LEFT">
@@ -719,39 +800,21 @@
 								</Layers>
 							</Frame>
 						</Frames>
-						<Scripts>
-							<OnShow>
-								self:ClearModel();
-								if (UnitExists("questnpc")) then
-									self:SetUnit("questnpc");
-									self.Name.Text:SetText(UnitName("questnpc"));
-								elseif (UnitExists("npc")) then
-									self:SetUnit("npc");
-									self.Name.Text:SetText(UnitName("npc"));
-								else
-									self.Name.Text:SetText("UNKNOWN");
-								end
-							</OnShow>
-							<OnHide>
-								self:SetUnit("none");
-								self.Name.Text:SetText("");
-							</OnHide>
-						</Scripts>
-					</PlayerModel>
+					</CinematicModel>
 				</Frames>
 			</Frame>
 			<Frame parentKey="Title" frameLevel="4">
-				<Size x="625" y="115"/>
+				<Size x="700" y="115"/>
 				<Anchors>
 					<Anchor point="BOTTOMLEFT" relativeKey="$parent.Models.Player" relativePoint="TOPLEFT" x="-12" y="0"/>
 				</Anchors>
 				<Layers>
 				    <Layer level="BACKGROUND">
-            		    <Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_title" setAllPoints="true"/>
+            		    <Texture file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_title" setAllPoints="true"/>
 					</Layer>
 					<Layer level="ARTWORK">
 						<FontString parentKey="Text" inherits="QuestFont_Outline_Huge" justifyH="CENTER" justifyV="CENTER" wordwrap="true">
-							<Size x="465" y="40"/>
+							<Size x="540" y="40"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="80" y="-40"/>
 							</Anchors>
@@ -772,19 +835,19 @@
 				</Layers>
 			</Button>					
 			<ScrollFrame parentKey="Scroll" frameLevel="4" inherits="GwScrollFrameScrollBarLeftTemplate">
-				<Size x="570" y="160"/>
+				<Size x="645" y="160"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent.Dialog" relativePoint="BOTTOMLEFT" x="40" y="0"/>
 				</Anchors>
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface/AddOns/GW2_UI/textures/questview/gvf_scroll">
+						<Texture file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_scroll_background">
 							<Anchors>
 								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-33" y="18"/>
 								<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
 							</Anchors>
 						</Texture>
-						<Texture parentKey="Icon" file="Interface/AddOns/GW2_UI/textures/questview/gvf_player_say" hidden="true">
+						<Texture parentKey="Icon" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_player_say" hidden="true">
 							<Size x="30" y="20"/>
 							<Anchors>
 								<Anchor point="BOTTOMLEFT" relativeKey="$parent.$parent.Models.Player" relativePoint="BOTTOMRIGHT" x="-15" y="15"/>
@@ -792,7 +855,7 @@
 						</Texture>
 					</Layer>
 					<Layer level="ARTWORK">
-						<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="TOP" wordwrap="true">
+						<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="TOP" wordwrap="true" hidden="true">
 							<Size x="500" y="32"/>
 							<Anchors>
 								<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="0" y="0"/>
@@ -912,14 +975,12 @@
 					</OnDragStop>
 				</Scripts>
 			</Frame>	
-
-			<Frame parentKey="mover" frameLevel="2" inherits="GwMoveFrameTemplate">
-                <Size x="625" y="40" />
-                <Anchors>
-                    <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-                </Anchors>
-            </Frame>
-			<Frame parentKey="sizer" frameLevel="2" inherits="GwSizerFrameTemplate"/>
 		</Frames>
+		<Scripts>
+			<OnLoad>
+				self.maxSizeText = 300
+				self.TitleHighlightTexture = "Interface/AddOns/GW2_UI/textures/questview/advanced/ns_title_button_highlight"
+			</OnLoad>
+		</Scripts>
 	</Frame>
 </Ui>

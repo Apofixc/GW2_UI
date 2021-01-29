@@ -506,11 +506,19 @@ GW_DEFAULT["PLAYER_TRACKED_DODGEBAR_SPELL_ID"] = 0
 
 GW_DEFAULT["ADVANCED_MODE"] = true
 GW_DEFAULT["FULL_SCREEN"] = true
-GW_DEFAULT["STYLE"] = true
+GW_DEFAULT["STYLE"] = "GW2"
 GW_DEFAULT["DINAMIC_ART"] = true
 GW_DEFAULT["MOUSE_DIALOG"] = true
 GW_DEFAULT["FORCE_GOSSIP"] = true
 GW_DEFAULT["AUTO_NEXT"] = true
 GW_DEFAULT["AUTO_NEXT_TIME"] = 0.5
 GW_DEFAULT["ANIMATION_TEXT_SPEED"] = 0.05
-GW_DEFAULT["MOVE_AND_SCALE"] = true
+GW_DEFAULT["SUMMON_MOUNT"] = false
+GW_DEFAULT["SUMMON_PET"] = false
+
+GW_DEFAULT["GwGossipViewFramePos"] = {}
+GW_DEFAULT["GwGossipViewFramePos"]["point"] = "TOP"
+GW_DEFAULT["GwGossipViewFramePos"]["relativePoint"] = "TOP"
+GW_DEFAULT["GwGossipViewFramePos"]["xOfs"] = 0
+GW_DEFAULT["GwGossipViewFramePos"]["yOfs"] = -175
+GW_DEFAULT["GwGossipViewFramePos_scale"] = 1

@@ -3,7 +3,7 @@
 ## Notes: HUD Replacement addon.
 ## Notes-deDE: Ersetzt die Benutzeroberfläche.
 ## OptionalDeps: MoveAnything, _DebugLog, BugSack, !Stragglers, ACU
-## Version: v5.7.3
+## Version: @project-version@
 ## X-Website: https://www.curseforge.com/wow/addons/gw2-ui
 ## X-Curse-Project-ID: 94310
 ## DefaultState: Enabled
@@ -59,6 +59,7 @@ settings/panel_tooltip.lua
 settings/panel_party.lua
 settings/panel_raid.lua
 settings/panel_auras.lua
+settings/panel_immersive.lua
 settings/panel_skins.lua
 settings/panel_profiles.lua
 settings/hover_binding.lua
@@ -88,7 +89,7 @@ mainbar/micromenu.xml
 mainbar/micromenu.lua
 mainbar/orderbar.xml
 mainbar/orderbar.lua
-
+mainbar/mirrortimer.lua
 mainbar/experiencebar.xml
 mainbar/hudart.xml
 mainbar/aurabar_legacy.xml
@@ -134,10 +135,10 @@ immersive/chatbubbles.lua
 immersive/tooltips.lua
 immersive/damagetext.xml
 immersive/damagetext.lua
-immersive/immersiveviewtemplate.xml
 immersive/immersiveview.xml
-immersive/immersiveview.lua
 immersive/immersiveviewcustome.lua
+immersive/immersiveview.lua
+
 
 objectives/questtracker.xml
 objectives/map.lua
@@ -175,6 +176,8 @@ character/professions.lua
 
 battlegrounds/battlegrounds.xml
 battlegrounds/battlegrounds.lua
+
+collection/summon.lua
 
 tests/mocks.lua
 tests/alert_tests.lua

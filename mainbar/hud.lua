@@ -883,52 +883,6 @@ registerActionHudAura(
     "pet"
 )
 
-local function LoadBreathMeter()
-    CreateFrame("Frame", "GwBreathMeter", UIParent, "GwBreathMeter")
-    GwBreathMeter:Hide()
-    GwBreathMeter:SetScript(
-        "OnShow",
-        function()
-            UIFrameFadeIn(GwBreathMeter, 0.2, GwBreathMeter:GetAlpha(), 1)
-        end
-    )
-    MirrorTimer1:SetScript(
-        "OnShow",
-        function(self)
-            self:Hide()
-        end
-    )
-    MirrorTimer1:UnregisterAllEvents()
-
-    GwBreathMeter:RegisterEvent("MIRROR_TIMER_START")
-    GwBreathMeter:RegisterEvent("MIRROR_TIMER_STOP")
-
-    GwBreathMeter:SetScript(
-        "OnEvent",
-        function(self, event, arg1, arg2, arg3, arg4)
-            if event == "MIRROR_TIMER_START" then
-                local texture = "Interface/AddOns/GW2_UI/textures/hud/castingbar"
-                if arg1 == "BREATH" then
-                    texture = "Interface/AddOns/GW2_UI/textures/hud/breathmeter"
-                end
-                GwBreathMeterBar:SetStatusBarTexture(texture)
-                GwBreathMeterBar:SetMinMaxValues(0, arg3)
-                GwBreathMeterBar:SetScript(
-                    "OnUpdate",
-                    function()
-                        GwBreathMeterBar:SetValue(GetMirrorTimerProgress(arg1))
-                    end
-                )
-                GwBreathMeter:Show()
-            end
-            if event == "MIRROR_TIMER_STOP" then
-                GwBreathMeterBar:SetScript("OnUpdate", nil)
-                GwBreathMeter:Hide()
-            end
-        end
-    )
-end
-GW.LoadBreathMeter = LoadBreathMeter
 
 local function levelingRewards_OnShow(self)
     PlaySound(SOUNDKIT.ACHIEVEMENT_MENU_OPEN)
@@ -1130,6 +1084,9 @@ local function hud_OnEvent(self, event, ...)
         if unit == "player" then
             combatHealthState()
         end
+    elseif event == "MIRROR_TIMER_START" then
+        local arg1, arg2, arg3, arg4, arg5, arg6 = ...
+        GW.MirrorTimer_Show(arg1, arg2, arg3, arg4, arg5, arg6)
     end
 end
 GW.AddForProfiling("hud", "hud_OnEvent", hud_OnEvent)
@@ -1158,6 +1115,7 @@ local function LoadHudArt()
     hudArtFrame:RegisterEvent("PLAYER_ALIVE")
     hudArtFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     hudArtFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    hudArtFrame:RegisterEvent("MIRROR_TIMER_START")
     hudArtFrame:RegisterUnitEvent("UNIT_HEALTH", "player")
     hudArtFrame:RegisterUnitEvent("UNIT_MAXHEALTH", "player")
     selectBg()

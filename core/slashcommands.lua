@@ -7,7 +7,6 @@ local function LoadSlashCommands()
         if msg == "" then
             DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r Slash commands:")
             DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r   /gw2 settings       -> To open the settings window")
-            DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r   /gw2 immersive       -> To open Immersive the settings window")
             DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r   /gw2 reset windows  -> To reset the inventory and hero panel windows")
             DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r   /gw2 status         -> To show GW2 Status window")
             DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r   /gw2 kb             -> To activate the keybindoptions")
@@ -16,14 +15,6 @@ local function LoadSlashCommands()
         elseif msg == "settings" then
             ShowUIPanel(GwSettingsWindow)
             UIFrameFadeIn(GwSettingsWindow, 0.2, 0, 1)
-        elseif msg == "immersive" then
-            if (not GwImmersiveSettings) then
-                GW.LoadImmersiveOption()
-            end
-
-            GwImmersiveSettings:SetParent(UIParent)
-            ShowUIPanel(GwImmersiveSettings)
-            UIFrameFadeIn(GwImmersiveSettings, 0.2, 0, 1)
         elseif msg == "reset windows" then
             GW.SetSetting("BAG_POSITION", nil)
             GW.SetSetting("BANK_POSITION", nil)

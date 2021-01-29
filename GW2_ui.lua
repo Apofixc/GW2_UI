@@ -9,7 +9,7 @@ local IsFrameModified = GW.IsFrameModified
 local Debug = GW.Debug
 local LibSharedMedia = GW.Libs.LSM
 
-GW.VERSION_STRING = "GW2_UI v5.7.3"
+GW.VERSION_STRING = "GW2_UI @project-version@"
 
 -- setup Binding Header color
 _G.BINDING_HEADER_GW2UI = GetAddOnMetadata(..., "Title")
@@ -245,13 +245,17 @@ end
 GW.SetDeadIcon = SetDeadIcon
 
 local function ActiveAnimation(k)
-    return animations[k] ~= nil;
+    return animations[k] and not animations[k]["completed"]
 end
 GW.ActiveAnimation = ActiveAnimation
 
-local function StopAnimation(k)
+local function StopAnimation(k, safe)
     if animations[k] ~= nil then
-        animations[k] = nil
+        if (safe) then
+            animations[k]["completed"] = true
+        else
+            animations[k] = nil
+        end
     end
 end
 GW.StopAnimation = StopAnimation
@@ -556,8 +560,8 @@ local function loadAddon(self)
     end
 
     if GetSetting("CASTINGBAR_ENABLED") then
-        GW.LoadCastingBar(CastingBarFrame, "GwCastingBarPlayer", "player")
-        GW.LoadCastingBar(PetCastingBarFrame, "GwCastingBarPet", "pet")
+        GW.LoadCastingBar(CastingBarFrame, "GwCastingBarPlayer", "player", true)
+        GW.LoadCastingBar(PetCastingBarFrame, "GwCastingBarPet", "pet", false)
     end
 
     if GetSetting("MINIMAP_ENABLED") then
@@ -575,16 +579,15 @@ local function loadAddon(self)
     end
 
     if GetSetting("QUESTVIEW_ENABLED") then
-        GW.LoadImmersiveOption()
-        
         if GetSetting("ADVANCED_MODE") then
             GW.LoadImmersiveView()
-            GW.LoadImmersiveCustome()
         else
             GW.LoadQuestview()
         end
-    end
 
+        GW.LoadSummon()
+    end
+    
     if GetSetting("CHATFRAME_ENABLED") then
         GW.LoadChat()
     end
@@ -613,7 +616,7 @@ local function loadAddon(self)
 
     GW.LoadCharacter()
 
-    GW.LoadBreathMeter()
+    GW.LoadMirrorTimers()
     GW.LoadAutoRepair()
 
     --Create unitframes
@@ -737,6 +740,19 @@ local function loadAddon(self)
 end
 GW.AddForProfiling("index", "loadAddon", loadAddon)
 
+local function loadFixBattlePet()
+    HIDE_MOST = {
+        GwStanceBarButton = "hidden",
+        StanceButton1 = "hidden",
+        StanceButton2 = "hidden",
+        StanceButton3 = "hidden",
+        StanceButton4 = "hidden",
+        StanceButton5 = "hidden",
+    }
+
+    FRAMELOCK_STATES.COMMENTATOR_SPECTATING_MODE = Mixin(FRAMELOCK_STATES.COMMENTATOR_SPECTATING_MODE, HIDE_MOST)
+    FRAMELOCK_STATES.PETBATTLES = Mixin(FRAMELOCK_STATES.PETBATTLES, HIDE_MOST) 
+end
 -- handles addon loading
 local function gw_OnEvent(self, event, ...)
     if event == "PLAYER_LOGIN" then
@@ -744,6 +760,7 @@ local function gw_OnEvent(self, event, ...)
             loaded = true
             GW.CheckRole() -- some API's deliver a nil value on init.lua load, we we fill this values also here
             loadAddon(self)
+            loadFixBattlePet()
         end
         GW.LoadStorage()
     elseif event == "UI_SCALE_CHANGED" and GetCVarBool("useUiScale") then

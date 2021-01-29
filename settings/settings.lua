@@ -293,6 +293,7 @@ local function loadDropDown(scrollFrame)
     USED_DROPDOWN_HEIGHT = 20 * ddCount
     HybridScrollFrame_Update(scrollFrame, USED_DROPDOWN_HEIGHT, 120)
 end
+GW.loadDropDown = loadDropDown
 
 local function InitPanel(panel)
     if not panel or not panel.gwOptions then
@@ -732,6 +733,7 @@ local function LoadSettings()
     mf:Hide()
 
     GW.LoadModulesPanel(sWindow)
+    GW.LoadImmersivePanel(sWindow)
     GW.LoadPlayerPanel(sWindow)
     GW.LoadTargetPanel(sWindow)
     GW.LoadActionbarPanel(sWindow)
