@@ -224,62 +224,72 @@
 	</Frame>
 	
 	<Frame name="GwFullScreenGossipViewFrameTemplate" hidden="true" alpha="0" setAllPoints="true" enableKeyboard="true" ignoreParentAlpha="true" ignoreParentScale="false" frameStrata="FULLSCREEN" enableMouse="true" virtual="true">
-		<Frames>
-			<Frame parentKey="Background" frameLevel="2" setAllPoints="true">
-				<Frames>
-					<Frame parentKey="Art" useParentLevel="true" setAllPoints="true">
-						<Layers>
-							<Layer level="BACKGROUND" textureSubLevel="-3">
-								<Texture parentKey="backgroundLayer" hidden="true"> 
-									<Anchors>
-										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-150"/>
-										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="150"/>
-									</Anchors>
-								</Texture>
-							</Layer>
-							<Layer level="BACKGROUND" textureSubLevel="-2">
-								<Texture parentKey="middlegroundLayer" hidden="true"> 
-									<Anchors>
-										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-150"/>
-										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="150"/>
-									</Anchors>
-								</Texture>
-							</Layer>
-							<Layer level="BACKGROUND" textureSubLevel="-1">
-								<Texture parentKey="foregroundLayer" hidden="true"> 
-									<Anchors>
-										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-150"/>
-										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="150"/>
-									</Anchors>
-								</Texture>
-							</Layer>
-						</Layers> 
-					</Frame>
-					<Frame parentKey="Border" useParentLevel="true" setAllPoints="true">
-						<Layers>
-							<Layer level="BACKGROUND" textureSubLevel="0">
-								<Texture parentKey="Side" setAllPoints="true"/> 
-							</Layer>
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="-3">
+				<Texture parentKey="Background" hidden="true"> 
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent" relativePoint="LEFT" x="0" y="0"/>
+						<Anchor point="RIGHT" relativeKey="$parent" relativePoint="RIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BACKGROUND" textureSubLevel="-2">
+				<Texture parentKey="Middleground" hidden="true"> 
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Background" relativePoint="TOPLEFT" x="0" y="0"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Background" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BACKGROUND" textureSubLevel="-1">
+				<Texture parentKey="Foreground" hidden="true"> 
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Background" relativePoint="TOPLEFT" x="0" y="0"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Background" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>	
+			<Layer level="BACKGROUND" textureSubLevel="0">
+				<Texture parentKey="Side"> 
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Background" relativePoint="TOPLEFT" x="0" y="0"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Background" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BACKGROUND" textureSubLevel="1">
+				<Texture parentKey="Bottom">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Top">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+						<Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
 
-							<Layer level="BACKGROUND" textureSubLevel="1">
-								<Texture parentKey="Bottom">
-									<Anchors>
-										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="400"/>
-										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
-									</Anchors>
-								</Texture>
-								<Texture parentKey="Top">
-									<Anchors>
-										<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-										<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="0" y="-400"/>
-									</Anchors>
-								</Texture>
-							</Layer>
-						</Layers>
-					</Frame>
-				</Frames>
-			</Frame>		
-			<Frame parentKey="Models" frameLevel="3">
+			<!-- <Layer level="BACKGROUND" textureSubLevel="1">
+				<Texture parentKey="Bottom">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="Top">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+						<Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer> -->
+
+		</Layers> 
+		<Frames>	
+			<Frame parentKey="Models" frameLevel="2">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-50"/>
 					<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
@@ -301,7 +311,7 @@
 					</CinematicModel>
 				</Frames>
 			</Frame>
-			<Frame parentKey="Title" frameLevel="4">
+			<Frame parentKey="Title" frameLevel="3">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Models" relativePoint="TOPRIGHT" x="0" y="0"/>
@@ -312,19 +322,22 @@
 					</Layer>
 				</Layers>
 			</Frame>
-			<Button parentKey="Dialog" frameLevel="4" registerForClicks="LeftButtonUp, RightButtonUp">
+			<Button parentKey="Dialog" frameLevel="3" registerForClicks="LeftButtonUp, RightButtonUp">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent.Title" relativePoint="BOTTOM" x="-400" y="0"/>
 					<Anchor point="TOPRIGHT" relativeKey="$parent.Title" relativePoint="BOTTOM" x="400" y="0"/>
 					<Anchor point="BOTTOM" relativeKey="$parent.Title" relativePoint="BOTTOM" x="0" y="-140"/>
 				</Anchors>
 				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture parentKey="Background" setAllPoints="true"/> 
+					</Layer>
 					<Layer level="ARTWORK">
 						<FontString parentKey="Text" inherits="GameFontHighlightLarge" setAllPoints="true" justifyH="LEFT" justifyV="CENTER" wordwrap="true"/>
 					</Layer>
 				</Layers>
 			</Button>				
-			<ScrollFrame parentKey="Scroll" frameLevel="4" inherits="GwScrollFrameScrollBarLeftTemplate">
+			<ScrollFrame parentKey="Scroll" frameLevel="3" inherits="GwScrollFrameScrollBarLeftTemplate">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Dialog" relativePoint="LEFT" x="0" y="0"/>
 					<Anchor point="RIGHT" relativeKey="$parent.Dialog" relativePoint="RIGHT" x="0" y="0"/>
@@ -354,7 +367,7 @@
 					</Frame>
 				</ScrollChild>
 			</ScrollFrame>
-			<StatusBar parentKey="ReputationBar" frameLevel="4" orientation="VERTICAL" hidden="true">
+			<StatusBar parentKey="ReputationBar" frameLevel="3" orientation="VERTICAL" hidden="true">
 				<Anchors>
 					<Anchor point="RIGHT" relativeKey="$parent" relativePoint="RIGHT" x="0" y="0"/>
 					<Anchor point="LEFT" relativeKey="$parent" relativePoint="RIGHT" x="-15" y="0"/>
@@ -398,14 +411,14 @@
 					</OnLeave>
 				</Scripts>
 			</StatusBar>
-			<Frame parentKey="Detail" frameLevel="5" enableMouse="true" movable="true" hidden="true">
+			<Frame parentKey="Detail" frameLevel="4" enableMouse="true" movable="true" hidden="true">
 				<Size x="256" y="380"/>
 				<Anchors>
 					<Anchor point="TOP" relativeKey="$parent.Dialog" relativePoint="BOTTOM" x="0" y="-30"/>
 				</Anchors>
 				<Layers>
 					<Layer frameStrata="BACKGROUND">
-						<Texture parentKey="background" setAllPoints="true"/>			
+						<Texture parentKey="Background" setAllPoints="true"/>			
 					</Layer>
 					<Layer frameStrata="ARTWORK">
 						<FontString parentKey="Title" inherits="QuestTitleFont" text="QUEST_OBJECTIVES" justifyH="CENTER" JustifyV="CENTER">
@@ -727,26 +740,24 @@
 
 	<Frame name="GwGossipViewFrameTemplate" hidden="true" alpha="0" enableKeyboard="true" frameStrata="DIALOG" movable="true" resizable="true" virtual="true">
 	    <Size x="700" y="300"/>
+		<Layers>
+            <Layer level="BACKGROUND">
+            	<Texture parentKey="Background" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_background">
+				   <Size x="700" y="300"/>
+            	    <Anchors>
+            	        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
+            	    </Anchors>
+            	</Texture>
+            	<Texture parentKey="Header" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_header">
+            	    <Size x="700" y="40"/>
+            	    <Anchors>
+            	        <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
+            	    </Anchors>
+            	</Texture>
+			</Layer>
+		</Layers>
 		<Frames>
-			<Frame parentKey="Background" frameLevel="2" setAllPoints="true">
-				<Layers>
-            		<Layer level="BACKGROUND">
-            		    <Texture parentKey="Art" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_background">
-						    <Size x="700" y="300"/>
-            		        <Anchors>
-            		            <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
-            		        </Anchors>
-            		    </Texture>
-            		    <Texture parentKey="Header" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_header">
-            		        <Size x="700" y="40"/>
-            		        <Anchors>
-            		            <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
-            		        </Anchors>
-            		    </Texture>
-					</Layer>
-				</Layers>
-			</Frame>		
-			<Frame parentKey="Models" frameLevel="3">
+			<Frame parentKey="Models" frameLevel="2">
 				<Size x="700" y="128"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
@@ -803,7 +814,7 @@
 					</CinematicModel>
 				</Frames>
 			</Frame>
-			<Frame parentKey="Title" frameLevel="4">
+			<Frame parentKey="Title" frameLevel="3">
 				<Size x="700" y="115"/>
 				<Anchors>
 					<Anchor point="BOTTOMLEFT" relativeKey="$parent.Models.Player" relativePoint="TOPLEFT" x="-12" y="0"/>
@@ -822,7 +833,7 @@
 					</Layer>
 				</Layers>
 			</Frame>
-			<Button parentKey="Dialog" frameLevel="4" registerForClicks="LeftButtonUp, RightButtonUp">
+			<Button parentKey="Dialog" frameLevel="3" registerForClicks="LeftButtonUp, RightButtonUp">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Models.Player" relativePoint="LEFT" x="0" y="0"/>
 					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Models.Giver" relativePoint="BOTTOMLEFT" x="0" y="0"/>
@@ -834,7 +845,7 @@
 					</Layer>
 				</Layers>
 			</Button>					
-			<ScrollFrame parentKey="Scroll" frameLevel="4" inherits="GwScrollFrameScrollBarLeftTemplate">
+			<ScrollFrame parentKey="Scroll" frameLevel="3" inherits="GwScrollFrameScrollBarLeftTemplate">
 				<Size x="645" y="160"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent.Dialog" relativePoint="BOTTOMLEFT" x="40" y="0"/>
@@ -869,7 +880,7 @@
 					</Frame>
 				</ScrollChild>
 			</ScrollFrame>
-			<StatusBar parentKey="ReputationBar" frameLevel="4" orientation="VERTICAL" hidden="true">
+			<StatusBar parentKey="ReputationBar" frameLevel="3" orientation="VERTICAL" hidden="true">
 				<Anchors>
 					<Anchor point="RIGHT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 					<Anchor point="LEFT" relativeKey="$parent" relativePoint="RIGHT" x="-15" y="0"/>
@@ -913,7 +924,7 @@
 					</OnLeave>
 				</Scripts>
 			</StatusBar>
-			<Button parentKey="DetailButton" frameLevel="5" hidden="true" registerForClicks="LeftButtonUp">
+			<Button parentKey="DetailButton" frameLevel="4" hidden="true" registerForClicks="LeftButtonUp">
 				<Size x="50" y="50"/>
 				<Anchors>
                     <Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPLEFT" x="-5" y="-15"/>
@@ -929,14 +940,14 @@
 					</Layer>
 				</Layers>
 			</Button>
-			<Frame parentKey="Detail" frameLevel="6" enableMouse="true" movable="true" hidden="true">
+			<Frame parentKey="Detail" frameLevel="5" enableMouse="true" movable="true" hidden="true">
 				<Size x="256" y="380"/>
 				<Anchors>
 					<Anchor point="TOP" relativeKey="$parent.DetailButton" relativePoint="BOTTOM" x="0" y="0"/>
 				</Anchors>
 				<Layers>
 					<Layer frameStrata="BACKGROUND">
-						<Texture parentKey="background" setAllPoints="true"/>			
+						<Texture parentKey="Background" setAllPoints="true"/>			
 					</Layer>
 					<Layer frameStrata="ARTWORK">
 						<FontString parentKey="Title" inherits="QuestTitleFont" text="QUEST_OBJECTIVES" justifyH="CENTER" JustifyV="CENTER">

@@ -1,6 +1,25 @@
 local _, GW = ...
 local v = GW.vernotes
 
+v("5.7.6", [=[
+FIXES
+    - Fix castbar latency issue
+    - Fix rested expbar issue
+    - Fix inactive factions listed under classic and others
+    - Fix Postal skin issue
+    - Update "Raid Debuffs"
+    - Possible fix for chatframe floating max error
+]=])
+
+v("5.7.5", [=[
+FIXES
+    - Fix chatframe fade
+    - Update party portraits correctly
+    - Fix arena headers
+    - Fix keybind slash command
+    - Fix arena prep frames overlaps with quests
+]=])
+
 v("5.7.4", [=[
 FIXES
     - Fix some castbar issues

@@ -1233,7 +1233,7 @@ do
 
 		FullScreenBorderStyle(GwFullScreenGossipViewFrame, GetSetting("STYLE"))
 		SetFontColor(GwImmersiveFrame.FullScreen and GetSetting("STYLE") or "NORMAL")
-		DinamicArt(GetSetting("DINAMIC_ART"))
+		DinamicArt(GwFullScreenGossipViewFrame, GetSetting("DINAMIC_ART"))
 		LoadModelInfo(GwGossipViewFrame.Models, GwFullScreenGossipViewFrame.Models)
 		DebugModel(GwGossipViewFrame.Models, GwFullScreenGossipViewFrame.Models)
 	end

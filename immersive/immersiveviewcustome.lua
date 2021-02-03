@@ -188,6 +188,12 @@ do
 			Normal = "|cFFFF5A00%s",
 			Action = "|cFF8C00FF%s"
 		},
+		STORYLINE = {
+			Ignored = "|cFF8C8C8C%s",
+			Trivial = "|cffffffff%s",
+			Normal = "|cFFFF5A00%s",
+			Action = "|cFF8C00FF%s"
+		},
 		GW2 = {
 			Ignored = "|cFF8C8C8C%s",
 			Trivial = "|cffffffff%s",
@@ -209,71 +215,56 @@ do
 
 	local FULL_SCREEN_STYLE = {
 		GW2 = {
-			Bottom = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_gw2_bottom",
-			Top = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_gw2_top",
-			Side = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_border",
-			Detail = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_gw2_detail"
+			Top = {path = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_gw2", texCoord = {0, 1, 0, 0.25}, height = 275},
+			Bottom = {path = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_gw2", texCoord = {0, 1, 0.25, 0.5}, height = 275},	
+			Side = {path = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_gw2", texCoord = {0, 0.49999, 0.5, 0.75}, height = 275},
+			Background = {height = 700}, 
+			Detail = {path = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_gw2", texCoord = {0.5, 0.75, 0.5, 0.75}}
 		},
 		CLASSIC = {
-			Bottom = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_classic_bottom",
-			Top = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_classic_top",
-			Side = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_border",
-			Detail = "Interface/AddOns/GW2_UI/textures/questview/advanced/fs_classic_detail"
+			Top = {path = "Interface/Glues/CharacterSelect/GlueAnnouncementPopup", texCoord = {0.00048828125, 0.2646484375, 0.5234375, 0.7568359375}, height = 275},
+			Bottom = {path = "Interface/Glues/CharacterSelect/GlueAnnouncementPopup", texCoord = {0.00048828125, 0.2646484375, 0.7587890625, 0.9384765625}, height = 275},
+			Side = {path = "Interface/Glues/CharacterSelect/GlueAnnouncementPopup", texCoord = {0.39208984375, 0.65576171875, 0.0009765625, 0.1240234375}},
+			Detail = {path = "Interface/QuestionFrame/Warboard"}
+		},
+		STORYLINE = {
+			Top = {path = "Interface/QuestionFrame/Question-Main", texCoord = {0.021, 0.805, 0.6, 1}, height = 275},
+			Bottom = {path = "Interface/QuestionFrame/Question-Main", texCoord = {0.021, 0.805, 0.32, 0.6}, height = 275},
+			--Side = {path = "Interface/QuestionFrame/Question-Vtile"},
+			Detail = {path = "Interface/QuestionFrame/Warboard"}
 		}
 	}
 
-	local function FullScreenBorderStyle(frame, status)
+	local function FullScreenBorderStyle(parent, status)
 		local style = FULL_SCREEN_STYLE[status]
-
-		frame.Background.Border.Bottom:SetTexture(style.Bottom)
-		frame.Background.Border.Top:SetTexture(style.Top)
-		frame.Background.Border.Side:SetTexture(style.Side)
 		
-		frame.Detail.background:SetTexture(style.Detail)
+		for k, v in pairs(style) do
+			local frame = k == "Detail" and parent.Detail.Background or parent[k]
+
+			if v.path then
+				frame:SetTexture(v.path)
+			end
+
+			if v.texCoord then
+				frame:SetTexCoord(unpack(v.texCoord))	
+			end
+
+			if v.width then
+				frame:SetWidth(v.height)
+			end
+
+			if v.height then
+				frame:SetHeight(v.height)
+			end
+		end
+
+		parent.Dialog.Background:SetAtlas("NightFae-NineSlice-CornerTopLeft");
 	end
 
 	GW.CUSTOME_IMMERSIVE.FullScreenBorderStyle = FullScreenBorderStyle
 
 	local LOCATION = {
-		--[[ Battle for Azeroth ]]
-		TiragardeSound = {"1161", "895", "1196", "876"},
-		Stormsong = {"942", "1198"},
-		Drustvar = {"896", "1197"},
-		Zuldazar = {"862", "1181", "1193", "1163", "1164", "1165", "1352", "1353", "1354", "1356", "1357", "1358", "1364", "1367", "875"},
-		Voldun = {"864", "1195"},
-		Nazmir = {"863", "1194"},
-		Nazjatar = {"1355", "1504", "1528"},
-		Mechagon = {"1462", "1490", "1491", "1493", "1494", "1497"},
-
-		--[[ Legion ]]
-		Azsuna = {"630", "867", "1187"},
-		Dalaran = {"41", "125", "126", "501", "502", "625", "626", "627", "628", "629"},
-		Highmountain = {"650", "869", "870", "1189"},
-		Stormheim = {"634", "696", "865", "866", "1190"},
-		Suramar = {"680", "1191"},
-		Valsharah = {"641", "868", "1188"},
-		Argus = {"905", "994", "885", "882", "830", "831", "887", "883"},
-		Legion = {"619"},
-
-		--[[ Warlords of Draenor ]]
-		FrostfireRidge = {"525"},
-		Gorgrond = {"543", "1170"},
-		Nagrand = {"107", "550"},
-		ShadowmoonValley = {"104", "539"},
-		SpiresofArak = {"542"},
-		Talador = {"535", "572"},
-		TannanJungle = {"534", "577"},
-
-		--[[ Old world]]
-		ArathiHighlands = {"14", "93", "837", "844", "906", "943", "1044", "1158", "1244", "1366", "1383"},
-		Ashenvale = {"63", "1310"},
-		Azshara = {"76", "697", "1209"},
-		Darkshore = {"62", "1203", "1309", "1332", "1333", "1338", "1343"},
-		Durotar = {"1", "1305"},
-		HillsbradFoothills = {"25", "274", "623"},
-		NorthernBarrens = {"10", "1307"},
-		SilverpineForest = {"21", "1248"},
-		SouthernBarrens = {"199", "1329"}
+		
 	}
 
 	local DYNAMIC_BACKGROUNDS = {
@@ -331,7 +322,6 @@ do
 		["630"] = "Azsuna",
 		["867"] = "Azsuna",
 		["1187"] = "Azsuna",
-
 		["41"] = "Dalaran",
 		["125"] = "Dalaran",
 		["126"] = "Dalaran",
@@ -342,25 +332,20 @@ do
 		["627"] = "Dalaran",
 		["628"] = "Dalaran",
 		["629"] = "Dalaran",
-
 		["650"] = "Highmountain",
 		["869"] = "Highmountain",
 		["870"] = "Highmountain",
 		["1189"] = "Highmountain",
-
 		["634"] = "Stormheim",
 		["696"] = "Stormheim",
 		["865"] = "Stormheim",
 		["866"] = "Stormheim",
 		["1190"] = "Stormheim",
-
 		["680"] = "Suramar",
 		["1191"] = "Suramar",
-
 		["641"] = "Valsharah",
 		["868"] = "Valsharah",
 		["1188"] = "Valsharah",
-
 		["905"] = "Argus",
 		["994"] = "Argus",
 		["885"] = "Argus", -- Antoran Wastes
@@ -369,7 +354,6 @@ do
 		["831"] = "Argus", -- Vindicaar
 		["887"] = "Argus", -- Vindicaar
 		["883"] = "Argus", -- Vindicaar
-
 		["619"] = "Legion", -- Fallback for all legion zones
 	
 		--endregion
@@ -427,6 +411,8 @@ do
 		["534"] = "TannanJungle",
 		["577"] = "TannanJungle",
 		["572"] = "Talador", -- Draenor, fallback for all Warlords of Draenor content
+	
+	
 		--endregion
 	}
 	
@@ -601,22 +587,6 @@ do
 	
 	}
 	
-	local function getCustomZoneBackground1(mapID)
-		local mapID = C_Map.GetBestMapForUnit("player");
-		if mapID then
-			repeat
-				if zone[tostring(mapID)] then
-					return zone[tostring(mapID)];
-				end
-				
-				local mapInfo = C_Map.GetMapInfo(mapID);
-				mapID = mapInfo and mapInfo.parentMapID or 0;
-			until mapID == 0
-		end			
-	
-		return false;
-	end
-
 	local function getCustomZoneBackground(zone)
 		local mapID = C_Map.GetBestMapForUnit("player");
 			if mapID then
@@ -632,52 +602,48 @@ do
 		return false;
 	end
 	
-	local function DinamicArt(newStatus)
+	local function DinamicArt(parent, newStatus)
 		if (newStatus) then
-			local dinamicArt = function (self)
-				if (C_CampaignInfo.IsCampaignQuest(GetQuestID())) then
-					self.backgroundLayer:SetAtlas( "QuestBG-"..UnitFactionGroup("player"));
-					self.backgroundLayer:SetTexCoord(0.2, 0.99, 0.5, 0.95);
-					self.backgroundLayer:Show();
-					self.middlegroundLayer:Hide();
-					self.foregroundLayer:Hide();
-				elseif (getCustomZoneBackground(STATIC_BACKGROUNDS)) then
-					local zoneBackground = getCustomZoneBackground(STATIC_BACKGROUNDS);
-					self.backgroundLayer:SetAtlas(zoneBackground);
-					self.backgroundLayer:Show();
-					self.middlegroundLayer:Hide();
-					self.foregroundLayer:Hide();
-				elseif (getCustomZoneBackground(DYNAMIC_BACKGROUNDS)) then
-					local dynamicBackground = getCustomZoneBackground(DYNAMIC_BACKGROUNDS);
-					self.backgroundLayer:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Back");
-					self.backgroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
-					self.backgroundLayer:Show();
-					self.middlegroundLayer:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Mid");
-					self.middlegroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
-					self.middlegroundLayer:Show();
-					self.foregroundLayer:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Fore");
-					self.foregroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
-					self.foregroundLayer:Show();
-				else
-					local classFilename = select(2, UnitClass("player"));
-					if (classFilename) then
-						self.backgroundLayer:SetAtlas("dressingroom-background-"..classFilename);
-						self.backgroundLayer:SetTexCoord(0, 1, 0.25, 0.75)
+			parent:HookScript("OnShow", 
+				function (self)
+					if (C_CampaignInfo.IsCampaignQuest(GetQuestID())) then
+						self.Background:SetAtlas( "QuestBG-"..UnitFactionGroup("player"));
+						--self.backgroundLayer:SetTexCoord(0.2, 0.99, 0.5, 0.95);
+						self.Background:Show();
+						self.Middleground:Hide();
+						self.Foreground:Hide();
+					elseif (getCustomZoneBackground(STATIC_BACKGROUNDS)) then
+						local zoneBackground = getCustomZoneBackground(STATIC_BACKGROUNDS);
+						self.Background:SetAtlas(zoneBackground);
+						self.Background:Show();
+						self.Middleground:Hide();
+						self.Foreground:Hide();
+					elseif (getCustomZoneBackground(DYNAMIC_BACKGROUNDS)) then
+						local dynamicBackground = getCustomZoneBackground(DYNAMIC_BACKGROUNDS);
+						self.Background:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Back");
+						--self.backgroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
+						self.Background:Show();
+						self.Middleground:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Mid");
+						--self.middlegroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
+						self.Middleground:Show();
+						self.Foreground:SetAtlas("_GarrMissionLocation-"..dynamicBackground.."-Fore");
+						--self.foregroundLayer:SetTexCoord(0.25, 0.75, 0, 1);
+						self.Foreground:Show();
 					else
-						self.backgroundLayer:SetTexture("Interface/AddOns/GW2_UI/textures/questview/bg_default");
+						local classFilename = select(2, UnitClass("player"));
+						if (classFilename) then
+							self.Background:SetAtlas("dressingroom-background-"..classFilename);
+							--self.backgroundLayer:SetTexCoord(0, 1, 0.25, 0.75)
+						else
+							self.Background:SetTexture("Interface/AddOns/GW2_UI/textures/questview/bg_default");
+							self.Background:SetTexCoord(0, 1, 0, 1)
+						end
+						self.Background:Show();
+						self.Middleground:Hide();
+						self.Foreground:Hide();
 					end
-					self.backgroundLayer:Show();
-					self.middlegroundLayer:Hide();
-					self.foregroundLayer:Hide();
 				end
-			end
-	
-			dinamicArt(GwFullScreenGossipViewFrame.Background.Art)
-			GwFullScreenGossipViewFrame.Background.Art:SetScript("OnShow", dinamicArt);
-			GwFullScreenGossipViewFrame.Background.Art:Show();	
-		else
-			GwFullScreenGossipViewFrame.Background.Art:SetScript("OnShow", nil);
-			GwFullScreenGossipViewFrame.Background.Art:Hide();
+			)
 		end
 	end
 

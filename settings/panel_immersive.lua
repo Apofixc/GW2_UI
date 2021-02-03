@@ -28,8 +28,8 @@ local function LoadImmersivePanel(sWindow)
         nil,
         "STYLE",
         nil,
-        {"CLASSIC", "GW2"},
-        {L["CLASSIC"], L["GW2 UI"]},
+        {"CLASSIC", "GW2", "STORYLINE"},
+        {L["CLASSIC"], L["GW2 UI"], L["STORYLINE"]},
         nil,
         {["ADVANCED_MODE"] = true}
     )
