@@ -33,13 +33,15 @@
 		<Size x="285" y="20"/>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<FontString parentKey="RequiredText" inherits="QuestTitleFont" justifyH="LEFT">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-					</Anchors>
-				</FontString>
+				<FontString parentKey="RequiredTextItem" text="ITEMS" inherits="QuestTitleFont" hidden="true" justifyH="LEFT"/>
+				<FontString parentKey="RequiredTextCurrencies" text="CURRENCY" inherits="QuestTitleFont" hidden="true" justifyH="LEFT"/>
 			</Layer>
 		</Layers>
+		<Scripts>
+			<OnLoad>
+				self.progressButtonPool = CreateFramePool("BUTTON", self, "QuestItemTemplate")
+			</OnLoad>
+		</Scripts>
 	</Frame>
 	
 	<Frame name="GwFullScreenGossipViewFrameTemplate" hidden="true" alpha="0" setAllPoints="true" enableKeyboard="true" ignoreParentAlpha="true" ignoreParentScale="false" frameStrata="FULLSCREEN" enableMouse="true" virtual="true">
