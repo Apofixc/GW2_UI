@@ -73,6 +73,10 @@ local function styleRewards()
     GwQuestviewFrameContainerDialogRequired:SetTextColor(1, 1, 1)
     GwQuestviewFrameContainerDialogRequired:SetShadowColor(0, 0, 0, 1)
     GwQuestviewFrameContainerDialogRequired:SetText(L["Required Items:"])
+
+    for i, questItem in ipairs(QuestInfoRewardsFrame.RewardButtons) do
+        GW.HandleReward(questItem)
+    end
 end
 GW.AddForProfiling("questview", "styleRewards", styleRewards)
 
@@ -189,7 +193,8 @@ local function showRewards()
         local itemWidth = 0
         for i = 1, itemReq, 1 do
             local frame = _G["QuestProgressItem" .. i]
-            if (frame) then
+            if frame then
+                local icon = _G[frame:GetName() .. "IconTexture"]
                 if itemHeight == 0 then
                     itemHeight = math.ceil(frame:GetHeight())
                 end
@@ -263,6 +268,31 @@ local function nextGossip()
             questTextCompleted()
         else
             GwQuestviewFrameContainerAcceptButton:SetText(L["Skip"])
+        end
+    else
+        questTextCompleted()
+    end
+end
+GW.AddForProfiling("questview", "nextGossip", nextGossip)
+
+local function lastGossip()
+    QUESTSTRINGINT = max(QUESTSTRINGINT - 1, 1)
+    local count = 0
+    for k, v in pairs(QUESTSTRING) do
+        count = count + 1
+    end
+    if QUESTSTRINGINT <= count then
+        GwQuestviewFrameContainerDialogString:SetText(QUESTSTRING[QUESTSTRINGINT])
+        setQuestGiverAnimation(count)
+        if QUESTSTRINGINT ~= 1 then
+            PlaySound(906)
+        end
+        if QUESTSTRINGINT == count then
+            questTextCompleted()
+        else
+            GwQuestviewFrameContainerAcceptButton:SetText(L["Skip"])
+            QuestInfoRewardsFrame:SetShown(false)
+            questStateSet = false
         end
     else
         questTextCompleted()
@@ -461,6 +491,39 @@ local function clearQuestReq()
 end
 GW.AddForProfiling("questview", "clearQuestReq", clearQuestReq)
 
+local function acceptQuest()
+    if questState == "TAKE" then
+        if (QuestFlagsPVP()) then
+            QuestFrame.dialog = StaticPopup_Show("CONFIRM_ACCEPT_PVP_QUEST")
+        else
+            if (QuestFrame.autoQuest) then
+                AcknowledgeAutoAcceptQuest()
+            else
+                AcceptQuest()
+                CloseQuest()
+            end
+        end
+        if GwQuestviewFrame:IsShown() then GwQuestviewFrame:Hide() end
+    elseif questState == "PROGRESS" then
+        CloseQuest()
+    else
+        if (GetNumQuestChoices() == 0) then
+            GetQuestReward()
+            CloseQuest()
+        elseif (GetNumQuestChoices() == 1) then
+            GetQuestReward(1)
+            CloseQuest()
+        else
+            if (QuestInfoFrame.itemChoice == 0) then
+                QuestChooseRewardError()
+            else
+                GetQuestReward(QuestInfoFrame.itemChoice)
+                CloseQuest()
+            end
+        end
+    end
+end
+
 local function LoadQuestview()
     CreateFrame("Frame", "GwQuestviewFrame", UIParent, "GwQuestviewFrame")
     GwQuestviewFrameContainerDialogString:SetFont(STANDARD_TEXT_FONT, 14)
@@ -473,6 +536,32 @@ local function LoadQuestview()
         "OnShow",
         function()
             UIFrameFadeIn(GwQuestviewFrame, 0.2, 0, 1)
+            GwQuestviewFrameContainerDeclineQuest:SetShown(not QuestFrame.autoQuest and true or false)
+            GwQuestviewFrame:EnableKeyboard(true)
+            GwQuestviewFrame:SetScript("OnKeyDown", function(self, key)
+                if key == "SPACE" then
+                    self:SetPropagateKeyboardInput(false)
+                    local Stringcount = 0
+                    for k, v in pairs(QUESTSTRING) do
+                        Stringcount = Stringcount + 1
+                    end
+
+                    if QUESTSTRINGINT < Stringcount then
+                        nextGossip()
+                    else
+                        acceptQuest()
+                    end
+                else
+                    self:SetPropagateKeyboardInput(true)
+                end
+            end)
+        end
+    )
+    GwQuestviewFrame:SetScript(
+        "OnHide",
+        function()
+            GwQuestviewFrame:EnableKeyboard(false)
+            GwQuestviewFrame:SetScript("OnKeyDown", nil)
         end
     )
 
@@ -557,6 +646,11 @@ local function LoadQuestview()
                 QuestInfoRewardsFrame:Hide()
                 QuestProgressRequiredMoneyFrame:Hide()
                 GwQuestviewFrameContainerDialogRequired:Hide()
+                if QuestGetAutoAccept() and not QuestFrame.autoQuest then
+                    QuestFrame.autoQuest = true
+                else
+                    QuestFrame.autoQuest = nil
+                end
                 for i = 1, 32, 1 do
                     local frame = _G["QuestProgressItem" .. i]
                     if (frame) then
@@ -575,24 +669,24 @@ local function LoadQuestview()
 
     GwQuestviewFrameContainerDialog:SetScript(
         "OnClick",
-        function(self, event, addon)
-            nextGossip()
+        function(self, button, addon)
+            if button == "RightButton" then
+                lastGossip()
+            else
+                nextGossip()
+            end
         end
     )
     GwQuestviewFrameContainerDeclineQuest:SetScript(
         "OnClick",
         function(self, event, addon)
-            if questState == "TAKE" then
-                DeclineQuest()
-            else
-                CloseQuest()
-            end
+            CloseQuest()
         end
     )
     GwQuestviewFrameContainerAcceptButton:SetScript(
         "OnClick",
-        function(self, event, addon)
-            Stringcount = 0
+        function(self, button, addon)
+            local Stringcount = 0
             for k, v in pairs(QUESTSTRING) do
                 Stringcount = Stringcount + 1
             end
@@ -601,35 +695,7 @@ local function LoadQuestview()
                 QUESTSTRINGINT = Stringcount - 1
                 nextGossip()
             else
-                if questState == "TAKE" then
-                    if (QuestFlagsPVP()) then
-                        QuestFrame.dialog = StaticPopup_Show("CONFIRM_ACCEPT_PVP_QUEST")
-                    else
-                        if (QuestFrame.autoQuest) then
-                            AcknowledgeAutoAcceptQuest()
-                        else
-                            AcceptQuest()
-                            CloseQuest()
-                        end
-                    end
-                elseif questState == "PROGRESS" then
-                    CloseQuest()
-                else
-                    if (GetNumQuestChoices() == 0) then
-                        GetQuestReward()
-                        CloseQuest()
-                    elseif (GetNumQuestChoices() == 1) then
-                        GetQuestReward(1)
-                        CloseQuest()
-                    else
-                        if (QuestInfoFrame.itemChoice == 0) then
-                            QuestChooseRewardError()
-                        else
-                            GetQuestReward(QuestInfoFrame.itemChoice)
-                            CloseQuest()
-                        end
-                    end
-                end
+                acceptQuest()
             end
         end
     )

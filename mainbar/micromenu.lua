@@ -28,7 +28,7 @@ do
                 local version, subversion, hotfix = string.match(message, "GW2_UI v(%d+).(%d+).(%d+)")
                 local currentVersion, currentSubversion, currentHotfix = string.match(GW.VERSION_STRING, "GW2_UI v(%d+).(%d+).(%d+)")
                 local isUpdate = false
-                if version == nil or subversion == nil or hotfix == nil then return end
+                if version == nil or subversion == nil or hotfix == nil or currentVersion == nil or currentSubversion == nil or currentHotfix == nil then return end
 
                 if version > currentVersion then
                     updateIcon.tooltipText = L["New update available for download."]
@@ -76,29 +76,41 @@ do
 end
 
 local function updateGuildButton(self, event)
-    if event ~= "GUILD_ROSTER_UPDATE" then
-        return
-    end
-
-    local gmb = GuildMicroButton
-    if gmb == nil then
-        return
-    end
-
-    local _, _, numOnlineMembers = GetNumGuildMembers()
-
-    if numOnlineMembers ~= nil and numOnlineMembers > 0 then
-        gmb.GwNotifyDark:Show()
-
-        if numOnlineMembers > 9 then
-            gmb.GwNotifyText:SetText(numOnlineMembers)
-        else
-            gmb.GwNotifyText:SetText(numOnlineMembers .. " ")
+    if event == "GUILD_ROSTER_UPDATE" then
+        local gmb = GuildMicroButton
+        if gmb == nil then
+            return
         end
-        gmb.GwNotifyText:Show()
-    else
-        gmb.GwNotifyDark:Hide()
-        gmb.GwNotifyText:Hide()
+
+        local _, _, numOnlineMembers = GetNumGuildMembers()
+
+        if numOnlineMembers ~= nil and numOnlineMembers > 0 then
+            gmb.GwNotifyDark:Show()
+
+            if numOnlineMembers > 9 then
+                gmb.GwNotifyText:SetText(numOnlineMembers)
+            else
+                gmb.GwNotifyText:SetText(numOnlineMembers .. " ")
+            end
+            gmb.GwNotifyText:Show()
+        else
+            gmb.GwNotifyDark:Hide()
+            gmb.GwNotifyText:Hide()
+        end
+
+        GW.FetchGuildMembers()
+
+        if GetMouseFocus() == self then
+            GW.Guild_OnEnter(self)
+        end
+    elseif event == "MODIFIER_STATE_CHANGED" then
+        if not IsAltKeyDown() and GetMouseFocus() == self then
+			GW.Guild_OnEnter(self)
+		end
+    elseif event == "GUILD_MOTD" then
+        if GetMouseFocus() == self then
+            GW.Guild_OnEnter(self)
+        end
     end
 end
 GW.AddForProfiling("micromenu", "updateGuildButton", updateGuildButton)
@@ -129,7 +141,7 @@ local function updateQuestLogButton(self, event)
         qlmb.GwNotifyText:Hide()
     end
 end
-GW.AddForProfiling("micromenu", "updateGuildButton", updateGuildButton)
+GW.AddForProfiling("micromenu", "updateQuestLogButton", updateQuestLogButton)
 
 local function bag_OnUpdate(self, elapsed)
     self.interval = self.interval - elapsed
@@ -301,6 +313,7 @@ local function setupMicroButtons(mbf)
     bref:HookScript("OnClick", ToggleAllBags)
     bref.interval = 0
     bref:HookScript("OnUpdate", bag_OnUpdate)
+    bref:HookScript("OnEnter", GW.Bags_OnEnter)
 
     -- determine if we are using the default spell & talent buttons
     -- or if we need our custom talent button for the hero panel
@@ -313,17 +326,23 @@ local function setupMicroButtons(mbf)
         tref:ClearAllPoints()
         tref:SetPoint("BOTTOMLEFT", bref, "BOTTOMRIGHT", 4, 0)
 
+        tref:RegisterForClicks("LeftButtonUp", "RightButtonUp")
         tref:SetFrameRef("GwCharacterWindow", GwCharacterWindow)
         tref:SetAttribute(
             "_onclick",
             [=[
-            local f = self:GetFrameRef("GwCharacterWindow")
-            f:SetAttribute("keytoggle", "1")
-            f:SetAttribute("windowpanelopen", "talents")
+            if button == "LeftButton" then
+                local f = self:GetFrameRef("GwCharacterWindow")
+                f:SetAttribute("keytoggle", "1")
+                f:SetAttribute("windowpanelopen", "talents")
+            end
             ]=]
         )
         tref:SetScript("OnEnter", MainMenuBarMicroButtonMixin.OnEnter)
+        tref:SetScript("OnLeave", GameTooltip_Hide)
         tref:SetScript("OnHide", GameTooltip_Hide)
+        tref:HookScript("OnEnter", GW.TalentButton_OnEnter)
+        tref:HookScript("OnClick", GW.TalentButton_OnClick)
 
         disableMicroButton(SpellbookMicroButton)
         disableMicroButton(TalentMicroButton, true)
@@ -334,8 +353,11 @@ local function setupMicroButtons(mbf)
 
         -- TalentMicroButton
         tref = TalentMicroButton
+        tref:RegisterForClicks("LeftButtonUp", "RightButtonUp")
         tref:ClearAllPoints()
         tref:SetPoint("BOTTOMLEFT", SpellbookMicroButton, "BOTTOMRIGHT", 4, 0)
+        tref:HookScript("OnEnter", GW.TalentButton_OnEnter)
+        tref:SetScript("OnClick", GW.TalentButton_OnClick)
 
         -- we've added an extra button so expand the container a bit
         mbf:SetWidth(mbf:GetWidth() + 28)
@@ -369,8 +391,12 @@ local function setupMicroButtons(mbf)
         end
     )
     GuildMicroButton:RegisterEvent("GUILD_ROSTER_UPDATE")
+    GuildMicroButton:RegisterEvent("MODIFIER_STATE_CHANGED")
+    GuildMicroButton:RegisterEvent("GUILD_MOTD")
     GuildMicroButton:HookScript("OnEvent", updateGuildButton)
-    updateGuildButton()
+    GuildMicroButton:HookScript("OnEnter", GW.Guild_OnEnter)
+    GuildMicroButton:SetScript("OnClick", GW.Guild_OnClick)
+    updateGuildButton(GuildMicroButton, "GUILD_ROSTER_UPDATE")
 
     -- LFDMicroButton
     LFDMicroButton.GwSetAnchorPoint = function(self)
@@ -419,20 +445,59 @@ local function setupMicroButtons(mbf)
     StoreMicroButton:ClearAllPoints()
     StoreMicroButton:SetPoint("BOTTOMLEFT", HelpMicroButton, "BOTTOMRIGHT", 4, 0)
 
+    -- great vault icom
+    local greatVaultIcon = CreateFrame("Button", nil, mbf, "MainMenuBarMicroButton")
+    greatVaultIcon.newbieText = nil
+    greatVaultIcon.tooltipText = RATED_PVP_WEEKLY_VAULT
+    reskinMicroButton(greatVaultIcon, "GreatVaultMicroButton", mbf)
+    greatVaultIcon:ClearAllPoints()
+    greatVaultIcon:SetPoint("BOTTOMLEFT", StoreMicroButton, "BOTTOMRIGHT", 4, 0)
+    greatVaultIcon:SetScript("OnMouseUp", function(self, button, upInside)
+        if button == "LeftButton" and upInside and self:IsEnabled() then
+            GW.StopFlash(self) -- Hide flasher if playing
+            if WeeklyRewardsFrame and WeeklyRewardsFrame:IsShown() then
+                HideUIPanel(WeeklyRewardsFrame)
+            else
+                WeeklyRewards_ShowUI()
+            end
+        end
+    end)
+    -- Disable icon till level 60 then lets flash it one time
+    greatVaultIcon:SetEnabled(IsPlayerAtEffectiveMaxLevel())
+    greatVaultIcon:RegisterEvent("PLAYER_LEVEL_UP")
+    greatVaultIcon:RegisterEvent("WEEKLY_REWARDS_UPDATE")
+    greatVaultIcon:SetScript("OnEvent", function(self, event, ...)
+        if event == "PLAYER_LEVEL_UP" then
+            local level = ...
+            if level >= GetMaxLevelForPlayerExpansion() then
+                self:SetEnabled(true)
+                GW.FrameFlash(self, 1, 0.3, 1, true)
+            end
+        elseif event == "WEEKLY_REWARDS_UPDATE" then
+            if C_WeeklyRewards.HasAvailableRewards() then
+                self.tooltipText = RATED_PVP_WEEKLY_VAULT .. "\n" .. GW.RGBToHex(GREEN_FONT_COLOR:GetRGB()) .. MYTHIC_PLUS_COLLECT_GREAT_VAULT .. "|r"
+                GW.FrameFlash(self, 1, 0.3, 1, true)
+            else
+                self.tooltipText = RATED_PVP_WEEKLY_VAULT
+                GW.StopFlash(self)
+            end
+        end
+    end)
+
     -- Update icon
     updateIcon = CreateFrame("Button", nil, mbf, "MainMenuBarMicroButton")
     updateIcon.newbieText = nil
     updateIcon.tooltipText = ""
     reskinMicroButton(updateIcon, "UpdateMicroButton", mbf)
     updateIcon:ClearAllPoints()
-    updateIcon:SetPoint("BOTTOMLEFT", StoreMicroButton, "BOTTOMRIGHT", 4, 0)
+    updateIcon:SetPoint("BOTTOMLEFT", greatVaultIcon, "BOTTOMRIGHT", 4, 0)
     updateIcon:Hide()
     updateIcon:HookScript("OnEnter", function(self)
         GameTooltip:ClearLines()
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip_SetTitle(GameTooltip, L["GW2 UI Update"])
         GameTooltip:AddLine(self.tooltipText)
-		GameTooltip:Show()
+        GameTooltip:Show()
     end)
 end
 GW.AddForProfiling("micromenu", "setupMicroButtons", setupMicroButtons)

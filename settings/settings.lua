@@ -18,6 +18,13 @@ local function switchCat(index)
     if l then
         l.iconbg:Show()
         l.cat_panel:Show()
+        if l.cat_crollFrames then
+            for k, v in pairs(l.cat_crollFrames) do 
+                v.scroll.slider:SetShown(v.scroll.maxScroll > 0)
+                v.scroll.scrollUp:SetShown(v.scroll.maxScroll > 0)
+                v.scroll.scrollDown:SetShown(v.scroll.maxScroll > 0)
+            end
+        end
         UIFrameFadeIn(l.cat_panel, 0.2, 0, 1)
     end
 end
@@ -44,7 +51,7 @@ local fnF_OnClick = function(self, button)
 end
 AddForProfiling("settings", "fnF_OnClick", fnF_OnClick)
 
-local function CreateCat(name, desc, panel, icon, bg)
+local function CreateCat(name, desc, panel, icon, bg, scrollFrames)
     local i = #settings_cat + 1
 
     -- create and position a new button/label for this category
@@ -53,6 +60,7 @@ local function CreateCat(name, desc, panel, icon, bg)
     f.cat_name = name
     f.cat_desc = desc
     f.cat_id = i
+    f.cat_crollFrames = scrollFrames
     settings_cat[i] = f
     f:SetPoint("TOPLEFT", -40, -32 + (-40 * (i - 1)))
 
@@ -294,16 +302,18 @@ local function loadDropDown(scrollFrame)
     HybridScrollFrame_Update(scrollFrame, USED_DROPDOWN_HEIGHT, 120)
 end
 
-local function InitPanel(panel)
-    if not panel or not panel.gwOptions then
+local function InitPanel(panel, hasScroll)
+    if not panel or not (hasScroll and panel.scroll.scrollchild.gwOptions or panel.gwOptions) then
         return
     end
-    local options = panel.gwOptions
+    local options = hasScroll and panel.scroll.scrollchild.gwOptions or panel.gwOptions
 
     local box_padding = 8
     local pY = -48
 
-    local padding = {x = box_padding, y = -55}
+    local numRows = 1
+
+    local padding = {x = box_padding, y = (hasScroll and panel.scroll.scrollchild.sub:GetText() or panel.sub:GetText()) and -55 or -35}
     local first = true
 
     for k, v in pairs(options) do
@@ -323,22 +333,27 @@ local function InitPanel(panel)
             newLine = true
         end
 
-        local of = CreateFrame("Button", v.optionName, panel, optionFrameType)
+        local of = CreateFrame("Button", v.optionName, (hasScroll and panel.scroll.scrollchild or panel), optionFrameType)
 
         if (newLine and not first) or padding.x > 440 then
             padding.y = padding.y + (pY + box_padding)
             padding.x = box_padding
+            numRows = numRows + 1
         end
         if first then
             first = false
         end
 
         of:ClearAllPoints()
-        of:SetPoint("TOPLEFT", panel, "TOPLEFT", padding.x, padding.y)
+        of:SetPoint("TOPLEFT", (hasScroll and panel.scroll.scrollchild or panel), "TOPLEFT", padding.x, padding.y)
         of.title:SetText(v.name)
         of.title:SetFont(DAMAGE_TEXT_FONT, 12)
         of.title:SetTextColor(1, 1, 1)
         of.title:SetShadowColor(0, 0, 0, 1)
+
+        if hasScroll and v.optionType == "dropdown" then
+            of.container:SetParent(panel)
+        end
 
         of:SetScript(
             "OnEnter",
@@ -356,6 +371,12 @@ local function InitPanel(panel)
             local scrollFrame = of.container.contentScroll
             scrollFrame.numEntries = #v.options
             scrollFrame.scrollBar.thumbTexture:SetSize(12, 30)
+            scrollFrame.scrollBar:ClearAllPoints()
+            scrollFrame.scrollBar:SetPoint("TOPRIGHT", -3, -12)
+            scrollFrame.scrollBar:SetPoint("BOTTOMRIGHT", -3, 12)
+            scrollFrame.scrollBar.scrollUp:SetPoint("TOPRIGHT", 0, 12)
+            scrollFrame.scrollBar.scrollDown:SetPoint("BOTTOMRIGHT", 0, -12)
+            scrollFrame.scrollBar:SetFrameLevel(scrollFrame:GetFrameLevel() + 5)
             
             scrollFrame.data = GW.copyTable(nil, v)
             scrollFrame.of = of
@@ -570,6 +591,17 @@ local function InitPanel(panel)
             padding.x = 450
         end
     end
+
+    -- Scrollframe settings
+    if hasScroll then
+        panel.scroll:SetScrollChild(panel.scroll.scrollchild)
+        panel.scroll.scrollchild:SetHeight(panel:GetHeight())
+        panel.scroll.scrollchild:SetWidth(panel.scroll:GetWidth() - 20)
+        panel.scroll.slider:SetMinMaxValues(0, max(0, numRows * 40 - panel:GetHeight() + 50))
+        panel.scroll.slider.thumb:SetHeight(100)
+        panel.scroll.slider:SetValue(1)
+        panel.scroll.maxScroll = max(0, numRows * 40 - panel:GetHeight()+50)
+    end
 end
 GW.InitPanel = InitPanel
 
@@ -732,7 +764,6 @@ local function LoadSettings()
     mf:Hide()
 
     GW.LoadModulesPanel(sWindow)
-    GW.LoadImmersivePanel(sWindow)
     GW.LoadPlayerPanel(sWindow)
     GW.LoadTargetPanel(sWindow)
     GW.LoadActionbarPanel(sWindow)

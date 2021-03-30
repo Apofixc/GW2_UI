@@ -4,9 +4,7 @@ local CommaValue = GW.CommaValue
 local GetSetting = GW.GetSetting
 local SetSetting = GW.SetSetting
 local UpdateMoney = GW.UpdateMoney
-local GetRealmMoney = GW.GetRealmMoney
-local GetCharClass = GW.GetCharClass
-local GetRealmStorage = GW.GetRealmStorage
+local GetStorage = GW.GetStorage
 local ClearStorage = GW.ClearStorage
 local EnableTooltip = GW.EnableTooltip
 local FormatMoneyForChat = GW.FormatMoneyForChat
@@ -20,7 +18,7 @@ local BAG_WINDOW_SIZE = 480
 
 local BAG1
 
-local IterationCount, totalPrice = 500, 0
+local IterationCount = 500
 local SellJunkFrame = CreateFrame("FRAME")
 local SellJunkTicker, mBagID, mBagSlot
 
@@ -51,8 +49,6 @@ local function sellJunk()
                         UseContainerItem(BagID, BagSlot)
                         -- Perform actions on first iteration
                         if SellJunkTicker._remainingIterations == IterationCount then
-                            -- Calculate total price
-                            totalPrice = totalPrice + (ItemPrice * itemCount)
                             -- Store first sold bag slot for analysis
                             if SoldCount == 1 then
                                 mBagID, mBagSlot = BagID, BagSlot
@@ -71,9 +67,6 @@ local function sellJunk()
     -- Stop selling if no items were sold for this iteration or iteration limit was reached
     if SoldCount == 0 or SellJunkTicker and SellJunkTicker._remainingIterations == 1 then 
         StopSelling() 
-        if totalPrice > 0 then
-            DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r " .. L["Sold junk for: %s"]:format(FormatMoneyForChat(totalPrice)))
-        end
     end
 end
 
@@ -934,56 +927,8 @@ local function LoadBag(helpers)
     f.gold:SetTextColor(221 / 255, 187 / 255, 68 / 255)
 
     -- money frame tooltip
-    f.moneyFrame:SetScript(
-        "OnEnter",
-        function(self)
-            local list, total = GetRealmMoney()
-            if list then
-                GameTooltip:SetOwner(self, "ANCHOR_TOP")
-                GameTooltip:ClearLines()
-
-                -- list all players from the realm+faction
-                local _, realm = UnitFullName("player")
-                GameTooltip:AddDoubleLine(realm .. " " .. TOTAL, nil, nil, nil, 1, 1, 1)
-                for name, money in pairs(list) do
-                    local color = select(4, GetClassColor(GetCharClass(name)))
-                    SetTooltipMoney(GameTooltip, money, "TOOLTIP", ("|c%s%s|r:"):format(color, name))
-                end
-
-                -- add total gold on realm+faction
-                GameTooltip_AddBlankLineToTooltip(GameTooltip)
-                SetTooltipMoney(GameTooltip, total, "TOOLTIP", TOTAL .. ":")
-
-                GameTooltip:Show()
-
-                -- align money frames to the right
-                local maxWidth = 0
-                for i = 1, GameTooltip.shownMoneyFrames do
-                    local name = "GameTooltipMoneyFrame" .. i
-                    local textWidth = _G[name .. "PrefixText"]:GetWidth()
-                    local moneyWidth = select(4, _G[name .. "CopperButton"]:GetPoint(1))
-                    maxWidth = max(maxWidth, textWidth + moneyWidth)
-                end
-                for i = 1, GameTooltip.shownMoneyFrames do
-                    local name = "GameTooltipMoneyFrame" .. i
-                    local textWidth = _G[name .. "PrefixText"]:GetWidth()
-                    _G[name .. "CopperButton"]:SetPoint("RIGHT", name .. "PrefixText", "RIGHT", maxWidth - textWidth, 0)
-                end
-            end
-        end
-    )
-
-    -- clear money storage on right-click
-    f.moneyFrame:SetScript(
-        "OnClick",
-        function(self, button)
-            if button == "RightButton" then
-                ClearStorage(GetRealmStorage("MONEY"))
-                UpdateMoney()
-                self:GetScript("OnEnter")(self)
-            end
-        end
-    )
+    f.moneyFrame:SetScript("OnEnter", GW.Money_OnEnter)
+    f.moneyFrame:SetScript("OnClick", GW.Money_OnClick)
 
     -- update money when applicable
     f.moneyFrame:SetScript(

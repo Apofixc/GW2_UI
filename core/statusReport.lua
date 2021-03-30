@@ -81,7 +81,7 @@ local EnglishSpecName = {
 }
 
 local function GetEnglishSpecName()
-    return EnglishSpecName[GetSpecializationInfo(GetSpecialization())] or "Unknown"
+    return EnglishSpecName[GetSpecializationInfo(GW.myspec)] or "Unknown"
 end
 
 local function CreateContentLines(num, parent, anchorTo)
@@ -232,6 +232,7 @@ local function CreateStatusFrame()
     StatusFrame.Section4.Content.Button2:SetText(CLOSE)
     StatusFrame.Section4.Content.Button2:SetScript("OnClick", function(self)
         HideUIPanel(StatusFrame)
+        GwSettingsWindow:Show()
     end)
 
     tinsert(UISpecialFrames, "GWStatusFrame")

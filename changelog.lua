@@ -1,7 +1,91 @@
 local _, GW = ...
 local v = GW.vernotes
 
-v("5.7.6", [=[
+v("5.12.0", [=[
+    NEW
+    - Added "Great Vault" Button to micromenu
+    - Added datatext to gametime (hover the time on minimap)
+    - Added datatext to talent micro button
+
+FIXES
+    - Fix rare ember court and chatframe lua error
+    - Fix some target/foucs overlapping
+
+MISC
+    - Remove auto sell junk chat output: Blizzard os doing this now
+    - Right click guild micromenu button to invite or whisper guild mebers
+]=])
+
+v("5.11.2", [=[
+FIXES
+    - Fix some gossip skin issues
+    - Some reputation issues
+
+MISC
+    - Update toc
+]=])
+
+v("5.11.1", [=[
+FIXES
+    - Some setting dropdowns are not accessible
+]=])
+
+v("5.11.0", [=[
+NEW
+    - Added more info to bag and guild micromenu icons
+
+FIXES
+    - Fix some gossip skin issues
+    - Module buttons are not inactive anymore
+    - Fix UTF8 issue if font module is deactivated (for any reason blizzard is not supporting UTF8 if we set a default blizzard font)
+]=])
+
+v("5.10.0", [=[
+NEW
+    - Added socket frame skin
+    - Added layout and functions to money tooltip (bags)
+    - Immersive Questing: Right click to go one gossip back
+    - Immersive Questing: Accept quest with space
+    - Added worldmap skin
+    - Added gossip skin
+    - Added itemupgrade skin
+
+FIXES
+    - Objective tracker improvments
+    - Focus frame invert is now working
+    - Fix auto repair
+]=])
+
+v("5.9.1", [=[
+FIXES
+    - Torghast tooltip issue
+    - Fix M+ timer overlapping (Thanks to Sethos)
+]=])
+
+v("5.9.0", [=[
+NEW
+    - Added "player frame in target frame style"
+    - Immersive Questing: Trigger "Next Gossip" with space
+    - Show cooldowns at bags and character correct by using our own cooldown system
+    - Added toggle for player PvP indicator
+    - Added "World Quest Addon"-Skin (embedded into objectives tracker)
+    - Added option to invert target/focus frame
+    - Immersive Questing: Now works with auto accepting quest addons like AAP
+    - Added Ember Court to the objectives tracker (Big thanks to Belazor for all the testing)
+    - Added Credits
+
+FIXES
+    - Update "Raid Debuffs"
+    - Guild auto repair if not in guild
+    - Gamemenu fixes to better interact with ElvUI
+    - Immersive Questing: "Ignore"-Button now only shows if applicable
+]=])
+
+v("5.8.0", [=[
+NEW
+    - Added Talent Set Manager support (button on hero panel)
+    - Button flyout direction is based on actionbar screen position
+
 FIXES
     - Fix castbar latency issue
     - Fix rested expbar issue
@@ -38,8 +122,8 @@ FIXES
 
 v("5.7.0", [=[
 NEW
-    - Dropdown in GW2 Settings habe now scrolling
-    - "Importend Raid & Dungeon" Debuffs can now be disable/enabled per debuffs
+    - Dropdown in GW2 Settings have now scrolling
+    - "Important Raid & Dungeon" Debuffs can now be disable/enabled per debuffs
     - Added ingame notification if a new addon update is available (icon at the micromenu)
     - Added missing types at GW2 floating combat text
     - We now use blizzards heropanel itemslots, that means that now everything can applyed to that buttons and the can be used, if they have "use" attributes

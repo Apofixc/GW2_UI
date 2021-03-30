@@ -22,7 +22,7 @@ local function InitTalkingHeadFrame()
         end
     end
 
-    GW.RegisterMovableFrame(TalkingHeadFrame, "Talking Head Frame", "TalkingHeadFrame_pos", "VerticalActionBarDummy", nil, nil, {"scaleable"})
+    GW.RegisterMovableFrame(TalkingHeadFrame, "Talking Head Frame", "TalkingHeadFrame_pos", "VerticalActionBarDummy", nil, nil, {"default", "scaleable"})
     TalkingHeadFrame:ClearAllPoints()
     TalkingHeadFrame:SetPoint("TOPLEFT", TalkingHeadFrame.gwMover)
 
@@ -50,7 +50,9 @@ local function InitTalkingHeadFrame()
     hooksecurefunc("TalkingHeadFrame_PlayCurrent", SkinTalkingHeadFrame_OnShow)
 end
 
-local function SkinAndPositionTalkingHeadFrame()
+local function LoadTalkingHeadSkin()
+    if not GW.GetSetting("TALKINGHEAD_SKIN_ENABLED") then return end
+
     if IsAddOnLoaded("Blizzard_TalkingHeadUI") then
         InitTalkingHeadFrame()
     else
@@ -63,4 +65,4 @@ local function SkinAndPositionTalkingHeadFrame()
         end)
     end
 end
-GW.SkinAndPositionTalkingHeadFrame = SkinAndPositionTalkingHeadFrame
+GW.LoadTalkingHeadSkin = LoadTalkingHeadSkin

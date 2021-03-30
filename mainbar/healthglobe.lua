@@ -69,7 +69,7 @@ local function updateHealthData(self, anims)
     local auy_off = Y_FULL - Y_RANGE * (1 - aup)
 
     -- determine how much shield (over absorb) to overlay
-    local ap = absorb_over / healthMax
+    local ap = min(absorb_over / healthMax, 1) -- only max 1, if ap over is greater then player hp
     local apy_off = Y_FULL - 7 - Y_RANGE * (1 - ap)
 
     -- determine how much predicted health to overlay
@@ -180,7 +180,7 @@ GW.AddForProfiling("healthglobe", "updateHealthData", updateHealthData)
 
 local function selectPvp(self)
     local prevFlag = self.pvp.pvpFlag
-    if C_PvP.IsWarModeDesired() or GetPVPDesired("player") or UnitIsPVP("player") or UnitIsPVPFreeForAll("player") then
+    if GetSetting("PLAYER_SHOW_PVP_INDICATOR") and (C_PvP.IsWarModeDesired() or GetPVPDesired("player") or UnitIsPVP("player") or UnitIsPVPFreeForAll("player")) then
         self.pvp.pvpFlag = true
         if prevFlag ~= true then
             if GW.myfaction == "Horde" then
@@ -197,6 +197,7 @@ local function selectPvp(self)
         self.pvp.horde:Hide()
     end
 end
+GW.PlayerSelectPvp = selectPvp
 GW.AddForProfiling("healthglobe", "selectPvp", selectPvp)
 
 local function globe_OnEvent(self, event, ...)
@@ -250,10 +251,11 @@ local function globe_OnEnter(self)
     end
     GameTooltip:Show()
 
-    if self.pvp.pvpFlag then
+    if GetSetting("PLAYER_SHOW_PVP_INDICATOR") and self.pvp.pvpFlag then
         self.pvp:fadeIn()
     end
 end
+GW.PlayerFrame_OnEnter = globe_OnEnter
 GW.AddForProfiling("healthglobe", "globe_OnEnter", globe_OnEnter)
 
 local function fill_OnFinish(self)
@@ -382,7 +384,7 @@ local function LoadHealthGlobe()
     hg:SetScript("OnEnter", globe_OnEnter)
     hg:SetScript("OnLeave", function(self)
         GameTooltip_Hide()
-        if self.pvp.pvpFlag then
+        if GetSetting("PLAYER_SHOW_PVP_INDICATOR") and self.pvp.pvpFlag then
             self.pvp:fadeOut()
         end
     end)
@@ -442,6 +444,8 @@ local function LoadHealthGlobe()
         pagOut:Stop()
         pagIn:Play()
     end
+
+    if not GetSetting("PLAYER_SHOW_PVP_INDICATOR") then pvp:Hide() end
 
     return hg
 end

@@ -325,7 +325,9 @@ local function ClearMailTextures()
     MailFrameTab1:Hide()
 end
 
-local function SkinMail()
+local function LoadMailSkin()
+    if not GetSetting("MAIL_SKIN_ENABLED") then return end
+
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("MAIL_SHOW")
     eventFrame:RegisterEvent("MAIL_INBOX_UPDATE")
@@ -405,6 +407,7 @@ local function SkinMail()
     InboxTitleText:SetTextColor(1, 1, 1, 1)
     InboxTitleText:SetJustifyH("LEFT")
 
+    _G.AutoCompleteBox:StripTextures()
     _G.AutoCompleteBox:CreateBackdrop(GW.skins.constBackdropFrame)
 
     -- movable stuff
@@ -467,5 +470,7 @@ local function SkinMail()
     -- hook inbox buttons to close the compose view if we want to look at a message and it's open
     AddOnClickHandlers()
 
+    -- Skin Postal Addon
+    GW.LoadPostalAddonSkin()
 end
-GW.SkinMail = SkinMail
+GW.LoadMailSkin = LoadMailSkin

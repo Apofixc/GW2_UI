@@ -768,6 +768,8 @@ local function grabDefaultSlots(slot, anchor, parent, size)
 
     slot:GetNormalTexture():SetTexture(nil)
 
+    GW.RegisterCooldown(_G[slot:GetName()..'Cooldown'])
+
     local high = slot:GetHighlightTexture()
     high:SetAllPoints(slot)
     high:SetTexture("Interface/AddOns/GW2_UI/textures/bag/bagitemborder")
@@ -981,22 +983,5 @@ local function LoadPDBagList(fmMenu)
     fmGPDSI:SetScript("OnShow", indicatorAnimation)
 
     updateStats()
-
-    StaticPopupDialogs["GW_UNEQUIP_LEGENDARY"] = {
-        text = L["You must unequip that item in order to upgrade it."],
-        button1 = CANCEL,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        preferredIndex = 3
-    }
-    StaticPopupDialogs["GW_NOT_A_LEGENDARY"] = {
-        text = L["You cannot upgrade that item."],
-        button1 = CANCEL,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        preferredIndex = 3
-    }
 end
 GW.LoadPDBagList = LoadPDBagList

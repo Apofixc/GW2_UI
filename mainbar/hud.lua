@@ -153,7 +153,6 @@ local function xpbar_OnEvent(self, event)
     local valPrec = valCurrent / valMax
     local valPrecRepu = 0
 
-    local effectiveLevel = GW.myeffectivelevel;
     local level = GW.mylevel
     local maxPlayerLevel = GetMaxLevelForPlayerExpansion()
     local Nextlevel = math.min(maxPlayerLevel, level + 1)
@@ -458,8 +457,8 @@ local function xpbar_OnEvent(self, event)
         Nextlevel = Nextlevel and Nextlevel .. " |TInterface/AddOns/GW2_UI/textures/icons/levelreward-icon:20:20:0:0|t" or ""
     end
 
-    if GW.mylevel ~= effectiveLevel then
-      level = level.. " |cFF00FF00("..effectiveLevel..")|r"
+    if GW.mylevel ~= UnitEffectiveLevel("player") then
+      level = level.. " |cFF00FF00(" .. UnitEffectiveLevel("player") .. ")|r"
     end
 
     GwExperienceFrame.NextLevel:SetText(Nextlevel)
@@ -1120,6 +1119,28 @@ local function LoadHudArt()
     hudArtFrame:RegisterUnitEvent("UNIT_MAXHEALTH", "player")
     selectBg()
     combatHealthState()
+
+    --Loss Of Control Icon Skin
+    LossOfControlFrame.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+
+    -- show weekly reward 
+    PVEFrame:HookScript("OnShow", function(self)
+        UIParentLoadAddOn("Blizzard_PVPUI")
+        if _G.PVPQueueFrame.HonorInset.CasualPanel.WeeklyChest then
+            _G.PVPQueueFrame.HonorInset.CasualPanel.WeeklyChest:SetScript("OnMouseDown", function()
+                if UIParentLoadAddOn("Blizzard_WeeklyRewards") then
+                    if WeeklyRewardsFrame:IsShown() then
+                        WeeklyRewardsFrame:Hide()
+                    else
+                        WeeklyRewardsFrame:Show()
+                    end
+                else
+                    LoadAddOn("Blizzard_WeeklyRewards")
+                    WeeklyRewardsFrame:Show()
+                end
+            end)
+        end
+    end)
 end
 GW.LoadHudArt = LoadHudArt
 
@@ -1199,9 +1220,6 @@ local function LoadXPBar()
             UIFrameFadeIn(GwExperienceFrame.AzeritBar, 0.2, GwExperienceFrame.AzeritBar:GetAlpha(), 1)
             UIFrameFadeIn(GwExperienceFrame.RepuBar, 0.2, GwExperienceFrame.RepuBar:GetAlpha(), 1)
         end
-    )
-
-    --Loss Of Control Icon Skin
-    LossOfControlFrame.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+    )    
 end
 GW.LoadXPBar = LoadXPBar

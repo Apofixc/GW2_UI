@@ -141,8 +141,8 @@ local function SummonPetInfo()
     local newSummonedPetGUID = C_PetJournal.GetSummonedPetGUID()
 
     if newSummonedPetGUID then
-        local _, _, _, _, _, _, isFavorite, name, _, _, _, sourceText, description, _, _, _, _, _ = C_PetJournal.GetPetInfoByPetID(newSummonedPetGUID)
-
+        local _, _, _, _, _, displayID, isFavorite, name, _, _, _, sourceText, description, _, _, _, _, _ = C_PetJournal.GetPetInfoByPetID(newSummonedPetGUID)
+        print(displayID)
         PrintInfo(PET, name, sourceText, description)
 
         timeLastSummon = GetTime() - 2

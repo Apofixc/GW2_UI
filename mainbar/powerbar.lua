@@ -4,6 +4,7 @@ local PowerBarColorCustom = GW.PowerBarColorCustom
 local bloodSpark = GW.BLOOD_SPARK
 local animations = GW.animations
 local AddToAnimation = GW.AddToAnimation
+local GetSetting = GW.GetSetting
 
 local function powerBar_OnUpdate(self)
     if self.lostKnownPower == nil or self.powerMax == nil or self.lastUpdate == nil or self.animating == true then
@@ -179,16 +180,17 @@ GW.UpdatePowerData = UpdatePowerData
 local function LoadPowerBar()
     local playerPowerBar = CreateFrame("Frame", "GwPlayerPowerBar", UIParent, "GwPlayerPowerBar")
 
-    GW.RegisterMovableFrame(playerPowerBar, DISPLAY_POWER_BARS, "PowerBar_pos", "VerticalActionBarDummy", nil, true, {"scaleable"}, true)
+    GW.RegisterMovableFrame(playerPowerBar, DISPLAY_POWER_BARS, "PowerBar_pos", "VerticalActionBarDummy", nil, true, {"default", "scaleable"}, true)
 
     playerPowerBar:ClearAllPoints()
     playerPowerBar:SetPoint("TOPLEFT", playerPowerBar.gwMover)
 
     -- position mover
-    if not GW.GetSetting("XPBAR_ENABLED") and not playerPowerBar.isMoved  then
-        local framePoint = GW.GetSetting("PowerBar_pos")
+    if not playerPowerBar.isMoved  then
+        local framePoint = GetSetting("PowerBar_pos")
+        local yOff = not GetSetting("XPBAR_ENABLED") and 14 or 0
         playerPowerBar.gwMover:ClearAllPoints()
-        playerPowerBar.gwMover:SetPoint(framePoint.point, UIParent, framePoint.relativePoint, framePoint.xOfs, framePoint.yOfs - 14)
+        playerPowerBar.gwMover:SetPoint(framePoint.point, UIParent, framePoint.relativePoint, framePoint.xOfs, framePoint.yOfs - yOff)
     end
     GW.MixinHideDuringPetAndOverride(playerPowerBar)
 
@@ -199,9 +201,7 @@ local function LoadPowerBar()
         function(self, event, unit)
             if (event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER") and unit == "player" then
                 UpdatePowerData(playerPowerBar)
-                return
-            end
-            if event == "UPDATE_SHAPESHIFT_FORM" or event == "ACTIVE_TALENT_GROUP_CHANGED" then
+            elseif event == "UPDATE_SHAPESHIFT_FORM" or event == "ACTIVE_TALENT_GROUP_CHANGED" then
                 playerPowerBar.lastPowerType = nil
                 UpdatePowerData(playerPowerBar)
             end
@@ -214,8 +214,6 @@ local function LoadPowerBar()
     playerPowerBar:RegisterUnitEvent("UNIT_MAXPOWER", "player")
     playerPowerBar:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
     playerPowerBar:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-    playerPowerBar:RegisterEvent("PLAYER_ENTERING_WORLD")
-    playerPowerBar:RegisterEvent("PLAYER_TALENT_UPDATE")
 
     UpdatePowerData(playerPowerBar)
 end

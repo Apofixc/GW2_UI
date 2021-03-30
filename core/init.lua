@@ -1,5 +1,5 @@
 
-local _, GW = ...
+local addonName, GW = ...
 
 -- init: store API, to reduce the API usage
 local function GetPlayerRole()
@@ -27,6 +27,7 @@ GW.CheckRole = CheckRole
 
 --Constants
 local gameLocale = GetLocale()
+GW.addonName = addonName:gsub("_", " ")
 GW.mylocal = gameLocale == "enGB" and "enUS" or gameLocale
 GW.NoOp = function() end
 GW.myfaction, GW.myLocalizedFaction = UnitFactionGroup("player")
@@ -36,7 +37,6 @@ GW.myname = UnitName("player")
 GW.myrealm = GetRealmName()
 GW.mysex = UnitSex("player")
 GW.mylevel = UnitLevel("player")
-GW.myeffectivelevel = UnitEffectiveLevel("player")
 GW.myspec = GetSpecialization()
 GW.CheckRole()
 GW.screenwidth, GW.screenHeight = GetPhysicalScreenSize()
@@ -58,6 +58,10 @@ GW.locationData = {}
 GW.MOVABLE_FRAMES = {}
 GW.scaleableFrames = {}
 GW.scaleableMainHudFrames = {}
+
+-- money
+GW.earnedMoney = 0
+GW.spentMoney = 0
 
 -- Init global function
 GW.InitLocationDataHandler()

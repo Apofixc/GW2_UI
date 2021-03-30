@@ -1,4 +1,4 @@
-## Interface: 90002
+## Interface: 90005
 ## Title: |cffffedbaGW2 UI|r
 ## Notes: HUD Replacement addon.
 ## Notes-deDE: Ersetzt die Benutzeroberfläche.
@@ -11,7 +11,7 @@
 ## Author: deadend06, Nils89, nezroy
 
 ## SavedVariablesPerCharacter: GW2UI_SETTINGS_DB_03
-## SavedVariables: GW2UI_STORAGE, GW2UI_SETTINGS_PROFILES
+## SavedVariables: GW2UI_STORAGE, GW2UI_SETTINGS_PROFILES, GW2UI_STORAGE2
 
 core/TaintLess.xml
 core/debug.lua
@@ -42,6 +42,7 @@ core/fonts.lua
 core/storage.lua
 core/statusReport.lua
 core/slashcommands.lua
+core/cooldowns.lua
 
 settings/defaults.lua
 settings/api.lua
@@ -59,13 +60,19 @@ settings/panel_tooltip.lua
 settings/panel_party.lua
 settings/panel_raid.lua
 settings/panel_auras.lua
-settings/panel_immersive.lua
 settings/panel_skins.lua
 settings/panel_profiles.lua
 settings/hover_binding.lua
 settings/welcome.xml
 settings/welcome.lua
 settings/moveableFrameHandler.lua
+settings/credits.lua
+
+dataInfo/money.lua
+dataInfo/guild.lua
+dataInfo/bags.lua
+dataInfo/time.lua
+dataInfo/spec.lua
 
 core/auras.lua
 
@@ -84,6 +91,7 @@ units/raidframes.lua
 units/unitframes.lua
 units/party.lua
 units/markers.lua
+units/playerFrame.lua
 
 mainbar/micromenu.xml
 mainbar/micromenu.lua
@@ -140,6 +148,10 @@ immersive/immersiveviewcustome.lua
 immersive/immersiveview.lua
 
 
+objectives/scenarioWidgets/heroicVisions.lua
+objectives/scenarioWidgets/jailersTower.lua
+objectives/scenarioWidgets/warfronts.lua
+objectives/scenarioWidgets/emberCourt.lua
 objectives/questtracker.xml
 objectives/map.lua
 objectives/worldmap.lua

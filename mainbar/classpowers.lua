@@ -304,13 +304,26 @@ local function setComboBar(f)
 
     if f.ourTarget and f.comboPointsOnTarget then
         f:ClearAllPoints()
-        f:SetPoint("TOPLEFT", GwTargetUnitFrame.castingbar, "TOPLEFT", -0, -5)
+        if GwTargetUnitFrame.frameInvert then
+            f:SetPoint("TOPRIGHT", GwTargetUnitFrame.castingbar, "TOPRIGHT", 0, -13)
+            f.combopoints:SetWidth(213)
+        else
+            f:SetPoint("TOPLEFT", GwTargetUnitFrame.castingbar, "TOPLEFT", 0, -13)
+        end
         f:SetWidth(220)
         f:SetHeight(30)
         f.combopoints.comboFlare:SetSize(64, 64)
+        local point = 0
         for i = 1, 9 do
             f.combopoints["runeTex" .. i]:SetSize(18, 18)
             f.combopoints["combo" .. i]:SetSize(18, 18)
+            if GwTargetUnitFrame.frameInvert then
+                f.combopoints["runeTex" .. i]:ClearAllPoints()
+                f.combopoints["combo" .. i]:ClearAllPoints()
+                f.combopoints["runeTex" .. i]:SetPoint("RIGHT", f.combopoints, "RIGHT", point, 0)
+                f.combopoints["combo" .. i]:SetPoint("RIGHT", f.combopoints, "RIGHT", point, 0)
+                point = point - 32
+            end
         end
         f:Hide()
     end
@@ -1245,17 +1258,19 @@ end
 local function LoadClassPowers()
     local cpf = CreateFrame("Frame", "GwPlayerClassPower", UIParent, "GwPlayerClassPower")
 
-    GW.RegisterMovableFrame(cpf, GW.L["Class Power"], "ClasspowerBar_pos", "VerticalActionBarDummy", nil, true, {"scaleable"}, true)
+    GW.RegisterMovableFrame(cpf, GW.L["Class Power"], "ClasspowerBar_pos", "VerticalActionBarDummy", nil, true, {"default", "scaleable"}, true)
     cpf:ClearAllPoints()
     cpf:SetPoint("TOPLEFT", cpf.gwMover)
     hooksecurefunc(cpf, "SetHeight", function() cpf.gwMover:SetHeight(cpf:GetHeight()) end)
     hooksecurefunc(cpf, "SetWidth", function() cpf.gwMover:SetWidth(cpf:GetWidth()) end)
 
     -- position mover
-    if not GW.GetSetting("XPBAR_ENABLED") and not cpf.isMoved  then
+    if (not GetSetting("XPBAR_ENABLED") or GetSetting("PLAYER_AS_TARGET_FRAME")) and not cpf.isMoved  then
         local framePoint = GW.GetSetting("ClasspowerBar_pos")
+        local yOff = not GetSetting("XPBAR_ENABLED") and 14 or 0
+        local xOff = GetSetting("PLAYER_AS_TARGET_FRAME") and 52 or 0
         cpf.gwMover:ClearAllPoints()
-        cpf.gwMover:SetPoint(framePoint.point, UIParent, framePoint.relativePoint, framePoint.xOfs, framePoint.yOfs - 14)
+        cpf.gwMover:SetPoint(framePoint.point, UIParent, framePoint.relativePoint, framePoint.xOfs + xOff, framePoint.yOfs - yOff)
     end
 
     GW.MixinHideDuringPetAndOverride(cpf)
@@ -1267,28 +1282,39 @@ local function LoadClassPowers()
 
     -- create an extra mana power bar that is used sometimes (feral druid in cat form) only if your Powerbar is on
     if cpf.ourPowerBar then
-        local lmb = CreateFrame("Frame", nil, GwPlayerPowerBar, "GwPlayerPowerBar")
+        local anchorFrame = GetSetting("PLAYER_AS_TARGET_FRAME") and _G.GwPlayerUnitFrame or _G.GwPlayerPowerBar
+        local barWidth = GetSetting("PLAYER_AS_TARGET_FRAME") and _G.GwPlayerUnitFrame.powerbar:GetWidth() or _G.GwPlayerPowerBar:GetWidth()
+        local lmb = CreateFrame("Frame", nil, anchorFrame, "GwPlayerPowerBar")
         GW.MixinHideDuringPetAndOverride(lmb)
         cpf.lmb = lmb
         lmb.candy.spark:ClearAllPoints()
-        lmb:SetSize(GwPlayerPowerBar:GetWidth(), 7)
+        
         lmb.bar:SetHeight(5)
         lmb.candy:SetHeight(5)
         lmb.candy.spark:SetHeight(5)
         lmb.statusBar:SetHeight(5)
         lmb:ClearAllPoints()
-        lmb:SetPoint("TOPLEFT", "GwPlayerPowerBar", "TOPLEFT", 0, 5)
+        if GetSetting("PLAYER_AS_TARGET_FRAME") then
+            lmb:SetPoint("LEFT", anchorFrame.castingbarBackground, "LEFT", 2, 5)
+            lmb:SetSize(barWidth + 2, 7)
+            lmb.statusBar:SetWidth(barWidth - 2)
+        else
+            lmb:SetPoint("TOPLEFT", anchorFrame, "TOPLEFT", 0, 5)
+            lmb:SetSize(barWidth, 7)
+        end
         lmb:SetFrameStrata("MEDIUM")
         lmb.statusBar.label:SetFont(DAMAGE_TEXT_FONT, 8)
     end
 
     -- create an extra mana power bar that is used sometimes
+    local yOff = not GetSetting("XPBAR_ENABLED") and 14 or 0
+    local xOff = GetSetting("PLAYER_AS_TARGET_FRAME") and 52 or 0
     local exbar = CreateFrame("Frame", nil, cpf, "GwPlayerPowerBar")
     GW.MixinHideDuringPetAndOverride(exbar)
     cpf.exbar = exbar
     exbar.candy.spark:ClearAllPoints()
     exbar:ClearAllPoints()
-    exbar:SetPoint("BOTTOMLEFT", cpf, "BOTTOMLEFT", 0, 5)
+    exbar:SetPoint("BOTTOMLEFT", cpf, "BOTTOMLEFT", 0 + xOff, 5 - yOff)
     exbar:SetFrameStrata("MEDIUM")
     exbar.statusBar.label:SetFont(DAMAGE_TEXT_FONT, 14)
 

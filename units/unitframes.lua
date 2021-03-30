@@ -28,13 +28,17 @@ local function normalUnitFrame_OnEnter(self)
 end
 GW.AddForProfiling("unitframes", "normalUnitFrame_OnEnter", normalUnitFrame_OnEnter)
 
-local function createNormalUnitFrame(ftype)
-    local f = CreateFrame("Button", ftype, UIParent, "GwNormalUnitFrame")
+local function createNormalUnitFrame(ftype, revert)
+    local f = CreateFrame("Button", ftype, UIParent, revert and "GwNormalUnitFrameInvert" or "GwNormalUnitFrame")
+
+    f.frameInvert = revert
 
     f.healthString:SetFont(UNIT_NAME_FONT, 11)
     f.healthString:SetShadowOffset(1, -1)
 
-    f.nameString:SetFont(UNIT_NAME_FONT, 14)
+    if GetSetting("FONTS_ENABLED") then -- for any reason blizzard is not supporting UTF8 if we set this font
+        f.nameString:SetFont(UNIT_NAME_FONT, 14)
+    end
     f.nameString:SetShadowOffset(1, -1)
 
     f.threatString:SetFont(STANDARD_TEXT_FONT, 11)
@@ -53,8 +57,6 @@ local function createNormalUnitFrame(ftype)
 
     f.prestigebg:SetPoint("CENTER", f.prestigeString, "CENTER", -1, 1)
 
-    --f.portrait:SetMask(186178)
-
     f.healthValue = 0
 
     f.barWidth = 212
@@ -64,6 +66,7 @@ local function createNormalUnitFrame(ftype)
 
     return f
 end
+GW.createNormalUnitFrame = createNormalUnitFrame
 GW.AddForProfiling("unitframes", "createNormalUnitFrame", createNormalUnitFrame)
 
 local function createNormalUnitFrameSmall(ftype)
@@ -72,7 +75,9 @@ local function createNormalUnitFrameSmall(ftype)
     f.healthString:SetFont(UNIT_NAME_FONT, 11)
     f.healthString:SetShadowOffset(1, -1)
 
-    f.nameString:SetFont(UNIT_NAME_FONT, 14)
+    if GetSetting("FONTS_ENABLED") then -- for any reason blizzard is not supporting UTF8 if we set this font
+        f.nameString:SetFont(UNIT_NAME_FONT, 14)
+    end
     f.nameString:SetShadowOffset(1, -1)
 
     f.levelString:SetFont(UNIT_NAME_FONT, 14)
@@ -111,7 +116,7 @@ end
 GW.AddForProfiling("unitframes", "updateHealthTextString", updateHealthTextString)
 
 local function updateHealthbarColor(self)
-    if self.classColor == true and UnitIsPlayer(self.unit) then
+    if self.classColor and UnitIsPlayer(self.unit) then
         local _, englishClass = UnitClass(self.unit)
         local color = GWGetClassColor(englishClass, true)
 
@@ -167,26 +172,27 @@ local function healthBarAnimation(self, powerPrec, norm)
     end
 
     hbSpark:SetTexCoord(
-        bloodSpark[bI].left,
-        bloodSpark[bI].right,
+        self.frameInvert and bloodSpark[bI].right or bloodSpark[bI].left,
+        self.frameInvert and bloodSpark[bI].left or bloodSpark[bI].right,
         bloodSpark[bI].top,
         bloodSpark[bI].bottom
     )
     hbSpark:SetPoint(
-        "LEFT",
+        self.frameInvert and "RIGHT" or "LEFT",
         hbbg,
-        "LEFT",
-        math.max(0, math.min(powerBarWidth - bit, math.floor(spark))),
+        self.frameInvert and "RIGHT" or "LEFT",
+        (math.max(0, math.min(powerBarWidth - bit, math.floor(spark))) - (self.frameInvert and 0.6 or 0)) * (self.frameInvert and -1 or 1),
         0
     )
     hb:SetPoint(
-        "RIGHT",
+        self.frameInvert and "LEFT" or "RIGHT",
         hbbg,
-        "LEFT",
-        math.max(0, math.min(powerBarWidth, spark)) + 1,
+        self.frameInvert and "RIGHT" or "LEFT",
+        (math.max(0, math.min(powerBarWidth, spark)) * (self.frameInvert and -1 or 1)) + (self.frameInvert and -1 or 1),
         0
     )
 end
+GW.healthBarAnimation = healthBarAnimation
 GW.AddForProfiling("unitframes", "healthBarAnimation", healthBarAnimation)
 
 local function setUnitPortraitFrame(self, event)
@@ -225,7 +231,7 @@ local function setUnitPortraitFrame(self, event)
         end
 
         local key = "prestige" .. plvl
-        if TARGET_FRAME_ART[key]~=nil then
+        if TARGET_FRAME_ART[key] then
             border = key
         end
     end
@@ -265,7 +271,6 @@ local function setUnitPortraitFrame(self, event)
             end
         end
     end
-
 
     if foundBossMod and border == "boss" then
         border = "realboss"
@@ -314,12 +319,15 @@ local function updateRaidMarkers(self, event)
         self.raidmarker:SetTexture(nil)
         return
     end
-    self.raidmarker:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i)
+    self.raidmarker:SetTexture("Interface/TargetingFrame/UI-RaidTargetingIcon_" .. i)
 end
 GW.AddForProfiling("unitframes", "updateRaidMarkers", updateRaidMarkers)
 
 local function setUnitPortrait(self)
     SetPortraitTexture(self.portrait, self.unit)
+    if self.frameInvert then
+        self.portrait:SetTexCoord(1, 0, 0, 1)
+    end
     self.activePortrait = nil
 end
 GW.AddForProfiling("unitframes", "setUnitPortrait", setUnitPortrait)
@@ -333,7 +341,7 @@ local function unitFrameData(self, event)
     local name = UnitName(self.unit)
 
     if UnitIsGroupLeader(self.unit) then
-        name = "|TInterface\\AddOns\\GW2_UI\\textures\\party\\icon-groupleader:18:18|t" .. name
+        name = "|TInterface/AddOns/GW2_UI/textures/party/icon-groupleader:18:18|t" .. name
     end
 
     self.nameString:SetText(name)
@@ -466,7 +474,7 @@ local function updateCastValues(self, event)
 end
 GW.AddForProfiling("unitframes", "updateCastValues", updateCastValues)
 
-local function updatePowerValues(self, event)
+local function updatePowerValues(self, event, hideAt0)
     local powerType, powerToken, _ = UnitPowerType(self.unit)
     local power = UnitPower(self.unit, powerType)
     local powerMax = UnitPowerMax(self.unit, powerType)
@@ -476,7 +484,7 @@ local function updatePowerValues(self, event)
         powerPrecentage = power / powerMax
     end
 
-    if power <= 0 then
+    if power <= 0 and hideAt0 then
         self.powerbarBackground:Hide()
         self.powerbar:Hide()
     else
@@ -489,8 +497,9 @@ local function updatePowerValues(self, event)
         self.powerbar:SetVertexColor(pwcolor.r, pwcolor.g, pwcolor.b)
     end
 
-    self.powerbar:SetWidth(math.min(self.barWidth, math.max(1, self.barWidth * powerPrecentage)))
+    self.powerbar:SetWidth(math.min(self.barWidth - 1, math.max(1, self.barWidth * powerPrecentage)))
 end
+GW.updatePowerValues = updatePowerValues
 GW.AddForProfiling("unitframes", "updatePowerValues", updatePowerValues)
 
 local function updateThreatValues(self)
@@ -539,7 +548,7 @@ local function updateHealthValues(self, event)
         StopAnimation(self:GetName() .. self.unit)
     else
         animationSpeed = Diff(self.healthValue, healthPrecentage)
-        animationSpeed = math.min(1.00, math.max(0.2, 2.00 * animationSpeed))
+        animationSpeed = math.min(1, math.max(0.2, 2 * animationSpeed))
     end
 
     -- absorb calc got inlined here because nothing else uses this
@@ -557,7 +566,7 @@ local function updateHealthValues(self, event)
         absbar:SetWidth(math.min(self.barWidth, math.max(1, self.barWidth * absorbAmount2)))
 
         absbarbg:SetTexCoord(0, math.min(1, 1 * absorbAmount), 0, 1)
-        absbar:SetTexCoord(0, math.min(1, 1 * absorbAmount), 0, 1)
+        absbar:SetTexCoord(0, math.min(1, 1 * absorbAmount2), 0, 1)
 
         absbarbg:SetAlpha(math.max(0, math.min(1, (1 * (absorbPrecentage / 0.1)))))
         absbar:SetAlpha(math.max(0, math.min(1, (1 * (absorbPrecentage / 0.1)))))
@@ -774,17 +783,24 @@ end
 GW.AddForProfiling("unitframes", "unittarget_OnUpdate", unittarget_OnUpdate)
 
 local function LoadTarget()
-    local NewUnitFrame = createNormalUnitFrame("GwTargetUnitFrame")
+    local NewUnitFrame = createNormalUnitFrame("GwTargetUnitFrame", GetSetting("target_FRAME_INVERT"))
     NewUnitFrame.unit = "target"
     NewUnitFrame.type = "NormalTarget"
     NewUnitFrame.auraPositionTop = GetSetting("target_AURAS_ON_TOP")
 
     if NewUnitFrame.auraPositionTop then
         NewUnitFrame.auras:ClearAllPoints()
-        NewUnitFrame.auras:SetPoint("TOPLEFT", NewUnitFrame.nameString, "TOPLEFT", 2, 17)
+        if NewUnitFrame.frameInvert then
+            NewUnitFrame.auras:SetPoint("TOPRIGHT", NewUnitFrame.nameString, "TOPRIGHT", -2, 17)
+        else
+            NewUnitFrame.auras:SetPoint("TOPLEFT", NewUnitFrame.nameString, "TOPLEFT", 2, 17)
+        end
+    elseif GetSetting("target_HOOK_COMBOPOINTS") and (GW.myClassID == 4 or GW.myClassID == 11) then
+        NewUnitFrame.auras:ClearAllPoints()
+        NewUnitFrame.auras:SetPoint("TOPLEFT", NewUnitFrame.castingbarBackground, "BOTTOMLEFT", 2, -23)
     end
 
-    RegisterMovableFrame(NewUnitFrame, TARGET, "target_pos", "GwTargetFrameTemplateDummy", nil, nil, {"scaleable"})
+    RegisterMovableFrame(NewUnitFrame, TARGET, "target_pos", "GwTargetFrameTemplateDummy", nil, nil, {"default", "scaleable"})
 
     NewUnitFrame:ClearAllPoints()
     NewUnitFrame:SetPoint("TOPLEFT", NewUnitFrame.gwMover)
@@ -795,13 +811,6 @@ local function LoadTarget()
     RegisterUnitWatch(NewUnitFrame)
     NewUnitFrame:EnableMouse(true)
     NewUnitFrame:RegisterForClicks("AnyDown")
-
-    local mask = UIParent:CreateMaskTexture()
-    mask:SetPoint("CENTER", NewUnitFrame.portrait, "CENTER", 0, 0)
-
-    mask:SetTexture(186178, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-    mask:SetSize(58, 58)
-    NewUnitFrame.portrait:AddMaskTexture(mask)
 
     AddToClique(NewUnitFrame)
 
@@ -845,7 +854,7 @@ local function LoadTarget()
     NewUnitFrame:RegisterUnitEvent("UNIT_FACTION", "target")
     NewUnitFrame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", "target")
 
-    LoadAuras(NewUnitFrame, NewUnitFrame.auras)
+    LoadAuras(NewUnitFrame)
 
     -- create floating combat text
     if GetSetting("target_FLOATING_COMBAT_TEXT") then
@@ -874,21 +883,14 @@ end
 GW.LoadTarget = LoadTarget
 
 local function LoadFocus()
-    local NewUnitFrame = createNormalUnitFrame("GwFocusUnitFrame")
+    local NewUnitFrame = createNormalUnitFrame("GwFocusUnitFrame", GetSetting("focus_FRAME_INVERT"))
     NewUnitFrame.unit = "focus"
     NewUnitFrame.type = "NormalTarget"
 
-    RegisterMovableFrame(NewUnitFrame, FOCUS, "focus_pos", "GwTargetFrameTemplateDummy", nil, nil, {"scaleable"})
+    RegisterMovableFrame(NewUnitFrame, FOCUS, "focus_pos", "GwTargetFrameTemplateDummy", nil, nil, {"default", "scaleable"})
 
     NewUnitFrame:ClearAllPoints()
     NewUnitFrame:SetPoint("TOPLEFT", NewUnitFrame.gwMover)
-
-    local mask = UIParent:CreateMaskTexture()
-    mask:SetPoint("CENTER", NewUnitFrame.portrait, "CENTER", 0, 0)
-
-    mask:SetTexture(186178, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-    mask:SetSize(58, 58)
-    NewUnitFrame.portrait:AddMaskTexture(mask)
 
     NewUnitFrame:SetAttribute("*type1", "target")
     NewUnitFrame:SetAttribute("*type2", "togglemenu")
@@ -934,9 +936,7 @@ local function LoadFocus()
     NewUnitFrame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", "focus")
     NewUnitFrame:RegisterUnitEvent("UNIT_FACTION", "focus")
 
-    LoadAuras(NewUnitFrame, NewUnitFrame.auras)
-
-
+    LoadAuras(NewUnitFrame)
 
     FocusFrame:SetScript("OnEvent", nil)
     FocusFrame:Hide()
@@ -949,7 +949,7 @@ local function LoadTargetOfUnit(unit)
     f.type = "SmallTarget"
     f.unit = unitID
 
-    RegisterMovableFrame(f, unit == "Focus" and MINIMAP_TRACKING_FOCUS or SHOW_TARGET_OF_TARGET_TEXT, unitID .. "_pos", "GwTargetFrameSmallTemplateDummy", nil, nil, {"scaleable"})
+    RegisterMovableFrame(f, unit == "Focus" and MINIMAP_TRACKING_FOCUS or SHOW_TARGET_OF_TARGET_TEXT, unitID .. "_pos", "GwTargetFrameSmallTemplateDummy", nil, nil, {"default", "scaleable"})
 
     f:ClearAllPoints()
     f:SetPoint("TOPLEFT", f.gwMover)
@@ -973,3 +973,5 @@ local function LoadTargetOfUnit(unit)
     f:SetScript("OnUpdate", unittarget_OnUpdate)
 end
 GW.LoadTargetOfUnit = LoadTargetOfUnit
+
+

@@ -110,7 +110,6 @@ local function initBar(self, pew)
         if not v then
             return
         end
-
         if string.find(v, ",") then
             for k, v in pairs(GW.splitString(v, ",", true)) do
                 if IsSpellKnown(tonumber(v)) then
@@ -119,21 +118,24 @@ local function initBar(self, pew)
                 end
             end
         else
-            self.spellId = tonumber(v)
+            self.spellId = IsSpellKnown(tonumber(v)) and tonumber(v) or DODGEBAR_SPELLS_ATTR[GW.myclass] and tonumber(v) or nil
         end
     end
     Debug("Dodgebar spell for Tooltip: ", self.spellId)
 
-    if pew or not InCombatLockdown() then
+    if self.spellId and (pew or not InCombatLockdown()) then
         if overrideSpellID == 0 and DODGEBAR_SPELLS_ATTR[GW.myclass] then
             v = SecureCmdOptionParse(DODGEBAR_SPELLS_ATTR[GW.myclass])
             if string.find(v, ",") then
+                local found = false
                 for k, v in pairs(GW.splitString(v, ",", true)) do
                     if IsSpellKnown(tonumber(v)) then
                         self:SetAttribute("spell", tonumber(v))
+                        found = true
                         break
                     end
                 end
+                if not found then return end
             else
                 self:SetAttribute("spell", tonumber(v))
             end
@@ -226,9 +228,9 @@ local function dodge_OnEvent(self, event, ...)
         -- do the stuff that must be done before combat lockdown takes effect
         initBar(self, true)
 
-    elseif event == "SPELLS_CHANGED" or event == "UPDATE_SHAPESHIFT_FORM" then
+    elseif event == "SPELLS_CHANGED" or event == "UPDATE_SHAPESHIFT_FORM" or event == "LEARNED_SPELL_IN_TAB" then
         -- do remaining spell detail stuff that is (usually) not available yet in PEW or if we are not in world
-        if not GW.inWorld or not self.spellId then
+        if event ~= "LEARNED_SPELL_IN_TAB" and (not GW.inWorld or not self.spellId) then
             return
         end
         -- add a delay because spell infos sometimes not ready
@@ -276,16 +278,31 @@ local function dodge_OnLeave(self)
 end
 GW.AddForProfiling("dodgebar", "dodge_OnLeave", dodge_OnLeave)
 
-local function LoadDodgeBar(hg)
+local function LoadDodgeBar(hg, asTargetFrame)
     Debug("LoadDodgeBar start")
     _G["BINDING_HEADER_GW2UI_MOVE_BINDINGS"] = BINDING_HEADER_MOVEMENT
     _G["BINDING_NAME_CLICK GwDodgeBar:LeftButton"] = DODGE
 
     -- this bar gets a global name for use in key bindings
     local fmdb = CreateFrame("Button", "GwDodgeBar", UIParent, "GwDodgeBarTmpl")
-    GW.RegisterScaleFrame(fmdb, 1.1)
+    fmdb.asTargetFrame = asTargetFrame
+    
     fmdb:ClearAllPoints()
-    fmdb:SetPoint("CENTER", hg, "CENTER", 0, 41)
+    if fmdb.asTargetFrame then
+        hg.dodgebar = fmdb
+        fmdb.arcfill:SetSize(80, 72)
+        fmdb.arcfill.mask_normal:SetSize(80, 72)
+        fmdb.arcfill.mask_hover:SetSize(80, 72)
+        fmdb.arcfill.maskr_normal:SetSize(80, 72)
+        fmdb.arcfill.maskr_hover:SetSize(80, 72)
+        fmdb.border:SetSize(80, 72)
+        fmdb:SetPoint("TOPLEFT", hg, "TOPLEFT", -9.5, 5)
+        fmdb:SetFrameStrata("BACKGROUND")
+        hg:HookScript("OnSizeChanged", function() fmdb:SetScale(GetSetting("player_pos_scale")) end)
+    else
+        fmdb:SetPoint("CENTER", hg, "CENTER", 0, 41)
+        GW.RegisterScaleFrame(fmdb, 1.1)
+    end
     fmdb:SetAttribute("*type1", "spell")
 
     -- setting these values in the XML creates animation glitches so we do it here instead
@@ -314,6 +331,7 @@ local function LoadDodgeBar(hg)
     fmdb:RegisterEvent("SPELLS_CHANGED")
     fmdb:RegisterEvent("PLAYER_ENTERING_WORLD")
     fmdb:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
+    fmdb:RegisterEvent("LEARNED_SPELL_IN_TAB")
 
     -- setup hook to hide the dodge bar when in vehicle/override UI
     MixinHideDuringPetAndOverride(fmdb)

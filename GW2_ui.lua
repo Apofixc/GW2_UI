@@ -251,7 +251,7 @@ GW.ActiveAnimation = ActiveAnimation
 
 local function StopAnimation(k, safe)
     if animations[k] ~= nil then
-        if (safe) then
+        if safe then
             animations[k]["completed"] = true
         else
             animations[k] = nil
@@ -404,7 +404,7 @@ local function loadAddon(self)
     if GetSetting("PIXEL_PERFECTION") and not GetCVarBool("useUiScale") then
         PixelPerfection()
         DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r Pixel Perfection-Mode enabled. UIScale down to perfect pixel size. Can be deactivated in HUD settings. |cFF00FF00/gw2|r")
-        hooksecurefunc("StaticPopup_Show", function(which, text_arg1, text_arg2, data, insertedFrame)
+        hooksecurefunc("StaticPopup_Show", function(which)
             if which == "EXPERIMENTAL_CVAR_WARNING" then
                 StaticPopup_Hide("EXPERIMENTAL_CVAR_WARNING")
             end
@@ -436,7 +436,7 @@ local function loadAddon(self)
     else
         --Setup addon button
         local GwMainMenuFrame = CreateFrame("Button", "GW2_UI_SettingsButton", _G.GameMenuFrame, "GameMenuButtonTemplate") -- add a button name to you that for other Addons
-        GwMainMenuFrame:SetText(format("|cffffedba%s|r", L["GW2 UI Settings"]))
+        GwMainMenuFrame:SetText(format("|cffffedba%s|r", GW.addonName))
         GwMainMenuFrame:SetScript(
             "OnClick",
             function()
@@ -449,82 +449,43 @@ local function loadAddon(self)
                 HideUIPanel(GameMenuFrame)
             end
         )
-        GameMenuFrame[L["GW2 UI Settings"]] = GwMainMenuFrame
+        GameMenuFrame[GW.addonName] = GwMainMenuFrame
 
         if not IsAddOnLoaded("ConsolePortUI_Menu") then
-            GwMainMenuFrame:SetSize(GameMenuButtonLogout:GetWidth(), GameMenuButtonLogout:GetHeight())
-            GwMainMenuFrame:SetPoint("TOPLEFT", IsAddOnLoaded("ElvUI") and GameMenuButtonContinue or GameMenuButtonAddons, "BOTTOMLEFT", 0, -1)
-            if not IsAddOnLoaded("ElvUI") then
-                hooksecurefunc("GameMenuFrame_UpdateVisibleButtons", GW.PositionGameMenuButton)
-            end
+            GwMainMenuFrame:SetSize(GameMenuButtonMacros:GetWidth(), GameMenuButtonMacros:GetHeight())
+            GwMainMenuFrame:SetPoint("TOPLEFT", GameMenuButtonMacros, "BOTTOMLEFT", 0, -1)
+            hooksecurefunc("GameMenuFrame_UpdateVisibleButtons", GW.PositionGameMenuButton)
         end
     end
-    if GetSetting("STATICPOPUP_SKIN_ENABLED") then
-        GW.SkinStaticPopup()
-    end
-    if GetSetting("BNTOASTFRAME_SKIN_ENABLED") then
-        GW.SkinBNToastFrame()
-    end
-    if GetSetting("GHOSTFRAME_SKIN_ENABLED") then
-        GW.SkinGhostFrame()
-    end
-    if GetSetting("DEATHRECAPFRAME_SKIN_ENABLED") then
-        GW.SkinDeathRecapFrame()
-    end
-    if GetSetting("DROPDOWN_SKIN_ENABLED") then
-        GW.SkinDropDown()
-    end
-    if GetSetting("LFG_FRAMES_SKIN_ENABLED") then
-        GW.SkinLFGFrames()
-    end
-    if GetSetting("READYCHECK_SKIN_ENABLED") then
-        GW.SkinReadyCheck()
-    end
-    if GetSetting("TALKINGHEAD_SKIN_ENABLED") then
-        GW.SkinAndPositionTalkingHeadFrame()
-    end
-    if GetSetting("TIMERTRACKER_SKIN_ENABLED") then
-        GW.SkinTimerTrackerFrame()
-    end
-    if GetSetting("IMMERSIONADDON_SKIN_ENABLED") then
-        GW.SkinImmersionAddonFrame()
-    end
-    if GetSetting("FLIGHTMAP_SKIN_ENABLED") then
-        GW.SkinFlightMap()
-    end
-    if GetSetting("ADDONLIST_SKIN_ENABLED") then
-        GW.SkinAddonList()
-    end
-    if GetSetting("BINDINGS_SKIN_ENABLED") then
-        GW.SkinBindingsUI()
-    end
-    if GetSetting("BLIZZARD_OPTIONS_SKIN_ENABLED") then
-        GW.SkinBlizzardOptions()
-    end
-    if GetSetting("MACRO_SKIN_ENABLED") then
-        GW.SkinMacroOptions()
-    end
-    if GetSetting("MAIL_SKIN_ENABLED") then
-        GW.SkinMail()
-        GW.SkinPostalAddonFrame()
-    end
-    if GetSetting("BARBERSHOP_SKIN_ENABLED") then
-        GW.SkinBarShopUI()
-    end
-    if GetSetting("INSPECTION_SKIN_ENABLED") then
-        GW.SkinInspectFrame()
-    end
-    if GetSetting("INSPECTION_SKIN_ENABLED") then
-        GW.SkinDressUpFrame()
-    end
-    if GetSetting("HELPFRAME_SKIN_ENABLED") then
-        GW.skinHelpFrameOnEvent()
-    end
 
-    if GetSetting("WORLDMAP_COORDS_TOGGLE") then
-        GW.AddCoordsToWorldMap()
-    end
+    -- Skins: BLizzard & Addons
+    GW.LoadStaticPopupSkin()
+    GW.LoadBNToastSkin()
+    GW.LoadDeathRecapSkin()
+    GW.LoadDropDownSkin()
+    GW.LoadLFGSkins()
+    GW.LoadReadyCheckSkin()
+    GW.LoadTalkingHeadSkin()
+    GW.LoadMiscBlizzardFrameSkins()
+    GW.LoadFlightMapSkin()
+    GW.LoadAddonListSkin()
+    GW.LoadBindingsUISkin()
+    GW.LoadBlizzardOptionsSkin()
+    GW.LoadMacroOptionsSkin()
+    GW.LoadMailSkin()
+    GW.LoadBarShopUISkin()
+    GW.LoadInspectFrameSkin()
+    GW.LoadDressUpFrameSkin()
+    GW.LoadHelperFrameSkin()
+    GW.LoadSocketUISkin()
+    GW.LoadWorldMapSkin()
+    GW.LoadGossipSkin()
+    GW.LoadItemUpgradeSkin()
+    GW.LoadTimeManagerSkin()
 
+    GW.LoadImmersionAddonSkin()
+
+    GW.AddCoordsToWorldMap()
     GW.LoadVehicleButton()
     GW.MakeAltPowerBarMovable()
     GW.WidgetUISetup()
@@ -593,12 +554,15 @@ local function loadAddon(self)
     end
 
     --Create player hud
-    if GetSetting("HEALTHGLOBE_ENABLED") then
+    if GetSetting("HEALTHGLOBE_ENABLED") and not GetSetting("PLAYER_AS_TARGET_FRAME") then
         local hg = GW.LoadHealthGlobe()
-        GW.LoadDodgeBar(hg)
+        GW.LoadDodgeBar(hg, false)
+    elseif GetSetting("HEALTHGLOBE_ENABLED") and GetSetting("PLAYER_AS_TARGET_FRAME") then
+        local hg = GW.LoadPlayerFrame()
+        GW.LoadDodgeBar(hg, true)
     end
 
-    if GetSetting("POWERBAR_ENABLED") then
+    if GetSetting("POWERBAR_ENABLED") and not GetSetting("PLAYER_AS_TARGET_FRAME") then
         GW.LoadPowerBar()
     end
 
@@ -673,7 +637,7 @@ local function loadAddon(self)
             SetCVar("test_cameraDynamicPitch", true)
             SetCVar("cameraKeepCharacterCentered", false)
             SetCVar("cameraReduceUnexpectedMovement", false)
-            hooksecurefunc("StaticPopup_Show", function(which, text_arg1, text_arg2, data, insertedFrame)
+            hooksecurefunc("StaticPopup_Show", function(which)
                 if which == "EXPERIMENTAL_CVAR_WARNING" then
                     StaticPopup_Hide("EXPERIMENTAL_CVAR_WARNING")
                 end
@@ -773,7 +737,6 @@ local function gw_OnEvent(self, event, ...)
         GW.inWorld = false
     elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_ENTERING_BATTLEGROUND" then
         GW.inWorld = true
-        GW.myeffectivelevel = UnitEffectiveLevel("player")
         GW.CheckRole()
         if GetSetting("PIXEL_PERFECTION") and not GetCVarBool("useUiScale") and not UnitAffectingCombat("player") then
             PixelPerfection()
@@ -791,8 +754,6 @@ local function gw_OnEvent(self, event, ...)
         Debug("New faction:", GW.myfaction, GW.myLocalizedFaction)
     elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
         GW.CheckRole()
-    elseif event == "PLAYER_LEVEL_CHANGED" then
-        GW.myeffectivelevel = UnitEffectiveLevel("player")
     end
 end
 GW.AddForProfiling("index", "gw_OnEvent", gw_OnEvent)
@@ -805,7 +766,6 @@ l:RegisterEvent("UI_SCALE_CHANGED")
 l:RegisterEvent("PLAYER_LEVEL_UP")
 l:RegisterEvent("NEUTRAL_FACTION_SELECT_RESULT")
 l:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-l:RegisterEvent("PLAYER_LEVEL_CHANGED")
 
 local function AddToClique(frame)
     if type(frame) == "string" then
