@@ -30,13 +30,6 @@ local function SetFontColor(color)
 	ACTION_DISPLAY = color.Action
 end
 
-local function AcquireObjectFromPool(pool, parentButton)
-	local obj = pool:Acquire()
-	obj:SetParent(parentButton or obj:GetParent())
-
-	return obj, pool:GetNumActive()
-end
-
 local CollectionPollMixin = {}
 
 function CollectionPollMixin:CreatePool(typePool, template, ...)
@@ -117,18 +110,24 @@ local function QuestInfo_ShowProgressRequiredMoney()
 end
 
 local function QuestInfo_ShowProgressRequiredItems()
-	local numRequiredItems = GetNumQuestItems()
-	local numRequiredCurrencies = GetNumQuestCurrencies()
-	local lastAnchorElement = GwQuestInfoRequiredItemFrame.RequiredText
+	GwQuestInfoProgress.progressButtonPool:ReleaseAll()
+
+	local lastAnchorElement
 	local totalHeight = 0	
 
+	local numRequiredItems = GetNumQuestItems()
 	if numRequiredItems > 0 then
 		local numHiddenItem = 0
+
+		GwQuestInfoProgress.RequiredTextItem:SetPoint("TOPLEFT", 0, -5)
+		GwQuestInfoProgress.RequiredTextItem:Show()
+		totalHeight = totalHeight + GwQuestInfoProgress.RequiredTextItem:GetHeight() + 5
+		lastAnchorElement = GwQuestInfoProgress.RequiredTextItem 
 
 		for i = 1, numRequiredItems do
 			local hidden = IsQuestItemHidden(i);
 			if hidden == 0 then
-				local requiredItem = GwImmersiveFrame.progressButtonPool:Acquire()
+				local requiredItem = GwQuestInfoProgress.progressButtonPool:Acquire()
 				requiredItem.type = "required";
 				requiredItem.objectType = "item";
 				requiredItem:SetID(i)
@@ -150,16 +149,29 @@ local function QuestInfo_ShowProgressRequiredItems()
 			end
 		end
 
-		if numHiddenItem ~= numRequiredItems then
-			GwQuestInfoRequiredItemFrame:SetHeight(totalHeight)
-			GwQuestInfoRequiredItemFrame:Show()
-			return GwQuestInfoRequiredItemFrame
+		if numHiddenItem == numRequiredItems then
+			GwQuestInfoProgress.RequiredTextItem:Hide()
+			totalHeight = totalHeight - GwQuestInfoProgress.RequiredTextItem:GetHeight() - 5
+			lastAnchorElement = nil
 		end
+	else
+		GwQuestInfoProgress.RequiredTextItem:Hide()
 	end
 
+	local numRequiredCurrencies = GetNumQuestCurrencies()
 	if numRequiredCurrencies > 0 then
+		if lastAnchorElement then
+			GwQuestInfoProgress.RequiredTextCurrencies:SetPoint("TOPLEFT", lastAnchorElement, "BOTTOMLEFT", 0, -5)
+		else
+			GwQuestInfoProgress.RequiredTextCurrencies:SetPoint("TOPLEFT", 0, -5)
+		end
+
+		GwQuestInfoProgress.RequiredTextCurrencies:Show()
+		totalHeight = totalHeight + GwQuestInfoProgress.RequiredTextCurrencies:GetHeight() + 5
+		lastAnchorElement = GwQuestInfoProgress.RequiredTextCurrencies 
+
 		for i=1, numRequiredCurrencies do
-			local requiredItem = GwImmersiveFrame.progressButtonPool:Acquire()
+			local requiredItem = GwQuestInfoProgress.progressButtonPool:Acquire()
 			requiredItem.type = "required";
 			requiredItem.objectType = "currency";
 			requiredItem:SetID(i);
@@ -177,15 +189,18 @@ local function QuestInfo_ShowProgressRequiredItems()
 				requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "TOPRIGHT", 1, 0)
 			end
 		end
-
-		GwQuestInfoRequiredCurrenciesFrame:SetHeight(totalHeight)
-		GwQuestInfoRequiredCurrenciesFrame:Show()
-
-		return GwQuestInfoRequiredCurrenciesFrame
+	else
+		GwQuestInfoProgress.RequiredTextCurrencies:Hide()
 	end
 
-	GwQuestInfoRequiredCurrenciesFrame:Hide()
-	return nil
+	if totalHeight > 0 then
+		GwQuestInfoProgress:SetHeight(totalHeight)
+		GwQuestInfoProgress:Show()
+		return GwQuestInfoProgress
+	else
+		GwQuestInfoProgress:Hide()
+		return nil	
+	end
 end
 
 local function ShownDetail(event, parentFrame)
@@ -200,6 +215,10 @@ local function ShownDetail(event, parentFrame)
 	for i = 1, #elementsTable, 2 do
 		if _G[elementsTable[i]]:IsShown() then
 			if elementsTable[i] == "QuestInfoRewardsFrame" then
+				QuestInfo_StyleDetail()
+			end
+
+			if elementsTable[i] == "GwQuestInfoProgress" then
 				QuestInfo_StyleDetail()
 			end
 
@@ -256,24 +275,23 @@ local function TitleButtonShow(self, event, start, finish, current)
 	for id, value in ipairs(ShowElement) do
 		if value.show then
 			for _, info in ipairs(GwImmersiveFrame.buttonTitleInfo[value.name]) do
-				local button, key = AcquireObjectFromPool(GwImmersiveFrame.titlePool, self.Scroll.ScrollChildFrame, GwImmersiveFrame.GossipFrame.titleHighlightTexture)	
-				local keyTitle = key < 11 and key..". " or ""
+				local button = GwImmersiveFrame.titlePool:Acquire() 
+				button:SetParent(self.Scroll.ScrollChildFrame)
+				button:SetHighlightTexture(GwImmersiveFrame.GossipFrame.titleHighlightTexture)
+				button:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'TOPLEFT', width, -totalHeight)
+				button:Show()		
 
 				if info.buttonType == "AVAILABLE" then
-					button:SetQuest(keyTitle..info.title, info.questLevel, info.isTrivial, info.frequency, info.repeatable, info.isLegendary, info.isIgnored, info.questID)
+					button:SetQuest(GwImmersiveFrame.titlePool:GetNumActive()..". "..info.title, info.questLevel, info.isTrivial, info.frequency, info.repeatable, info.isLegendary, info.isIgnored, info.questID)
 				elseif info.buttonType == "ACTIVE" then
-					button:SetActiveQuest(keyTitle..info.title, info.questLevel, info.isTrivial, info.isComplete, info.isLegendary, info.isIgnored, info.questID)
+					button:SetActiveQuest(GwImmersiveFrame.titlePool:GetNumActive()..". "..info.title, info.questLevel, info.isTrivial, info.isComplete, info.isLegendary, info.isIgnored, info.questID)
 				elseif info.buttonType == "GOSSIP" then
-					button:SetOption(keyTitle..info.name, info.type, info.spellID)
+					button:SetOption(GwImmersiveFrame.titlePool:GetNumActive()..". "..info.name, info.type, info.spellID)
 				else
-					button:SetAction(keyTitle..GetInteractiveText(info.buttonType), id - 4)
+					button:SetAction(GwImmersiveFrame.titlePool:GetNumActive()..". "..GetInteractiveText(info.buttonType), id - 4)
 				end
-				button:SetFunction(key, info.func, info.arg, info.playSound)
-				button:SetHighlightTexture(GwImmersiveFrame.GossipFrame.titleHighlightTexture)
 
-				button:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'TOPLEFT', width, -totalHeight)
-				button:Show()
-
+				button:SetFunction(GwImmersiveFrame.titlePool:GetNumActive(), info.func, info.arg, info.playSound)
 				totalHeight = totalHeight + button:GetHeight() + 5
 			end
 		end
@@ -762,7 +780,7 @@ local function ModificationStandardElements()
 		},
 		frames = {
 			"QuestInfoRequiredMoneyFrame", 0,
-			"GwQuestInfoRequiredItem", 5
+			"GwQuestInfoProgress", 5
 		}	
 	}
 
@@ -782,7 +800,7 @@ local function ModificationStandardElements()
 	QuestInfoRewardsFrame.followerRewardPool = CreateFramePool("BUTTON", QuestInfoRewardsFrame, "LargeQuestInfoRewardFollowerTemplate");
 	QuestInfoRewardsFrame.spellHeaderPool = CreateFontStringPool(QuestInfoRewardsFrame, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate");
 
-	CreateFrame("Frame", "GwQuestInfoRequiredItem", QuestInfoFrame, "GwQuestInfoProgressTemplate")
+	CreateFrame("Frame", "GwQuestInfoProgress", QuestInfoFrame, "GwQuestInfoProgressTemplate")
 end
 
 local function LoadImmersiveView()
