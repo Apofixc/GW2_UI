@@ -280,7 +280,7 @@ local function TitleButtonShow(self, event, start, finish, current)
 					button:SetAction(keyTitle..GetInteractiveText(info.buttonType), id - 4)
 				end
 				button:SetFunction(key, info.func, info.arg, info.playSound)
-				--button:SetHighlight(GwImmersiveFrame.GossipFrame.titleHighlightTexture)
+				button:SetHighlightTexture(GwImmersiveFrame.GossipFrame.titleHighlightTexture)
 
 				button:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'TOPLEFT', width, -totalHeight)
 				button:Show()
@@ -655,10 +655,6 @@ local function ModificationStandardElements()
 	function GossipTitleButtonMixin:Resize()
 		self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()));
 		self:SetWidth(self:GetParent():GetWidth());
-	end
-
-	function GossipTitleButtonMixin:SetHighlight(texture)
-		self.HighlightTexture:SetTexture(texture);
 	end
 
 	function GossipTitleButtonMixin:SetAnimationText()
