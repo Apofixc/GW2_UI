@@ -96,7 +96,7 @@
 					</Frame> -->
 				</Frames>
 			</Frame>		
-			<Frame parentKey="Title" frameLevel="3">
+			<Frame parentKey="Title" alpha="0" frameLevel="3">
 				<Size x="1000" y="85"/>
 				<Anchors>
 					<Anchor point="TOP" relativeKey="$parent" relativePoint="TOP" x="0" y="0"/>
@@ -145,8 +145,8 @@
 					</Layer>
 				</Layers>
 				<ScrollChild>
-					<Frame parentKey="ScrollChildFrame">
-						<Size x="800"/>
+					<Frame parentKey="ScrollChildFrame" hidden="true">
+						<Size x="800" y="0"/>
 					</Frame>
 				</ScrollChild>
 			</ScrollFrame>
@@ -307,12 +307,12 @@
 				self.maxSizeText = 400;
 				self.titleHighlightTexture = "Interface/QuestFrame/UI-QuestTitleHighlight";
 				self.titleHighlightTextureCoord = {0, 1, 0, 1};
-				self.fontColor = {
-					Ignored = "|cFF8C8C8C%s",
-					Trivial = "|cffffffff%s",
-					Normal = "|cFFFF5A00%s",
-					Action = "|cFF8C00FF%s"
-				}
+				self.FontColor = function()
+					IGNORED_QUEST_DISPLAY = "|cFF8C8C8C%s";
+					TRIVIAL_QUEST_DISPLAY = "|cffffffff%s";
+					NORMAL_QUEST_DISPLAY = "|cFFFF5A00%s";
+					ACTION_DISPLAY = "|cFF8C00FF%s";
+				end
 			</OnLoad>
 			<OnShow>
 				UIFrameFadeOut(UIParent, 0.5, 1, 0);
@@ -325,7 +325,7 @@
 		</Scripts>
 	</Frame>
 
-	<Frame name="GwGossipViewFrameTemplate" hidden="true" alpha="0" enableKeyboard="true" frameStrata="DIALOG" movable="true" resizable="true" virtual="true">
+	<Frame name="GwNormalScreenGossipViewFrameTemplate" hidden="true" alpha="0" enableKeyboard="true" ignoreParentAlpha="true" ignoreParentScale="true" frameStrata="DIALOG" movable="true" resizable="true" virtual="true">
 	    <Size x="700" y="300"/>
 		<Layers>
             <Layer level="BACKGROUND">
@@ -401,7 +401,7 @@
 					</CinematicModel>
 				</Frames>
 			</Frame>
-			<Frame parentKey="Title" frameLevel="3">
+			<Frame parentKey="Title"  alpha="0" frameLevel="3">
 				<Size x="700" y="115"/>
 				<Anchors>
 					<Anchor point="BOTTOMLEFT" relativeKey="$parent.Models.Player" relativePoint="TOPLEFT" x="-12" y="0"/>
@@ -463,7 +463,8 @@
 					</Layer>
 				</Layers>
 				<ScrollChild>				
-					<Frame parentKey="ScrollChildFrame">
+					<Frame parentKey="ScrollChildFrame" hidden="true">
+						<Size x="645" y="0"/>
 					</Frame>
 				</ScrollChild>
 			</ScrollFrame>
@@ -544,12 +545,12 @@
 				self.mode = "NORMAL";
 				self.maxSizeText = 300
 				self.titleHighlightTexture = "Interface/AddOns/GW2_UI/textures/questview/advanced/ns_title_button_highlight"
-				self.fontColor = {
-					Ignored = "|cFF8C8C8C%s",
-					Trivial = "|cffffffff%s",
-					Normal = "|cFFFF5A00%s",
-					Action = "|cFF8C00FF%s"
-				}
+				self.FontColor = function()
+					IGNORED_QUEST_DISPLAY = "|cFF8C8C8C%s";
+					TRIVIAL_QUEST_DISPLAY = "|cffffffff%s";
+					NORMAL_QUEST_DISPLAY = "|cFFFF5A00%s";
+					ACTION_DISPLAY = "|cFF8C00FF%s";
+				end
 			</OnLoad>
 		</Scripts>
 	</Frame>

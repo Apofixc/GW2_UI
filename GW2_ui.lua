@@ -244,18 +244,9 @@ local function SetDeadIcon(self)
 end
 GW.SetDeadIcon = SetDeadIcon
 
-local function ActiveAnimation(k)
-    return animations[k] and not animations[k]["completed"]
-end
-GW.ActiveAnimation = ActiveAnimation
-
 local function StopAnimation(k, safe)
     if animations[k] ~= nil then
-        if safe then
-            animations[k]["completed"] = true
-        else
-            animations[k] = nil
-        end
+        animations[k] = nil
     end
 end
 GW.StopAnimation = StopAnimation
@@ -704,19 +695,6 @@ local function loadAddon(self)
 end
 GW.AddForProfiling("index", "loadAddon", loadAddon)
 
-local function loadFixBattlePet()
-    HIDE_MOST = {
-        GwStanceBarButton = "hidden",
-        StanceButton1 = "hidden",
-        StanceButton2 = "hidden",
-        StanceButton3 = "hidden",
-        StanceButton4 = "hidden",
-        StanceButton5 = "hidden",
-    }
-
-    FRAMELOCK_STATES.COMMENTATOR_SPECTATING_MODE = Mixin(FRAMELOCK_STATES.COMMENTATOR_SPECTATING_MODE, HIDE_MOST)
-    FRAMELOCK_STATES.PETBATTLES = Mixin(FRAMELOCK_STATES.PETBATTLES, HIDE_MOST) 
-end
 -- handles addon loading
 local function gw_OnEvent(self, event, ...)
     if event == "PLAYER_LOGIN" then
@@ -724,7 +702,6 @@ local function gw_OnEvent(self, event, ...)
             loaded = true
             GW.CheckRole() -- some API's deliver a nil value on init.lua load, we we fill this values also here
             loadAddon(self)
-            loadFixBattlePet()
         end
         GW.LoadStorage()
     elseif event == "UI_SCALE_CHANGED" and GetCVarBool("useUiScale") then

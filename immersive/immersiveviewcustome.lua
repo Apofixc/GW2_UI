@@ -1,9 +1,19 @@
 local _, GW = ...
 local L = GW.L
-local AddToAnimation = GW.AddToAnimation
-local ActiveAnimation = GW.ActiveAnimation
-local StopAnimation = GW.StopAnimation
-GW.CUSTOME_IMMERSIVE = {}
+local animations = GW.animations
+
+local function FreeAnimation(name)
+	if animations[name] then
+		animations[name]["completed"] = true
+		animations[name]["duration"] = 0
+	end
+end
+GW.FreeAnimation = FreeAnimation
+
+local function FinishedAnimation(name)
+	return animations[name] == nil or animations[name]["completed"] == true
+end
+GW.FinishedAnimation = FinishedAnimation
 
 ---------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------- INTERACTIVE ---------------------------------------------------------
@@ -22,11 +32,11 @@ do
 		FINISH = {"Завершить"}
 	}
 
-	local function GetInteractiveText(buttonType)
+	local function GetImmersiveInteractiveText(buttonType)
 		return INTERACTIVE_TEXT[buttonType][math.random(1, #INTERACTIVE_TEXT[buttonType])]
 	end
 
-	GW.CUSTOME_IMMERSIVE.GetInteractiveText = GetInteractiveText
+	GW.GetImmersiveInteractiveText = GetImmersiveInteractiveText
 end
 
 ---------------------------------------------------------------------------------------------------------------------
@@ -48,37 +58,14 @@ do
 		["No"] = 186
 	}
 
-	local function Animation(self)
+	local function SetImmersiveUnitModelAnimation(model, animation)
 
 	end
+	GW.SetImmersiveUnitModelAnimation = SetImmersiveUnitModelAnimation
 
 	local MODEL_INFO = {}
 
-	local function SetDefaultModel(frameModel, idModel, Camera, Facing, TargetDistance, HeightFactor, FacingLeft, Light)
-		if not MODEL_INFO[frameModel] then MODEL_INFO[frameModel] = {} end
-		if idModel and not MODEL_INFO[frameModel][idModel] then MODEL_INFO[frameModel][idModel] = {} end
-
-		local model = idModel and MODEL_INFO[frameModel][idModel] or MODEL_INFO[frameModel]
-		model.Camera = Camera
-		model.Facing = Facing
-		model.TargetDistance = TargetDistance
-		model.HeightFactor = HeightFactor	
-		model.FacingLeft = FacingLeft
-		model.Light = Light
-	end
-
-	local function LoadModelInfo(frameModel, frameModelFullScreen)
-		SetDefaultModel(frameModel.Player, nil, .5, .8, 0, 0, false, { true, false, -250, 0, 0, .25, 1, 1, 1, 75, 1, 1,	1})
-		SetDefaultModel(frameModel.Giver, nil, .4, .9, .12, 2.2, true, { true, false, -250, 0, 0, .25, 1, 1, 1, 75, 1, 1, 1})
-		SetDefaultModel(frameModelFullScreen.Player, nil, 1.8, 1.8, .22, .395, false, { true, false, -250, 0, 0, .25, 1, 1, 1, 75, 1, 1, 1})
-		SetDefaultModel(frameModelFullScreen.Giver, nil, 1.8, -.95, .22, .325, true, { true, false, -250, 0, 0, .25, 1, 1, 1, 75, 1, 1,	1})
-
-		SetDefaultModel(frameModelFullScreen.Giver, 1324256, 1.7, -1.2, -.12)
-	end
-
-	GW.CUSTOME_IMMERSIVE.LoadModelInfo = LoadModelInfo
-
-	local function DebugModelOn(frameModel, frameModelFullScreen)
+	local function ImmersiveDebugModelOn(frameModel, frameModelFullScreen)
 		for _, model in pairs({frameModel.Player, frameModel.Giver, frameModelFullScreen.Player, frameModelFullScreen.Giver}) do
 			model:SetScript("OnModelLoaded", 
 				function(self)
@@ -86,7 +73,7 @@ do
 					
 					local defaults = MODEL_INFO[self]
 					local fixModel = defaults[self.displayedModel]
-
+	
 					self.scaleCamera = defaults.Camera  + (fixModel and fixModel.Camera or 0)
 					self.oldScaleCamera = defaults.Camera
 					self.scaleHeight = defaults.HeightFactor  + (fixModel and fixModel.HeightFactor or 0)
@@ -97,7 +84,7 @@ do
 					self.oldFacing = defaults.Facing
 				end
 			)
-
+	
 			model:EnableMouseWheel(true);
 			model:SetScript("OnMouseWheel", 
 				function(self, delta)
@@ -114,7 +101,7 @@ do
 						self.scaleCamera = self.scaleCamera - (IsShiftKeyDown() and 0.1 or 0.01) * delta
 						self:InitializeCamera(self.scaleCamera)
 					end	
-
+	
 					GameTooltip:ClearLines()
 					GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 					GameTooltip:AddLine("ModelID: "..self.displayedModel)
@@ -125,29 +112,53 @@ do
 					GameTooltip:Show()
 				end
 			)
-
+	
 			model:SetScript("OnLeave",
 				function()
 					GameTooltip:Hide()
 				end
 			)
 		end
-
+	
 		frameModelFullScreen.Player:SetPoint("TOPRIGHT", -50, 0)
 		frameModelFullScreen.Giver:SetPoint("TOPLEFT", 50, 0)
 	end
-
-	local function DebugModelOff()
+	
+	local function ImmersiveDebugModelOff()
 		return
 	end
-
+	
 	if (true) then
-		GW.CUSTOME_IMMERSIVE.DebugModel = DebugModelOn
+		GW.ImmersiveDebugModel = ImmersiveDebugModelOn
 	else
-		GW.CUSTOME_IMMERSIVE.DebugModel = DebugModelOff
+		GW.ImmersiveDebugModel = ImmersiveDebugModelOff
 	end
 
-	local function SetUnitModel(self, unit)
+	local function SetDefaultModel(frameModel, idModel, Camera, Facing, TargetDistance, HeightFactor, FacingLeft, Light)
+		if not MODEL_INFO[frameModel] then MODEL_INFO[frameModel] = {} end
+		if idModel and not MODEL_INFO[frameModel][idModel] then MODEL_INFO[frameModel][idModel] = {} end
+
+		local model = idModel and MODEL_INFO[frameModel][idModel] or MODEL_INFO[frameModel]
+		model.Camera = Camera
+		model.Facing = Facing
+		model.TargetDistance = TargetDistance
+		model.HeightFactor = HeightFactor	
+		model.FacingLeft = FacingLeft
+		model.Light = Light
+	end
+
+	local function LoadImmersiveModelInfo(frameModel, frameModelFullScreen)
+		SetDefaultModel(frameModel.Player, nil, .5, .8, 0, 0, false, { true, false, -250, 0, 0, .25, 1, 1, 1, 75, 1, 1,	1})
+		SetDefaultModel(frameModel.Giver, nil, .4, .9, .12, 2.2, true, { true, false, -250, 0, 0, .25, 1, 1, 1, 75, 1, 1, 1})
+		SetDefaultModel(frameModelFullScreen.Player, nil, 1.8, 1.8, .22, .395, false, { true, false, -250, 0, 0, .25, 1, 1, 1, 75, 1, 1, 1})
+		SetDefaultModel(frameModelFullScreen.Giver, nil, 1.8, -.95, .22, .325, true, { true, false, -250, 0, 0, .25, 1, 1, 1, 75, 1, 1,	1})
+
+		SetDefaultModel(frameModelFullScreen.Giver, 1324256, 1.7, -1.2, -.12)
+	end
+
+	GW.LoadImmersiveModelInfo = LoadImmersiveModelInfo
+
+	local function SetImmersiveUnitModel(self, unit)
 		self.defectmodel = false
 
 		self:ClearModel()
@@ -170,7 +181,7 @@ do
 		self:SetLight(unpack(defaults.Light))
 	end
 
-	GW.CUSTOME_IMMERSIVE.SetUnitModel = SetUnitModel
+	GW.SetImmersiveUnitModel = SetImmersiveUnitModel
 end
 
 ---------------------------------------------------------------------------------------------------------------------
@@ -557,36 +568,34 @@ do
 		end
 	end
 	
-	local function DinamicArt(parent, newStatus)
-		if (newStatus) then
-			parent:HookScript("OnShow", 
-				function (self)
-					local typeBackGrounds, texture, texCoord = getCustomZoneBackground()
-					if typeBackGrounds == "Default" then
-						self.Background:SetTexture(texture);
-					else
-						if typeBackGrounds == "Dinamic" then
-							self.Middleground:SetAtlas("_GarrMissionLocation-"..texture.."-Mid")
-							self.Background:SetAtlas("_GarrMissionLocation-"..texture.."-Back")
-							self.Foreground:SetAtlas("_GarrMissionLocation-"..texture.."-Fore")		
-						else
-							self.Background:SetAtlas(texture)
-						end	
-					end
-
-					self.Background:SetTexCoord(unpack(texCoord))	
+	local function ImmersiveDinamicArt(parent)
+		parent:HookScript("OnShow", 
+			function (self)
+				local typeBackGrounds, texture, texCoord = getCustomZoneBackground()
+				if typeBackGrounds == "Default" then
+					self.Background:SetTexture(texture);
+				else
 					if typeBackGrounds == "Dinamic" then
-						self.Middleground:SetTexCoord(unpack(texCoord))	
-						self.Foreground:SetTexCoord(unpack(texCoord))	
-					end
-
-					self.Background:SetShown(true)
-					self.Middleground:SetShown(typeBackGrounds == "Dinamic")
-					self.Foreground:SetShown(typeBackGrounds == "Dinamic")
+						self.Middleground:SetAtlas("_GarrMissionLocation-"..texture.."-Mid")
+						self.Background:SetAtlas("_GarrMissionLocation-"..texture.."-Back")
+						self.Foreground:SetAtlas("_GarrMissionLocation-"..texture.."-Fore")		
+					else
+						self.Background:SetAtlas(texture)
+					end	
 				end
-			)
-		end
+
+				self.Background:SetTexCoord(unpack(texCoord))	
+				if typeBackGrounds == "Dinamic" then
+					self.Middleground:SetTexCoord(unpack(texCoord))	
+					self.Foreground:SetTexCoord(unpack(texCoord))	
+				end
+
+				self.Background:SetShown(true)
+				self.Middleground:SetShown(typeBackGrounds == "Dinamic")
+				self.Foreground:SetShown(typeBackGrounds == "Dinamic")
+			end
+		)
 	end
 
-	GW.CUSTOME_IMMERSIVE.DinamicArt = DinamicArt
+	GW.ImmersiveDinamicArt = ImmersiveDinamicArt
 end
