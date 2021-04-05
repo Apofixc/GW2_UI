@@ -3,8 +3,8 @@ local L = GW.L
 local GetSetting = GW.GetSetting
 local RegisterMovableFrame = GW.RegisterMovableFrame
 local IsIn = GW.IsIn
-local AnimationFade = GW.AnimationFade
 local AddToAnimation = GW.AddToAnimation
+local AnimationFade = GW.AnimationFade
 local FreeAnimation = GW.FreeAnimation
 local FinishedAnimation = GW.FinishedAnimation
 local ImmersiveDinamicArt = GW.ImmersiveDinamicArt
@@ -238,24 +238,36 @@ end
 
 local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)	
 	immersiveFrame:Show()
-	AnimationFade(immersiveFrame, "IN", 0.2, immersiveFrame:GetAlpha(), 1)
-
+	AnimationFade(immersiveFrame, immersiveFrame:GetName(), immersiveFrame:GetAlpha(), 1, 0.2)
+	-- AddToAnimation(
+	-- 	,
+	-- 	immersiveFrame:GetAlpha(),
+	-- 	1,
+	-- 	GetTime(),
+	-- 	0.2,
+	-- 	function(step)
+	-- 		immersiveFrame:SetAlpha(step)
+	-- 	end,
+	-- 	nil, nil, true
+	-- )
+		
 	immersiveFrame.ReputationBar:Show()
 	SetImmersiveUnitModel(immersiveFrame.Models.Player, "player")
 	SetImmersiveUnitModel(immersiveFrame.Models.Giver, UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none")
 
 	if title then
 		immersiveFrame.Title.Text:SetText(title)
-		AddToAnimation(
-			"IMMERSIVE_TITLE_ANIMATION",
-			immersiveFrame.Title:GetAlpha(),
-			1,
-			GetTime(),
-			0.3,
-			function(step)
-				immersiveFrame.Title:SetAlpha(step)
-			end
-		)
+		AnimationFade(immersiveFrame.Title, "IMMERSIVE_TITLE_ANIMATION", immersiveFrame.Title:GetAlpha(), 1, 0.3)
+		-- AddToAnimation(
+		-- 	"IMMERSIVE_TITLE_ANIMATION",
+		-- 	immersiveFrame.Title:GetAlpha(),
+		-- 	1,
+		-- 	GetTime(),
+		-- 	0.3,
+		-- 	function(step)
+		-- 		immersiveFrame.Title:SetAlpha(step)
+		-- 	end
+		-- )
 	else
 		if not FinishedAnimation("IMMERSIVE_TITLE_ANIMATION") then FreeAnimation("IMMERSIVE_TITLE_ANIMATION") end
 		immersiveFrame.Title:SetAlpha(0)
@@ -266,19 +278,16 @@ local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)
 end
 
 local function ImmersiveFrameHandleHide(self)
-	if (self.customFrame) then
-		self.customFrame:Hide()
-		self.customFrame = nil	
-	else
-		if not self.GossipFrame:IsVisible() then return end;
+		if (self.customFrame) then
+			self.customFrame:Hide()
+			self.customFrame = nil	
+		elseif self.GossipFrame:IsShown() then
+			if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION") end
+			if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
+			if not FinishedAnimation("IMMERSIVE_TITLE_ANIMATION") then FreeAnimation("IMMERSIVE_TITLE_ANIMATION") end
 
-		if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION") end
-		if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
-		if not FinishedAnimation("IMMERSIVE_TITLE_ANIMATION") then FreeAnimation("IMMERSIVE_TITLE_ANIMATION") end
-		
-		local frame = self.GossipFrame
-		AnimationFade(frame, "OUT", 0.5, frame:GetAlpha(), 0, nil,
-			function()
+			local frame = self.GossipFrame
+			local funcFinish = function()
 				frame:Hide()
 				frame.Scroll.Icon:Hide()
 				frame.Scroll.Text:Hide()
@@ -286,8 +295,29 @@ local function ImmersiveFrameHandleHide(self)
 
 				wipe(Cache)
 			end
-		)
-	end
+
+			AnimationFade(self.GossipFrame, self.GossipFrame:GetName(), self.GossipFrame:GetAlpha(), 0, 0.5, funcFinish)
+			-- AddToAnimation(
+			-- 	frame:GetName(),
+			-- 	frame:GetAlpha(),
+			-- 	0,
+			-- 	GetTime(),
+			-- 	0.5,
+			-- 	function(step)
+			-- 		frame:SetAlpha(step)	
+			-- 	end,
+			-- 	nil,
+			-- 	function()
+			-- 		frame:Hide()
+			-- 		frame.Scroll.Icon:Hide()
+			-- 		frame.Scroll.Text:Hide()
+			-- 		frame.Scroll.ScrollChildFrame:Hide()
+
+			-- 		wipe(Cache)
+			-- 	end,
+			-- 	true
+			-- )
+		end
 end
 
 ---------------------------------------------------------------------------------------------------------------------
@@ -707,7 +737,7 @@ local function LoadImmersiveView()
 
 				LastEvent = event
 			end
-
+			
 			if IsIn(event, "GOSSIP_SHOW", "QUEST_GREETING") then
 				local dialog 
 
@@ -720,7 +750,7 @@ local function LoadImmersiveView()
 							return
 						end
 					end
-					
+
 					if C_GossipInfo.GetNumAvailableQuests() == 0 and C_GossipInfo.GetNumActiveQuests() == 0 and C_GossipInfo.GetNumOptions() == 1 and not C_GossipInfo.ForceGossip() then
 						local gossipInfoTable = C_GossipInfo.GetOptions()
 						if gossipInfoTable[1].type ~= "gossip" then

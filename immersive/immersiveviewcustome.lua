@@ -1,6 +1,7 @@
 local _, GW = ...
 local L = GW.L
 local animations = GW.animations
+local AddToAnimation = GW.AddToAnimation
 
 local function FreeAnimation(name)
 	if animations[name] then
@@ -15,17 +16,20 @@ local function FinishedAnimation(name)
 end
 GW.FinishedAnimation = FinishedAnimation
 
-local function AnimationFade(frame, mode, timeToFade, startAlpha, endAlpha, fadeHoldTime, finishedFunc, ...)
-	local fadeInfo = {}
-	fadeInfo.mode = mode
-	fadeInfo.timeToFade = timeToFade
-	fadeInfo.startAlpha = startAlpha
-	fadeInfo.endAlpha = endAlpha
-	fadeInfo.fadeHoldTime = fadeHoldTime
-	fadeInfo.finishedFunc = finishedFunc
-	fadeInfo.finishedArg1 , fadeInfo.finishedArg2, fadeInfo.finishedArg3, fadeInfo.finishedArg4 = ...
-
-	UIFrameFade(frame, fadeInfo)
+local function AnimationFade(frame, name, fadeStart, fadeFinish, duration, funcFinish)
+	AddToAnimation(
+		name,
+		fadeStart,
+		fadeFinish,
+		GetTime(),
+		duration,
+		function(step)
+			frame:SetAlpha(step)	
+		end,
+		nil,
+		funcFinish,
+		true
+	)
 end
 GW.AnimationFade = AnimationFade
 
