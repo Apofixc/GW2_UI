@@ -3,8 +3,9 @@ local L = GW.L
 local GetSetting = GW.GetSetting
 local RegisterMovableFrame = GW.RegisterMovableFrame
 local IsIn = GW.IsIn
-local AddToAnimation = GW.AddToAnimation
-local AnimationFade = GW.AnimationFade
+--local AddToAnimation = GW.AddToAnimation
+local FadeAnimation = GW.FadeAnimation
+local DialogAnimation =  GW.DialogAnimation
 local FreeAnimation = GW.FreeAnimation
 local FinishedAnimation = GW.FinishedAnimation
 local ImmersiveDinamicArt = GW.ImmersiveDinamicArt
@@ -205,28 +206,40 @@ local function Dialog(immersiveFrame, operation)
 		immersiveFrame.Dialog.Text:SetText(SPLIT_DIALOGUE_STRINGS[CurrentPartDialogue])
 			
 		local lenghtAnimationDialog = strlenutf8(immersiveFrame.Dialog.Text:GetText()) - StartAnimationDialog;
-		AddToAnimation(
-			"IMMERSIVE_DIALOG_ANIMATION",
-			StartAnimationDialog,
-			lenghtAnimationDialog,
-			GetTime(),
-			GetSetting("ANIMATION_TEXT_SPEED") * lenghtAnimationDialog,
-			function(step)
-				immersiveFrame.Dialog.Text:SetAlphaGradient(step, 1);
-			end,
-			true,
-			function()
-				if AutoNext and CurrentPartDialogue < #SPLIT_DIALOGUE_STRINGS then
-					C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
-						function() 
-							if AutoNext then Dialog(immersiveFrame, 1) end	
-						end
-					)
-				else
-					StopAnimationDialog(immersiveFrame)
-				end
+		local funcFinish = function()
+			if AutoNext and CurrentPartDialogue < #SPLIT_DIALOGUE_STRINGS then
+				C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
+					function() 
+						if AutoNext then Dialog(immersiveFrame, 1) end	
+					end
+				)
+			else
+				StopAnimationDialog(immersiveFrame)
 			end
-		)	
+		end
+		DialogAnimation(immersiveFrame.Dialog.Text, "IMMERSIVE_DIALOG_ANIMATION", StartAnimationDialog, lenghtAnimationDialog, GetSetting("ANIMATION_TEXT_SPEED") * lenghtAnimationDialog, funcFinish)
+		-- AddToAnimation(
+		-- 	"IMMERSIVE_DIALOG_ANIMATION",
+		-- 	StartAnimationDialog,
+		-- 	lenghtAnimationDialog,
+		-- 	GetTime(),
+		-- 	GetSetting("ANIMATION_TEXT_SPEED") * lenghtAnimationDialog,
+		-- 	function(step)
+		-- 		immersiveFrame.Dialog.Text:SetAlphaGradient(step, 1);
+		-- 	end,
+		-- 	true,
+		-- 	function()
+		-- 		if AutoNext and CurrentPartDialogue < #SPLIT_DIALOGUE_STRINGS then
+		-- 			C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
+		-- 				function() 
+		-- 					if AutoNext then Dialog(immersiveFrame, 1) end	
+		-- 				end
+		-- 			)
+		-- 		else
+		-- 			StopAnimationDialog(immersiveFrame)
+		-- 		end
+		-- 	end
+		-- )	
 
 		TitleButtonShow(immersiveFrame, LastEvent, 1, #SPLIT_DIALOGUE_STRINGS, CurrentPartDialogue);
 	end
@@ -238,7 +251,8 @@ end
 
 local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)	
 	immersiveFrame:Show()
-	AnimationFade(immersiveFrame, immersiveFrame:GetName(), immersiveFrame:GetAlpha(), 1, 0.2)
+
+	FadeAnimation(immersiveFrame, immersiveFrame:GetName(), immersiveFrame:GetAlpha(), 1, 0.2)
 	-- AddToAnimation(
 	-- 	,
 	-- 	immersiveFrame:GetAlpha(),
@@ -257,7 +271,7 @@ local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)
 
 	if title then
 		immersiveFrame.Title.Text:SetText(title)
-		AnimationFade(immersiveFrame.Title, "IMMERSIVE_TITLE_ANIMATION", immersiveFrame.Title:GetAlpha(), 1, 0.3)
+		FadeAnimation(immersiveFrame.Title, "IMMERSIVE_TITLE_ANIMATION", immersiveFrame.Title:GetAlpha(), 1, 0.3)
 		-- AddToAnimation(
 		-- 	"IMMERSIVE_TITLE_ANIMATION",
 		-- 	immersiveFrame.Title:GetAlpha(),
@@ -296,7 +310,7 @@ local function ImmersiveFrameHandleHide(self)
 				wipe(Cache)
 			end
 
-			AnimationFade(self.GossipFrame, self.GossipFrame:GetName(), self.GossipFrame:GetAlpha(), 0, 0.5, funcFinish)
+			FadeAnimation(self.GossipFrame, self.GossipFrame:GetName(), self.GossipFrame:GetAlpha(), 0, 0.5, funcFinish)
 			-- AddToAnimation(
 			-- 	frame:GetName(),
 			-- 	frame:GetAlpha(),
@@ -364,21 +378,27 @@ local function LoadTitleButtons()
 			self.frameAnimationText.Text:Show();
 			self.frameAnimationText.Text:SetText(self:GetText():gsub("^.*%d+%p%s", ""));
 
-			AddToAnimation(
-				"IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON",
-				0,
-				strlenutf8(self.frameAnimationText.Text:GetText()),
-				GetTime(),
-				GetSetting("ANIMATION_TEXT_SPEED") * strlenutf8(self.frameAnimationText.Text:GetText()),
-				function(step)
-					self.frameAnimationText.Text:SetAlphaGradient(step, 1);
-				end,
-				true,
-				function()
-					self.func(self.arg)
-					PlaySound(self.playSound)
-				end
-			)	
+			local funcFinish = function()
+				self.func(self.arg)
+				PlaySound(self.playSound)
+			end
+
+			DialogAnimation(self.frameAnimationText.Text, "IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON", 0, strlenutf8(self.frameAnimationText.Text:GetText()), GetSetting("ANIMATION_TEXT_SPEED") * strlenutf8(self.frameAnimationText.Text:GetText()), funcFinish)
+			-- AddToAnimation(
+			-- 	"IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON",
+			-- 	0,
+			-- 	strlenutf8(self.frameAnimationText.Text:GetText()),
+			-- 	GetTime(),
+			-- 	GetSetting("ANIMATION_TEXT_SPEED") * strlenutf8(self.frameAnimationText.Text:GetText()),
+			-- 	function(step)
+			-- 		self.frameAnimationText.Text:SetAlphaGradient(step, 1);
+			-- 	end,
+			-- 	true,
+			-- 	function()
+			-- 		self.func(self.arg)
+			-- 		PlaySound(self.playSound)
+			-- 	end
+			-- )	
 		end
 	end 
 

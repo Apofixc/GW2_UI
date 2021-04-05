@@ -16,7 +16,7 @@ local function FinishedAnimation(name)
 end
 GW.FinishedAnimation = FinishedAnimation
 
-local function AnimationFade(frame, name, fadeStart, fadeFinish, duration, funcFinish)
+local function FadeAnimation(frame, name, fadeStart, fadeFinish, duration, funcFinish)
 	AddToAnimation(
 		name,
 		fadeStart,
@@ -31,7 +31,23 @@ local function AnimationFade(frame, name, fadeStart, fadeFinish, duration, funcF
 		true
 	)
 end
-GW.AnimationFade = AnimationFade
+GW.FadeAnimation = FadeAnimation
+
+local function DialogAnimation(frame, name, start, finish, duration, funcFinish)
+	AddToAnimation(
+		name,
+		start,
+		finish,
+		GetTime(),
+		duration,
+		function(step)
+			frame:SetAlphaGradient(step, 1)
+		end,
+		nil,
+		funcFinish
+	)
+end
+GW.DialogAnimation = DialogAnimation
 
 ---------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------- INTERACTIVE ---------------------------------------------------------
