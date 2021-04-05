@@ -15,6 +15,20 @@ local function FinishedAnimation(name)
 end
 GW.FinishedAnimation = FinishedAnimation
 
+local function AnimationFade(frame, mode, timeToFade, startAlpha, endAlpha, fadeHoldTime, finishedFunc, ...)
+	local fadeInfo = {}
+	fadeInfo.mode = mode
+	fadeInfo.timeToFade = timeToFade
+	fadeInfo.startAlpha = startAlpha
+	fadeInfo.endAlpha = endAlpha
+	fadeInfo.fadeHoldTime = fadeHoldTime
+	fadeInfo.finishedFunc = finishedFunc
+	fadeInfo.finishedArg1 , fadeInfo.finishedArg2, fadeInfo.finishedArg3, fadeInfo.finishedArg4 = ...
+
+	UIFrameFade(frame, fadeInfo)
+end
+GW.AnimationFade = AnimationFade
+
 ---------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------- INTERACTIVE ---------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
@@ -29,7 +43,8 @@ do
 		CANCEL = {"Выход", "Отмена"},
 		EXIT = {"Выход"},
 		COMPLETE = {"Завершить"},
-		FINISH = {"Завершить"}
+		FINISH = {"Завершить"},
+		REPEAT = {"Повторить"}
 	}
 
 	local function GetImmersiveInteractiveText(buttonType)

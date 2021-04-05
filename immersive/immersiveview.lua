@@ -3,16 +3,19 @@ local L = GW.L
 local GetSetting = GW.GetSetting
 local RegisterMovableFrame = GW.RegisterMovableFrame
 local IsIn = GW.IsIn
+local AnimationFade = GW.AnimationFade
 local AddToAnimation = GW.AddToAnimation
-	local FreeAnimation = GW.FreeAnimation
-	local FinishedAnimation = GW.FinishedAnimation
-	local ImmersiveDinamicArt = GW.ImmersiveDinamicArt
-	local GetImmersiveInteractiveText = GW.GetImmersiveInteractiveText
-	local LoadImmersiveModelInfo = GW.LoadImmersiveModelInfo
-	local SetImmersiveUnitModel = GW.SetImmersiveUnitModel
-	local ImmersiveDebugModel = GW.ImmersiveDebugModel
+local FreeAnimation = GW.FreeAnimation
+local FinishedAnimation = GW.FinishedAnimation
+local ImmersiveDinamicArt = GW.ImmersiveDinamicArt
+local GetImmersiveInteractiveText = GW.GetImmersiveInteractiveText
+local LoadImmersiveModelInfo = GW.LoadImmersiveModelInfo
+local SetImmersiveUnitModel = GW.SetImmersiveUnitModel
+local ImmersiveDebugModel = GW.ImmersiveDebugModel
 
 C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end
+
+local Cache = {}
 
 local LastEvent
 
@@ -25,278 +28,116 @@ local CurrentPartDialogue
 local StartAnimationDialog
 local SPLIT_DIALOGUE_STRINGS
 
----------------------------------------------------------------------------------------------------------------------
----------------------------------------------- REWARD/DETAILE -------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------
-
-local function QuestInfo_StyleDetail()
-	local lastFrame = QuestInfoRewardsFrame.Header
-	local totalHeight = lastFrame:GetHeight()
-
-	for _, frame in ipairs({"QuestSessionBonusReward", "ItemReceiveText", "MoneyFrame", "XPFrame", "ArtifactXPFrame", "WarModeBonusFrame", "HonorFrame", "SkillPointFrame", "PlayerTitleText", "TitleFrame", "ItemChooseText"}) do
-		if QuestInfoRewardsFrame[frame] and QuestInfoRewardsFrame[frame]:IsShown() then
-			QuestInfoRewardsFrame[frame]:ClearAllPoints()
-			QuestInfoRewardsFrame[frame]:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
-			lastFrame = QuestInfoRewardsFrame[frame]
-			totalHeight = totalHeight + lastFrame:GetHeight() + 5
-		end
-	end
-
-	if QuestInfoRewardsFrame.spellRewardPool:GetNumActive() > 0 then
-
-	end
-	
-	for i, questItem in ipairs(QuestInfoRewardsFrame.RewardButtons) do
-		if questItem:IsShown() then
-			questItem:ClearAllPoints()
-			questItem:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", i == 1 and 5 or 0, -5)
-			lastFrame = questItem
-			totalHeight = totalHeight + lastFrame:GetHeight() + 5
-		end
-	end
-
-	QuestInfoRewardsFrame:SetHeight(totalHeight)
-end
-
-local function QuestInfo_ShowProgressRequiredMoney()
-	local requiredMoney = GetQuestMoneyToGet()
-	if requiredMoney > 0 then
-		MoneyFrame_Update("QuestInfoRequiredMoneyDisplay", requiredMoney)
-		if requiredMoney > GetMoney() then
-			QuestInfoRequiredMoneyText:SetTextColor(0, 0, 0)
-			SetMoneyFrameColor("QuestInfoRequiredMoneyDisplay", "red")
-		else
-			QuestInfoRequiredMoneyText:SetTextColor(0.2, 0.2, 0.2);
-			SetMoneyFrameColor("QuestInfoRequiredMoneyDisplay", "white")
-		end
-
-		QuestInfoRequiredMoneyFrame:Show()
-		return QuestInfoRequiredMoneyFrame
-	else
-		QuestInfoRequiredMoneyFrame:Hide()
-		return nil;
-	end
-end
-
-local function QuestInfo_ShowProgressRequiredItems()
-	GwQuestInfoProgress.progressButtonPool:ReleaseAll()
-
-	local lastAnchorElement
-	local totalHeight = 0	
-
-	local numRequiredItems = GetNumQuestItems()
-	if numRequiredItems > 0 then
-		local numHiddenItem = 0
-
-		GwQuestInfoProgress.RequiredTextItem:SetPoint("TOPLEFT", 0, -5)
-		GwQuestInfoProgress.RequiredTextItem:Show()
-		totalHeight = totalHeight + GwQuestInfoProgress.RequiredTextItem:GetHeight() + 5
-		lastAnchorElement = GwQuestInfoProgress.RequiredTextItem 
-
-		for i = 1, numRequiredItems do
-			local hidden = IsQuestItemHidden(i);
-			if hidden == 0 then
-				local requiredItem = GwQuestInfoProgress.progressButtonPool:Acquire()
-				requiredItem.type = "required";
-				requiredItem.objectType = "item";
-				requiredItem:SetID(i)
-				local name, texture, numItems = GetQuestItemInfo(requiredItem.type, 1)
-				SetItemButtonCount(requiredItem, numItems)
-				SetItemButtonTexture(requiredItem, texture)
-				requiredItem:Show()
-				requiredItem.Name:SetText(name)
-
-				if (i - numHiddenItem) % 2 == 1 then
-					requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "BOTTOMLEFT", 0, -5)
-					lastAnchorElement = requiredItem
-					totalHeight = totalHeight + requiredItem:GetHeight() + 5
-				else
-					requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "TOPRIGHT", 1, 0)
-				end
-			else
-				numHiddenItem = numHiddenItem + 1
-			end
-		end
-
-		if numHiddenItem == numRequiredItems then
-			GwQuestInfoProgress.RequiredTextItem:Hide()
-			totalHeight = totalHeight - GwQuestInfoProgress.RequiredTextItem:GetHeight() - 5
-			lastAnchorElement = nil
-		end
-	else
-		GwQuestInfoProgress.RequiredTextItem:Hide()
-	end
-
-	local numRequiredCurrencies = GetNumQuestCurrencies()
-	if numRequiredCurrencies > 0 then
-		if lastAnchorElement then
-			GwQuestInfoProgress.RequiredTextCurrencies:SetPoint("TOPLEFT", lastAnchorElement, "BOTTOMLEFT", 0, -5)
-		else
-			GwQuestInfoProgress.RequiredTextCurrencies:SetPoint("TOPLEFT", 0, -5)
-		end
-
-		GwQuestInfoProgress.RequiredTextCurrencies:Show()
-		totalHeight = totalHeight + GwQuestInfoProgress.RequiredTextCurrencies:GetHeight() + 5
-		lastAnchorElement = GwQuestInfoProgress.RequiredTextCurrencies 
-
-		for i=1, numRequiredCurrencies do
-			local requiredItem = GwQuestInfoProgress.progressButtonPool:Acquire()
-			requiredItem.type = "required";
-			requiredItem.objectType = "currency";
-			requiredItem:SetID(i);
-			local name, texture, numItems = GetQuestCurrencyInfo(requiredItem.type, 1);
-			SetItemButtonCount(requiredItem, numItems);
-			SetItemButtonTexture(requiredItem, texture);
-			requiredItem:Show();
-			requiredItem.Name:SetText(name)
-
-			if i % 2 == 1 then
-				requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "BOTTOMLEFT", 0, -5)
-				lastAnchorElement = requiredItem
-				totalHeight = totalHeight + requiredItem:GetHeight() + 5
-			else
-				requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "TOPRIGHT", 1, 0)
-			end
-		end
-	else
-		GwQuestInfoProgress.RequiredTextCurrencies:Hide()
-	end
-
-	if totalHeight > 0 then
-		GwQuestInfoProgress:SetHeight(totalHeight)
-		GwQuestInfoProgress:Show()
-		return GwQuestInfoProgress
-	else
-		GwQuestInfoProgress:Hide()
-		return nil	
-	end
-end
-
-local function ShownDetail(event, parentFrame)
-	local template = _G["GW2_"..event.."_TEMPLATE"]
+local function QuestInfo_StyleDetail(template)
 	local totalHeight = 0
-
-	--for i,children in ipairs{parentFrame:GetFrameChildren()}
-	template.contentWidth = parentFrame:GetWidth()
-	QuestInfo_Display(template, parentFrame)
-	
 	local elementsTable = template.frames
+
 	for i = 1, #elementsTable, 2 do
 		if _G[elementsTable[i]]:IsShown() then
 			if elementsTable[i] == "QuestInfoRewardsFrame" then
-				QuestInfo_StyleDetail()
+				local lastFrame = QuestInfoRewardsFrame.Header
+				local height = lastFrame:GetHeight()
+			
+				for _, frame in ipairs({"QuestSessionBonusReward", "ItemReceiveText", "MoneyFrame", "XPFrame", "ArtifactXPFrame", "WarModeBonusFrame", "HonorFrame", "SkillPointFrame", "PlayerTitleText", "TitleFrame", "ItemChooseText"}) do
+					if QuestInfoRewardsFrame[frame] and QuestInfoRewardsFrame[frame]:IsShown() then
+						QuestInfoRewardsFrame[frame]:ClearAllPoints()
+						QuestInfoRewardsFrame[frame]:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+						lastFrame = QuestInfoRewardsFrame[frame]
+						height = height + lastFrame:GetHeight() + 5
+					end
+				end
+				
+				for _, obj in ipairs(QuestInfoRewardsFrame.collectionObjectFromPolls) do
+					obj:ClearAllPoints()
+					obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
+					lastFrame = obj
+					height = height + lastFrame:GetHeight() + 5
+				end
+				
+				for i, questItem in ipairs(QuestInfoRewardsFrame.RewardButtons) do
+					if questItem:IsShown() then
+						questItem:ClearAllPoints()
+						questItem:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", i == 1 and 5 or 0, -5)
+						lastFrame = questItem
+						height = height + lastFrame:GetHeight() + 5
+					end
+				end
+			
+				QuestInfoRewardsFrame:SetHeight(height)
 			end
 
 			if elementsTable[i] == "GwQuestInfoProgress" then
-				QuestInfo_StyleDetail()
 			end
 
 			totalHeight = totalHeight + _G[elementsTable[i]]:GetHeight() + elementsTable[i + 1]
 		end
 	end
 
-	parentFrame:SetHeight(totalHeight)
-	return totalHeight > 0
+	return totalHeight
 end
 
----------------------------------------------------------------------------------------------------------------------
------------------------------------------------ TITLE BUTTON --------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------
+local function ShownDetail(event, parentFrame)
+	for _, frame in ipairs({QuestInfoObjectivesText, QuestInfoSpecialObjectivesFrame, QuestInfoGroupSize, QuestInfoSpecialObjectivesFrame, QuestInfoRewardsFrame, QuestInfoRequiredMoneyFrame, GwQuestInfoProgress}) do
+		frame:ClearAllPoints()
+		frame:Hide()
+	end
+
+	local template = _G["GW2_"..event.."_TEMPLATE"]
+	template.contentWidth = parentFrame:GetWidth()
+	QuestInfo_Display(template, parentFrame)
+
+	return QuestInfo_StyleDetail(template)
+end
 
 local function TitleButtonShow(self, event, start, finish, current)
-	local multiElement = start ~= finish
 	local firstElement = current == start
 	local lastElement = current == finish
-	local moveElement = current > start and current < finish
-	local width = self.Scroll.ScrollChildFrame:GetWidth()
 	local totalHeight = 0
-
-	SHOW_TITLE_BUTTON[1].show = lastElement and (event == 'GOSSIP_SHOW' or event == 'QUEST_GREETING')
-	SHOW_TITLE_BUTTON[2].show = lastElement and (event == 'GOSSIP_SHOW' or event == 'QUEST_GREETING')
-	SHOW_TITLE_BUTTON[3].show = lastElement and event == 'GOSSIP_SHOW'
-	SHOW_TITLE_BUTTON[4].show = lastElement and event == 'QUEST_DETAIL'
-	SHOW_TITLE_BUTTON[5].show = lastElement and event == 'QUEST_DETAIL' and not QuestGetAutoAccept()
-	SHOW_TITLE_BUTTON[6].show = lastElement and event == 'QUEST_PROGRESS' and IsQuestCompletable()
-	SHOW_TITLE_BUTTON[7].show = lastElement and event == 'QUEST_COMPLETE' and GetNumQuestChoices() == 0
-	SHOW_TITLE_BUTTON[8].show = multiElement and (firstElement or moveElement)
-	SHOW_TITLE_BUTTON[9].show = multiElement and (lastElement or moveElement)
-	SHOW_TITLE_BUTTON[10].show = event == 'QUEST_GREETING' or event == 'QUEST_PROGRESS' or event == 'QUEST_COMPLETE'
-	SHOW_TITLE_BUTTON[11].show = event == 'GOSSIP_SHOW'
-	
-	local function AcquireButton()
-		local button = TitleButtonPool:Acquire() 
-		button:SetParent(self.Scroll.ScrollChildFrame)
-		button:SetHighlightTexture(GwImmersiveFrame.GossipFrame.titleHighlightTexture)
-		button:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'TOPLEFT', width, -totalHeight)
-		button:Show()		
-
-		return button
-	end
 
 	TitleButtonPool:ReleaseAll()
 
 	for id, value in ipairs(SHOW_TITLE_BUTTON) do
-		if value.show then
-			if value.type == "AVAILABLE" and event == 'GOSSIP_SHOW' then
-				local GossipQuests = C_GossipInfo.GetAvailableQuests();
-				for titleIndex, questInfo in ipairs(GossipQuests) do
-					local button = AcquireButton()
-					button:AddCallbackForTitleButton(TitleButtonPool:GetNumActive(), value.type, questInfo, C_GossipInfo.SelectAvailableQuest, titleIndex, value.playSound)
-					totalHeight = totalHeight + button:GetHeight() + 5
-				end	
-			elseif value.type == "AVAILABLE" and event == 'QUEST_GREETING' then
-				local GreetingAvailableQuests = GetNumAvailableQuests();
-				for ID = 1, GreetingAvailableQuests do
-					local button = AcquireButton()
-					local titleText, isTrivial, frequency, isRepeatable, isLegendary, questID = GetAvailableTitle(ID), GetAvailableQuestInfo(ID)
+		if value.show(event, firstElement, lastElement) then
+			for titleIndex, info in pairs(value.getInfo()) do
+				local button = TitleButtonPool:Acquire() 
+				local numActiveButton = TitleButtonPool:GetNumActive()
+				button:SetParent(self.Scroll.ScrollChildFrame)
+				button:SetHighlightTexture(self.titleHighlightTexture)
+				button:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'TOPLEFT', 0, -totalHeight)
+				button:Show()		
+				
+				if value.type == "AVAILABLE" then
+					button:SetQuest(numActiveButton..". "..info.title, info.questLevel, info.isTrivial, info.frequency, info.repeatable, info.isLegendary, info.isIgnored, info.questID)
+				elseif value.type == "ACTIVE" then
+					button:SetActiveQuest(numActiveButton..". "..info.title, info.questLevel, info.isTrivial, info.isComplete, info.isLegendary, info.isIgnored, info.questID)
+				elseif value.type == "GOSSIP" then
+					button:SetOption(numActiveButton..". "..info.name, info.type, info.spellID)
+				else
+					button:SetAction(numActiveButton..". "..info.name, info.icon)
+				end
 
-					button:AddCallbackForTitleButton(TitleButtonPool:GetNumActive(), value.type, {}, SelectAvailableQuest, ID, value.playSound)
-					totalHeight = totalHeight + button:GetHeight() + 5
-				end
-			elseif value.type == "ACTIVE" and event == 'GOSSIP_SHOW' then
-				local GossipQuests = C_GossipInfo.GetActiveQuests()
-				hasActiveQuest = #GossipQuests > 0
-				for titleIndex, questInfo in ipairs(GossipQuests) do
-					local button = AcquireButton()
-					button:AddCallbackForTitleButton(TitleButtonPool:GetNumActive(), value.type, questInfo, C_GossipInfo.SelectActiveQuest, titleIndex, value.playSound)
-					totalHeight = totalHeight + button:GetHeight() + 5
-				end
-			elseif value.type == "ACTIVE" and event == 'QUEST_GREETING' then
-				local GreetingActiveQuests = GetNumActiveQuests();
-				for ID = 1, GreetingActiveQuests do
-					local button = AcquireButton()
-					local title, isComplete, questID, isTrivial, isTrivial = GetActiveTitle(ID), GetActiveQuestID(ID), IsActiveQuestTrivial(ID), IsActiveQuestLegendary(ID)
-
-					button:AddCallbackForTitleButton(TitleButtonPool:GetNumActive(), value.type, {}, SelectActiveQuest, ID, value.playSound)
-					totalHeight = totalHeight + button:GetHeight() + 5
-				end
-			elseif value.type == "GOSSIP" then
-				local gossipOptions = C_GossipInfo.GetOptions()
-				for titleIndex, optionInfo in ipairs(gossipOptions) do
-					local button = AcquireButton()
-					button:AddCallbackForTitleButton(TitleButtonPool:GetNumActive(), value.type, optionInfo, value.callBack, titleIndex, value.playSound)
-					totalHeight = totalHeight + button:GetHeight() + 5
-				end
-			else
-				local button = AcquireButton()
-				button:AddCallbackForTitleButton(TitleButtonPool:GetNumActive(), value.type, {name = GetImmersiveInteractiveText(value.type), icon = id - 4}, value.callBack, value.arg, value.playSound)
-				totalHeight = totalHeight + button:GetHeight() + 5
+				button:AddCallbackForClick(numActiveButton, value.callBack, id < 6 and titleIndex or value.arg, value.playSound)
+				totalHeight = totalHeight + button:GetHeight() + 5						
 			end
 		end
 	end
 
-	self.Scroll.ScrollChildFrame:SetHeight(totalHeight)
-
 	if IsIn(event, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") and lastElement then
 		if not self.Detail:IsVisible() then
 			self.Detail.Scroll.ScrollBar:SetValue(0)
-			self.Detail:SetShown(ShownDetail(event, self.Detail.Scroll.ScrollChildFrame))
+			local height = ShownDetail(event, self.Detail.Scroll.ScrollChildFrame)
+			self.Detail.Scroll.ScrollChildFrame:SetHeight(height)
+			self.Detail:SetShown(height > 0)
 		end
 	else
 		if self.Detail:IsVisible() then
 			self.Detail:Hide()
 		end
 	end
+
+	self.Scroll.ScrollBar:SetValue(0)
+	self.Scroll.ScrollBar:SetAlpha(0)
+	self.Scroll.ScrollChildFrame:SetHeight(totalHeight)
 end
 
 ---------------------------------------------------------------------------------------------------------------------
@@ -392,22 +233,23 @@ local function Dialog(immersiveFrame, operation)
 end
 
 ---------------------------------------------------------------------------------------------------------------------
--------------------------------------------------- EVENT ------------------------------------------------------------
+----------------------------------------------- SHOW / HIDE ---------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------
 
 local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)	
-	immersiveFrame:Show();
-	AddToAnimation(
-		immersiveFrame:GetName(),
-		immersiveFrame:GetAlpha(),
-		1,
-		GetTime(),
-		0.2,
-		function(step)
-			immersiveFrame:SetAlpha(step)
-		end,
-		nil, nil, true
-	)
+	immersiveFrame:Show()
+	AnimationFade(immersiveFrame, "IN", 0.2, immersiveFrame:GetAlpha(), 1)
+	-- AddToAnimation(
+	-- 	immersiveFrame:GetName(),
+	-- 	immersiveFrame:GetAlpha(),
+	-- 	1,
+	-- 	GetTime(),
+	-- 	0.2,
+	-- 	function(step)
+	-- 		immersiveFrame:SetAlpha(step)
+	-- 	end,
+	-- 	nil, nil, true
+	-- )
 		
 	immersiveFrame.ReputationBar:Show()
 	SetImmersiveUnitModel(immersiveFrame.Models.Player, "player")
@@ -420,7 +262,7 @@ local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)
 			immersiveFrame.Title:GetAlpha(),
 			1,
 			GetTime(),
-			0.2,
+			0.3,
 			function(step)
 				immersiveFrame.Title:SetAlpha(step)
 			end
@@ -435,103 +277,101 @@ local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)
 end
 
 local function ImmersiveFrameHandleHide(self)
-		if (self.customFrame) then
-			self.customFrame:Hide()
-			self.customFrame = nil	
-		else
-			if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION") end
-			if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
-			if not FinishedAnimation("IMMERSIVE_TITLE_ANIMATION") then FreeAnimation("IMMERSIVE_TITLE_ANIMATION") end
+	if (self.customFrame) then
+		self.customFrame:Hide()
+		self.customFrame = nil	
+	else
+		if not self.GossipFrame:IsVisible() then return end;
 
-			local frame = self.GossipFrame
-			AddToAnimation(
-				frame:GetName(),
-				frame:GetAlpha(),
-				0,
-				GetTime(),
-				0.5,
-				function(step)
-					frame:SetAlpha(step)	
-				end,
-				nil,
-				function()
-					frame:Hide()
-					frame.Detail:Hide()
-					frame.Scroll.Icon:Hide()
-					frame.Scroll.Text:Hide()
-					frame.Scroll.ScrollBar:SetValue(0)
-					frame.Scroll.ScrollBar:SetAlpha(0)
-					frame.Scroll.ScrollChildFrame:Hide()
-					frame.Models.Player.unitDirty = nil
-					frame.Models.Giver.unitDirty = nil	
-					
-					frame.Title:SetAlpha(0)
-				end,
-				true
-			)
-		end
+		if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION") end
+		if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
+		if not FinishedAnimation("IMMERSIVE_TITLE_ANIMATION") then FreeAnimation("IMMERSIVE_TITLE_ANIMATION") end
+		
+		local frame = self.GossipFrame
+		AnimationFade(frame, "OUT", 0.5, frame:GetAlpha(), 0, nil,
+			function()
+				frame:Hide()
+				frame.Scroll.Icon:Hide()
+				frame.Scroll.Text:Hide()
+				frame.Scroll.ScrollChildFrame:Hide()
+
+				wipe(Cache)
+			end
+		)
+		-- local frame = self.GossipFrame
+		-- AddToAnimation(
+		-- 	frame:GetName(),
+		-- 	frame:GetAlpha(),
+		-- 	0,
+		-- 	GetTime(),
+		-- 	0.5,
+		-- 	function(step)
+		-- 		frame:SetAlpha(step)	
+		-- 	end,
+		-- 	nil,
+		-- 	function()
+		-- 		frame:Hide()
+		-- 		frame.Scroll.Icon:Hide()
+		-- 		frame.Scroll.Text:Hide()
+		-- 		frame.Scroll.ScrollChildFrame:Hide()
+
+		-- 		wipe(Cache)
+		-- 	end,
+		-- 	true
+		-- )
+	end
 end
 
-local function LoadTitleButtonsMixin()
-	function GossipTitleButtonMixin:SetAction(titleText, icon)
+---------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------- LOAD ------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+
+local function LoadTitleButtons()
+	AdvanceGossipTitleButtonMixin = {}
+
+	function AdvanceGossipTitleButtonMixin:SetAction(titleText, icon)
 		self.type = "Action";
 
 		self:SetFormattedText(ACTION_DISPLAY, titleText);
-		self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/icons/icon-gossip");
+		self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/gossipview/icon-gossip");
 		self.Icon:SetTexCoord(0.25 * floor(icon / 4), 0.25 * (floor(icon / 4) + 1), 0.25 * (icon % 4), 0.25 * ((icon % 4) + 1))
 		self.Icon:SetVertexColor(1, 1, 1, 1);
 	
 		self:Resize();
 	end
 	
-	function GossipTitleButtonMixin:AddCallbackForTitleButton(id, typeButton, info, func, arg, playSound)
+	function AdvanceGossipTitleButtonMixin:AddCallbackForClick(id, func, arg, playSound)
 		self:SetID(id);
 
 		self.func = func;
 		self.arg = arg;
 		self.playSound = playSound;
-
-		if typeButton == "AVAILABLE" then
-			self:SetQuest(id..". "..info.title, info.questLevel, info.isTrivial, info.frequency, info.repeatable, info.isLegendary, info.isIgnored, info.questID)
-		elseif typeButton == "ACTIVE" then
-			self:SetActiveQuest(id.titlePool:GetNumActive()..". "..info.title, info.questLevel, info.isTrivial, info.isComplete, info.isLegendary, info.isIgnored, info.questID)
-		elseif typeButton == "GOSSIP" then
-			self:SetOption(id..". "..info.name, info.type, info.spellID)
-		else
-			self:SetAction(id..". "..info.name, info.icon)
-		end
 	end
 
-	function GossipTitleButtonMixin:Resize()
+	function AdvanceGossipTitleButtonMixin:Resize()
 		self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()));
 		self:SetWidth(self:GetParent():GetWidth());
 	end
 
-	function GossipTitleButtonMixin:SetAnimationText()
-		self.frameAnimationText = self:GetParent():GetParent():GetParent().Scroll;
-		self.frameAnimationText.ScrollBar:SetValue(0);
-		self.frameAnimationText.ScrollBar:SetAlpha(0);
-		self.frameAnimationText.ScrollChildFrame:Hide();
-		self.frameAnimationText.Icon:Show();
-		if self.frameAnimationText.Icon.SetText then
-			self.frameAnimationText.Icon:SetText("|cFFFF5A00"..UnitName("player")..": ");
-		end
-		self.frameAnimationText.Text:Show();
-		self.frameAnimationText.Text:SetText(self:GetText():gsub("^.*%d+%p%s", ""));
+	function AdvanceGossipTitleButtonMixin:OnClick()
+		if FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") and self.func and not self.ShowIn:IsPlaying() then
+			self.frameAnimationText = self:GetParent():GetParent():GetParent().Scroll
+			self.frameAnimationText.ScrollBar:SetAlpha(0)
+			self.frameAnimationText.ScrollChildFrame:Hide();
+			
+			self.frameAnimationText.Icon:Show();
+			if self.frameAnimationText.Icon.SetText then
+				self.frameAnimationText.Icon:SetText("|cFFFF5A00"..UnitName("player")..": ");
+			end
+			self.frameAnimationText.Text:Show();
+			self.frameAnimationText.Text:SetText(self:GetText():gsub("^.*%d+%p%s", ""));
 
-		self.startAnimationText = 0;
-		self.lenghtAnimationText = strlenutf8(self.frameAnimationText.Text:GetText()) - self.startAnimationText;
-	end
-	
-	function GossipTitleButtonMixin:OnClick()
-		if FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") and self.func then
-			self:SetAnimationText()
 			AddToAnimation(
 				"IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON",
-				self.startAnimationText,
-				self.lenghtAnimationText,
+				0,
+				strlenutf8(self.frameAnimationText.Text:GetText()),
 				GetTime(),
-				GetSetting("ANIMATION_TEXT_SPEED") * self.lenghtAnimationText,
+				GetSetting("ANIMATION_TEXT_SPEED") * strlenutf8(self.frameAnimationText.Text:GetText()),
 				function(step)
 					self.frameAnimationText.Text:SetAlphaGradient(step, 1);
 				end,
@@ -544,120 +384,283 @@ local function LoadTitleButtonsMixin()
 		end
 	end 
 
-	function GossipTitleButtonMixin:OnShowAnimation()
-		local id = self:GetID();
-
-		local ag = self:CreateAnimationGroup()    
-
-		local a1 = ag:CreateAnimation("Translation")
-		a1:SetOffset(-self:GetWidth(), 0)   
-		a1:SetStartDelay(0.4 * id) 
-		a1:SetDuration(6)
-		a1:SetSmoothing("OUT")
-		a1:Play()
-		
-		--local point, relativeTo, relativePoint, _, yOfs = self:GetPoint()
-
-		-- if (id and id > 0) then
-		-- 	AddToAnimation(
-		-- 		"IMMERSIVE_TITLE_BUTTON_ANIMATION_"..id,
-		-- 		self:GetWidth(),
-		-- 		0,
-		-- 		GetTime(),
-		-- 		0.4 * id,
-		-- 		function(step)
-		-- 			self:SetPoint(point, relativeTo, relativePoint, step, yOfs)
-		-- 		end
-		-- 	)	
-		-- else
-		-- 	self:SetPoint(point, relativeTo, relativePoint, 0, yOfs)
-		-- end
-	end
-	
-	function GossipTitleButtonMixin:OnHideAnimation()
-		local id = self:GetID()
-		--if not FinishedAnimation("IMMERSIVE_TITLE_BUTTON_ANIMATION_"..id) then FreeAnimation("IMMERSIVE_TITLE_BUTTON_ANIMATION_"..id) end
-
-		self.Icon:SetTexCoord(0, 1, 0, 1)
-	end
-
 	TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate")
-end
 
-local function LoadTitleButtonsInfo()
+	local function GetAvailableQuests() return C_GossipInfo.GetAvailableQuests() end
+	local function GetOptions() return C_GossipInfo.GetOptions() end		
+
+	local function GetActiveQuests()
+		local GossipQuests = C_GossipInfo.GetActiveQuests()  
+		hasActiveQuest = #GossipQuests > 0
+		return GossipQuests
+	end
+
+	local function GetGreetingAvailableQuests()
+		local info ={}
+		local GreetingAvailableQuests = GetNumAvailableQuests();
+		for ID = 1, GreetingAvailableQuests do
+			local title, isTrivial, frequency, isRepeatable, isLegendary, questID, questLevel = GetAvailableTitle(ID), GetAvailableQuestInfo(ID), GetActiveLevel(ID)
+			tinsert(info, {title = title, questLevel = questLevel, isTrivial = isTrivial, frequency = frequency, isRepeatable = isRepeatable, isLegendary = isLegendary, questID = questID})
+		end
+
+		return info
+	end
+
+	local function GetGreetingActiveQuests()
+		local info ={}
+		local GreetingActiveQuests = GetNumActiveQuests();
+		for ID = 1, GreetingActiveQuests do
+			local title, isComplete, questID, isTrivial, isLegendary, questLevel = GetActiveTitle(ID), GetActiveQuestID(ID), IsActiveQuestTrivial(ID), IsActiveQuestLegendary(ID), GetAvailableLevel(ID)
+			tinsert(info, {title = title, questLevel = questLevel, isComplete = isComplete, isTrivial = isTrivial, isLegendary = isLegendary, questID = questID})
+		end
+
+		return info
+	end	
+
+	local function GetAction(typeAction, icon)
+		local info = {}
+		tinsert(info, {name = GetImmersiveInteractiveText(typeAction), icon = icon})
+
+		return info
+	end
+
+	local function Accept()
+		if QuestFlagsPVP() then
+			StaticPopup_Show('CONFIRM_ACCEPT_PVP_QUEST')
+		else
+			if QuestGetAutoAccept() then
+				AcknowledgeAutoAcceptQuest()
+			else
+				AcceptQuest()
+			end
+		end
+	end
+
+	local function Finish()
+		local numQuestChoices = GetNumQuestChoices()
+		if numQuestChoices > 1 then
+			QuestChooseRewardError()
+		else
+			if numQuestChoices == 1 then QuestInfoFrame.itemChoice = 1 end
+
+			GetQuestReward(QuestInfoFrame.itemChoice)
+		end
+	end
+
+	local function Next() Dialog(GwImmersiveFrame.GossipFrame, 1) end
+	local function Back() Dialog(GwImmersiveFrame.GossipFrame, -1) end
+	local function Repeat() 
+		CurrentPartDialogue = 0
+		AutoNext = GetSetting("AUTO_NEXT")
+		Dialog(GwImmersiveFrame.GossipFrame, 1) 
+	end
+
+
+	local function ShowAvailable(event, firstElement, lastElement) return lastElement and event == "GOSSIP_SHOW" end
+	local function ShowGreetingAvailable(event, firstElement, lastElement) return lastElement and event == "QUEST_GREETING" end
+	local function ShowActive(event, firstElement, lastElement) return lastElement and event == "GOSSIP_SHOW" end
+	local function ShowGreetingActive(event, firstElement, lastElement) return lastElement and event == "QUEST_GREETING" end
+	local function ShowGossip(event, firstElement, lastElement) return lastElement and event == "GOSSIP_SHOW" end
+	local function ShowAccept(event, firstElement, lastElement) return lastElement and event == "QUEST_DETAIL" end
+	local function ShowDecline(event, firstElement, lastElement) return lastElement and event == "QUEST_DETAIL" and not QuestGetAutoAccept() end
+	local function ShowComplete(event, firstElement, lastElement) return lastElement and event == "QUEST_PROGRESS" and IsQuestCompletable() end
+	local function ShowFinish(event, firstElement, lastElement) return lastElement and event == "QUEST_COMPLETE" and GetNumQuestChoices() <= 1 end
+	local function ShowNext(event, firstElement, lastElement) return not lastElement end 
+	local function ShowBack(event, firstElement, lastElement) return not firstElement end
+	local function ShowCancel(event, firstElement, lastElement) return IsIn(event, "QUEST_GREETING", "QUEST_PROGRESS", "QUEST_COMPLETE") end
+	local function ShowExit(event, firstElement, lastElement) return event == "GOSSIP_SHOW" end
+	local function ShowRepeat(event, firstElement, lastElement) return lastElement and false end
+
 	SHOW_TITLE_BUTTON = {
-		{ type = "AVAILABLE", playSound = SOUNDKIT.IG_QUEST_LIST_SELECT },
-		{ type = "ACTIVE", playSound = SOUNDKIT.IG_QUEST_LIST_SELECT},
-		{ type = "GOSSIP", callBack = C_GossipInfo.SelectOption, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT },
-		{ type = "ACCEPT", 
-			callBack = function ()
-				if QuestFlagsPVP() then
-					StaticPopup_Show('CONFIRM_ACCEPT_PVP_QUEST')
-				else
-					if QuestGetAutoAccept() then
-						AcknowledgeAutoAcceptQuest()
-					else
-						AcceptQuest()
-					end
-				end
-			end, 
-			playSound = SOUNDKIT.IG_QUEST_LIST_OPEN },
-		{ type = "DECLINE", callBack = DeclineQuest, playSound = SOUNDKIT.IG_QUEST_CANCEL },
-		{ type = "COMPLETE", callBack = CompleteQuest, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN },
-		{ type = "FINISH", 
-			callBack = function ()
-				local numQuestChoices = GetNumQuestChoices()
-				if (numQuestChoices ~= 0) then
-					QuestChooseRewardError()
-				else
-					GetQuestReward(QuestInfoFrame.itemChoice)
-				end
-			end, 
-			playSound = SOUNDKIT.IG_QUEST_LIST_OPEN },
-		{ type = "NEXT", 
-			callBack = function ()
-				Dialog(GwImmersiveFrame.GossipFrame, 1)
-			end, 
-			playSound = SOUNDKIT.IG_QUEST_LIST_OPEN },
-		{ type = "BACK", 			
-			callBack = function ()
-				Dialog(GwImmersiveFrame.GossipFrame, -1)
-			end, 
-			playSound = SOUNDKIT.IG_QUEST_LIST_OPEN },
-		{ type = "CANCEL", callBack = CloseQuest, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE },
-		{ type = "EXIT", callBack = C_GossipInfo.CloseGossip, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE }
+		{ type = "AVAILABLE", show = ShowAvailable, callBack = C_GossipInfo.SelectAvailableQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetAvailableQuests },
+		{ type = "AVAILABLE", show = ShowGreetingAvailable, callBack = SelectAvailableQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetGreetingAvailableQuests },
+		{ type = "ACTIVE", show = ShowActive, callBack = C_GossipInfo.SelectActiveQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetActiveQuests },
+		{ type = "ACTIVE", show = ShowGreetingActive, callBack = SelectActiveQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetGreetingActiveQuests },
+		{ type = "GOSSIP", show = ShowGossip, callBack = C_GossipInfo.SelectOption, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetOptions },
+		{ type = "ACCEPT", show = ShowAccept, callBack = Accept, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("ACCEPT", 0) end },
+		{ type = "DECLINE", show = ShowDecline, callBack = DeclineQuest, playSound = SOUNDKIT.IG_QUEST_CANCEL, getInfo = function() return GetAction("DECLINE", 1) end },
+		{ type = "COMPLETE", show = ShowComplete, callBack = CompleteQuest, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("COMPLETE", 2) end },
+		{ type = "FINISH", show = ShowFinish, callBack = Finish, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("FINISH", 3) end },
+		{ type = "NEXT", show = ShowNext, callBack = Next, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("NEXT", 4) end },
+		{ type = "BACK", show = ShowBack, callBack = Back, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("BACK", 5) end },
+		{ type = "CANCEL", show = ShowCancel, callBack = CloseQuest, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE, getInfo = function() return GetAction("CANCEL", 6) end},
+		{ type = "EXIT", show = ShowExit, callBack = C_GossipInfo.CloseGossip, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE, getInfo = function() return GetAction("EXIT", 7) end},
+		{ type = "REPEAT", show = ShowRepeat, callBack = Repeat, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("REPEAT", 8) end}
 	}
 end
 
 local function LoadDetalies()
-	local CollectionPollMixin = {}
+	local CollectionMixin = {}
 
-	function CollectionPollMixin:CreatePool(typePool, template, ...)
-		local pool
+	function CollectionMixin:Acquire()
+		local obj = ObjectPoolMixin.Acquire(self)
+		tinsert(self.collection, obj)
+		
+		return obj
+	end
 
-		if typePool == "Frame" then
-			local frameType, parent, frameTemplate, resetterFunc, forbidden = ...
-			pool = CreateFramePool(frameType, parent, frameTemplate, resetterFunc, forbidden)
-		elseif typePool == "FontString" then
-			local parent, layer, subLayer, fontStringTemplate, resetterFunc = ...
-			pool = CreateFontStringPool(parent, layer, subLayer, fontStringTemplate, resetterFunc)
+	function CollectionMixin:Release(obj)
+		for index, objCollection in ipairs(self.collection) do
+			if objCollection == obj then 
+				tremove(self.collection, index) 
+				break
+			end
 		end
 
-		self.pools[template] = pool
+		ObjectPoolMixin.Release(self, obj)
+	end
+
+	local function CreatePool(typePool, ...)
+		local pool
+
+		if typePool == "Button" then
+			local parent, frameTemplate = ...
+
+			pool = CreateFromMixins(FramePoolMixin, CollectionMixin)
+			pool:OnLoad("BUTTON", parent, frameTemplate, FramePool_HideAndClearAnchors)
+		elseif typePool == "FontString" then
+			local parent, layer, subLayer, fontStringTemplate = ...
+
+			pool = CreateFromMixins(FontStringPoolMixin, CollectionMixin)
+			pool:OnLoad(parent, layer, subLayer, fontStringTemplate, FontStringPool_HideAndClearAnchors)
+		end
+		pool.collection = QuestInfoRewardsFrame.collectionObjectFromPolls
 
 		return pool
 	end
 
-	local function CreateCollectionPool()
-		local poolCollection = CreateFromMixins(CollectionPollMixin)
-		FramePoolCollectionMixin.OnLoad(poolCollection)
-		return poolCollection;
+	QuestInfoRewardsFrame.collectionObjectFromPolls = {}
+	QuestInfoRewardsFrame.spellRewardPool = CreatePool("Button", QuestInfoRewardsFrame, "QuestSpellTemplate, QuestInfoRewardSpellCodeTemplate");
+	QuestInfoRewardsFrame.followerRewardPool = CreatePool("Button", QuestInfoRewardsFrame, "LargeQuestInfoRewardFollowerTemplate");
+	QuestInfoRewardsFrame.spellHeaderPool = CreatePool("FontString", QuestInfoRewardsFrame, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate");
+
+	CreateFrame("Frame", "GwQuestInfoProgress", QuestInfoFrame, "GwQuestInfoProgressTemplate")
+
+	local function QuestInfo_ShowHookObjectivesText()
+		local objectivesText = QuestInfo_ShowObjectivesText()
+		objectivesText:Show()
+
+		return objectivesText
 	end
 
+	local function QuestInfo_ShowProgressRequiredMoney()
+		local requiredMoney = GetQuestMoneyToGet()
+		if requiredMoney > 0 then
+			MoneyFrame_Update("QuestInfoRequiredMoneyDisplay", requiredMoney)
+			if requiredMoney > GetMoney() then
+				QuestInfoRequiredMoneyText:SetTextColor(0, 0, 0)
+				SetMoneyFrameColor("QuestInfoRequiredMoneyDisplay", "red")
+			else
+				QuestInfoRequiredMoneyText:SetTextColor(0.2, 0.2, 0.2);
+				SetMoneyFrameColor("QuestInfoRequiredMoneyDisplay", "white")
+			end
+	
+			QuestInfoRequiredMoneyFrame:Show()
+			return QuestInfoRequiredMoneyFrame
+		else
+			QuestInfoRequiredMoneyFrame:Hide()
+			return nil;
+		end
+	end
+	
+	local function QuestInfo_ShowProgressRequiredItems()
+		GwQuestInfoProgress.progressButtonPool:ReleaseAll()
+	
+		local lastAnchorElement
+		local totalHeight = 0	
+	
+		local numRequiredItems = GetNumQuestItems()
+		if numRequiredItems > 0 then
+			local numHiddenItem = 0
+	
+			GwQuestInfoProgress.RequiredTextItem:SetPoint("TOPLEFT", 0, -5)
+			GwQuestInfoProgress.RequiredTextItem:Show()
+			totalHeight = totalHeight + GwQuestInfoProgress.RequiredTextItem:GetHeight() + 5
+			lastAnchorElement = GwQuestInfoProgress.RequiredTextItem 
+	
+			for i = 1, numRequiredItems do
+				local hidden = IsQuestItemHidden(i);
+				if hidden == 0 then
+					local requiredItem = GwQuestInfoProgress.progressButtonPool:Acquire()
+					requiredItem.type = "required";
+					requiredItem.objectType = "item";
+					requiredItem:SetID(i)
+					local name, texture, numItems = GetQuestItemInfo(requiredItem.type, 1)
+					SetItemButtonCount(requiredItem, numItems)
+					SetItemButtonTexture(requiredItem, texture)
+					requiredItem:Show()
+					requiredItem.Name:SetText(name)
+	
+					if (i - numHiddenItem) % 2 == 1 then
+						requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "BOTTOMLEFT", 0, -5)
+						lastAnchorElement = requiredItem
+						totalHeight = totalHeight + requiredItem:GetHeight() + 5
+					else
+						requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "TOPRIGHT", 1, 0)
+					end
+				else
+					numHiddenItem = numHiddenItem + 1
+				end
+			end
+	
+			if numHiddenItem == numRequiredItems then
+				GwQuestInfoProgress.RequiredTextItem:Hide()
+				totalHeight = totalHeight - GwQuestInfoProgress.RequiredTextItem:GetHeight() - 5
+				lastAnchorElement = nil
+			end
+		else
+			GwQuestInfoProgress.RequiredTextItem:Hide()
+		end
+	
+		local numRequiredCurrencies = GetNumQuestCurrencies()
+		if numRequiredCurrencies > 0 then
+			if lastAnchorElement then
+				GwQuestInfoProgress.RequiredTextCurrencies:SetPoint("TOPLEFT", lastAnchorElement, "BOTTOMLEFT", 0, -5)
+			else
+				GwQuestInfoProgress.RequiredTextCurrencies:SetPoint("TOPLEFT", 0, -5)
+			end
+	
+			GwQuestInfoProgress.RequiredTextCurrencies:Show()
+			totalHeight = totalHeight + GwQuestInfoProgress.RequiredTextCurrencies:GetHeight() + 5
+			lastAnchorElement = GwQuestInfoProgress.RequiredTextCurrencies 
+	
+			for i=1, numRequiredCurrencies do
+				local requiredItem = GwQuestInfoProgress.progressButtonPool:Acquire()
+				requiredItem.type = "required";
+				requiredItem.objectType = "currency";
+				requiredItem:SetID(i);
+				local name, texture, numItems = GetQuestCurrencyInfo(requiredItem.type, 1);
+				SetItemButtonCount(requiredItem, numItems);
+				SetItemButtonTexture(requiredItem, texture);
+				requiredItem:Show();
+				requiredItem.Name:SetText(name)
+	
+				if i % 2 == 1 then
+					requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "BOTTOMLEFT", 0, -5)
+					lastAnchorElement = requiredItem
+					totalHeight = totalHeight + requiredItem:GetHeight() + 5
+				else
+					requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "TOPRIGHT", 1, 0)
+				end
+			end
+		else
+			GwQuestInfoProgress.RequiredTextCurrencies:Hide()
+		end
+	
+		if totalHeight > 0 then
+			GwQuestInfoProgress:SetHeight(totalHeight)
+			GwQuestInfoProgress:Show()
+			return GwQuestInfoProgress
+		else
+			GwQuestInfoProgress:Hide()
+			return nil	
+		end
+	end
+	
 	GW2_QUEST_DETAIL_TEMPLATE = {
 		chooseItems = nil, canHaveSealMaterial = false, 
 		elements = {		
-			QuestInfo_ShowObjectivesText, 0, 0,
+			QuestInfo_ShowHookObjectivesText, 0, 0,
 			QuestInfo_ShowSpecialObjectives, 0, -10,
 			QuestInfo_ShowGroupSize, 0, -10,
 			QuestInfo_ShowRewards, 0, -15,
@@ -685,23 +688,15 @@ local function LoadDetalies()
 	GW2_QUEST_COMPLETE_TEMPLATE = {
 		chooseItems = true, canHaveSealMaterial = false,
 		elements = {
-			QuestInfo_ShowRewardText, 0, 0,
 			QuestInfo_ShowRewards, 0, -10,
 		},
 		frames = {
-			"QuestInfoRewardText", 0,
-			"QuestInfoRewardsFrame", 10
+			"QuestInfoRewardsFrame", 0
 		}
 	}
 
-	QuestInfoRewardsFrame.spellRewardPool = CreateFramePool("BUTTON", QuestInfoRewardsFrame, "QuestSpellTemplate, QuestInfoRewardSpellCodeTemplate");
-	QuestInfoRewardsFrame.followerRewardPool = CreateFramePool("BUTTON", QuestInfoRewardsFrame, "LargeQuestInfoRewardFollowerTemplate");
-	QuestInfoRewardsFrame.spellHeaderPool = CreateFontStringPool(QuestInfoRewardsFrame, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate");
-
-	CreateFrame("Frame", "GwQuestInfoProgress", QuestInfoFrame, "GwQuestInfoProgressTemplate")
-
 	function QuestInfoItem_OnClick(self)
-		if ( self.type == "choice" ) then
+		if self.type == "choice" then
 			if QuestInfoFrame.itemChoice == self:GetID() then
 				GetQuestReward(QuestInfoFrame.itemChoice)
 			else
@@ -711,6 +706,7 @@ local function LoadDetalies()
 			end
 		end
 	end
+	
 end
 
 local function LoadImmersiveView()
@@ -737,13 +733,13 @@ local function LoadImmersiveView()
 	GwImmersiveFrame:SetScript("OnEvent", 
 		function (self, event, ...)
 			if IsIn(event, "QUEST_ITEM_UPDATE", "QUEST_LOG_UPDATE", "LEARNED_SPELL_IN_TAB", "UNIT_MODEL_CHANGED") and not self.GossipFrame:IsShown() then return end
-
+			print(event)
 			if not IsIn(event, "QUEST_ITEM_UPDATE", "QUEST_LOG_UPDATE", "LEARNED_SPELL_IN_TAB", "UNIT_MODEL_CHANGED") then
 				if LastEvent == "GOSSIP_SHOW" and event:match('^QUEST') then C_GossipInfo.CloseGossip() end
 
 				LastEvent = event
 			end
-			
+
 			if IsIn(event, "GOSSIP_SHOW", "QUEST_GREETING") then
 				local dialog 
 
@@ -756,7 +752,7 @@ local function LoadImmersiveView()
 							return
 						end
 					end
-
+					
 					if C_GossipInfo.GetNumAvailableQuests() == 0 and C_GossipInfo.GetNumActiveQuests() == 0 and C_GossipInfo.GetNumOptions() == 1 and not C_GossipInfo.ForceGossip() then
 						local gossipInfoTable = C_GossipInfo.GetOptions()
 						if gossipInfoTable[1].type ~= "gossip" then
@@ -898,8 +894,7 @@ local function LoadImmersiveView()
 	GwImmersiveFrame.GossipFrame = GetSetting("FULL_SCREEN") and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
 	GwImmersiveFrame.GossipFrame.FontColor()
 
-	LoadTitleButtonsMixin()
-	LoadTitleButtonsInfo()
+	LoadTitleButtons()
 	LoadDetalies()
 	LoadImmersiveModelInfo(GwNormalScreenGossipViewFrame.Models, GwFullScreenGossipViewFrame.Models)
 

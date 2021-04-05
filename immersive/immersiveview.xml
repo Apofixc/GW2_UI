@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 
-	<Button name="GwTitleButtonTemplate" hidden="true" virtual="true" mixin="GossipTitleButtonMixin">
+	<Button name="GwTitleButtonTemplate" hidden="true" virtual="true" mixin="GossipTitleButtonMixin, AdvanceGossipTitleButtonMixin">
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="Icon" file="Interface\QuestFrame\UI-Quest-BulletPoint">
@@ -11,22 +11,76 @@
 					</Anchors>
 				</Texture>
 			</Layer>
-		</Layers>
-		<Scripts>
-			<OnClick method="OnClick"/>
-			<OnShow method="OnShowAnimation"/>
-			<OnHide method="OnHideAnimation"/>
-			<OnEnter method="OnEnter"/>
-			<OnLeave method="OnLeave"/>
-		</Scripts>
-		<HighlightTexture parentKey="HighlightTexture" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+		</Layers>	
+		<NormalFont style="QuestFontLeft"/>	
 		<ButtonText>
 			<Anchors>
-				<Anchor point="LEFT" x="42" y="0"/>
+				<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="5" y="0"/>
 			</Anchors>
-			<Color a="1" r="1" g="1" b="1"/>
+			<Color r="1" g="1" b="1" a="1"/>
 		</ButtonText>
-		<NormalFont style="QuestFontLeft"/>
+		<HighlightTexture parentKey="HighlightTexture" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
+		<Animations>
+			<AnimationGroup parentKey="ShowIn">
+				<Scale parentKey="Scal" childKey="Glow" duration="0.7" startDelay="1" order="1" fromScaleX="0" fromScaleY="0" toScaleX="1" toScaleY="1"/>
+				<Alpha parentKey="Alpha" childKey="Glow" fromAlpha="0" toAlpha="1" duration="0.8" order="1"/>
+				<Translation parentKey="Move" childKey="Glow" duration="1" order="1"/>
+				<Scripts>
+					<OnPlay>
+						local parent = self:GetParent()
+						local id = parent:GetID();
+						local width = parent:GetWidth();	
+						local point, relativeTo, relativePoint, xOfs, yOfs = parent:GetPoint();
+						
+						self:GetParent():SetPoint(point, relativeTo, relativePoint, width, yOfs);
+						self.Scal:SetStartDelay(0.2 * id)
+						self.Alpha:SetStartDelay(0.2 * id)
+						self.Move:SetStartDelay(0.2 * id)
+						self.Move:SetOffset(-width, 0); 
+					</OnPlay>
+					<OnFinished>
+						local parent = self:GetParent()
+						local point, relativeTo, relativePoint, xOfs, yOfs = parent:GetPoint();
+
+						parent:SetPoint(point, relativeTo, relativePoint, 0, yOfs);
+					</OnFinished>
+				</Scripts>
+			</AnimationGroup>
+			<AnimationGroup parentKey="Highlight">
+				<Alpha parentKey="Alpha" childKey="Glow" targetKey="$parent.Icon" fromAlpha="1" toAlpha="0"  duration="1" order="1"/>
+				<Scripts>
+					<OnPlay>
+
+					</OnPlay>
+					<OnFinished>
+					</OnFinished>
+				</Scripts>
+			</AnimationGroup>
+		</Animations>
+		<Scripts>
+			<OnClick method="OnClick"/>
+			<OnShow>
+				self.ShowIn:Play();
+			</OnShow>
+
+			<OnHide>				
+				if self.ShowIn:IsPlaying() then 
+					self.ShowIn:Stop();
+				end
+
+				self.Icon:SetTexCoord(0, 1, 0, 1);
+			</OnHide>
+			<OnEnter>
+				self.Highlight:Play();
+				self:OnEnter();
+			</OnEnter>
+			<OnLeave>
+				if self.Highlight:IsPlaying() then 
+					self.Highlight:Stop();
+				end
+				self:OnLeave();
+			</OnLeave>
+		</Scripts>
 	</Button>
 
 	<Frame name="GwQuestInfoProgressTemplate" hidden="true" virtual="true">
@@ -67,7 +121,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="BORDER">
-				<Texture parentKey="Border" file="Interface/AddOns/GW2_UI/textures/questview/advanced/advanced_fs_gw2" setAllPoints="true">
+				<Texture parentKey="Border" file="Interface/AddOns/GW2_UI/Textures/gossipview/advanced_fs_gw2" setAllPoints="true">
 					<TexCoords left="0" right="1" top="0" bottom="0.5"/>
 				</Texture>
 			</Layer>
@@ -88,7 +142,7 @@
 						</Anchors>
 						<Layers>
 							<Layer level="BACKGROUND">
-								<Texture parentKey="Background" file="Interface/AddOns/GW2_UI/textures/questview/advanced/advanced_fs_gw2" setAllPoints="true"> 
+								<Texture parentKey="Background" file="Interface/AddOns/GW2_UI/Textures/gossipview/advanced_fs_gw2" setAllPoints="true"> 
 									<TexCoords left="0.635" right="0.993269" top="0.502" bottom="0.7842"/>
 								</Texture>
 							</Layer>
@@ -147,6 +201,9 @@
 				<ScrollChild>
 					<Frame parentKey="ScrollChildFrame" hidden="true">
 						<Size x="800" y="0"/>
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
+						</Anchors>
 					</Frame>
 				</ScrollChild>
 			</ScrollFrame>
@@ -246,7 +303,7 @@
 				</Anchors>
 				<Layers>
 					<Layer frameStrata="BACKGROUND">
-						<Texture parentKey="Background" file="Interface/AddOns/GW2_UI/textures/questview/advanced/advanced_fs_gw2" setAllPoints="true">
+						<Texture parentKey="Background" file="Interface/AddOns/GW2_UI/Textures/gossipview/advanced_fs_gw2" setAllPoints="true">
 							<TexCoords left="0.0017" right="0.3645" top="0.5" bottom="0.948"/>
 						</Texture>			
 					</Layer>
@@ -329,13 +386,13 @@
 	    <Size x="700" y="300"/>
 		<Layers>
             <Layer level="BACKGROUND">
-            	<Texture parentKey="Background" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_background">
+            	<Texture parentKey="Background" file="Interface/AddOns/GW2_UI/Textures/gossipview/ns_background">
 				   <Size x="700" y="300"/>
             	    <Anchors>
             	        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
             	    </Anchors>
             	</Texture>
-            	<Texture parentKey="Header" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_header">
+            	<Texture parentKey="Header" file="Interface/AddOns/GW2_UI/Textures/gossipview/ns_header">
             	    <Size x="700" y="40"/>
             	    <Anchors>
             	        <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-12" y="0"/>
@@ -363,7 +420,7 @@
 								</Anchors>
 								<Layers>
 									<Layer level="BACKGROUND">
-										<Texture file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_name" setAllPoints="true"/>
+										<Texture file="Interface/AddOns/GW2_UI/Textures/gossipview/ns_name" setAllPoints="true"/>
 									</Layer>
 									<Layer level="OVERLAY">
 										<FontString parentKey="Text" inherits="SystemFont_Outline_Small" setAllPoints="true" justifyH="CENTER" justifyV="CENTER"/>
@@ -385,7 +442,7 @@
 								</Anchors>
 								<Layers>
 									<Layer level="BACKGROUND">
-										<Texture file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_name" setAllPoints="true"/>
+										<Texture file="Interface/AddOns/GW2_UI/Textures/gossipview/ns_name" setAllPoints="true"/>
 									</Layer>
 									<Layer level="OVERLAY">
 										<FontString parentKey="Text" inherits="SystemFont_Outline_Small" justifyH="LEFT" justifyV="LEFT">
@@ -408,7 +465,7 @@
 				</Anchors>
 				<Layers>
 				    <Layer level="BACKGROUND">
-            		    <Texture file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_title" setAllPoints="true"/>
+            		    <Texture file="Interface/AddOns/GW2_UI/Textures/gossipview/ns_title" setAllPoints="true"/>
 					</Layer>
 					<Layer level="ARTWORK">
 						<FontString parentKey="Text" inherits="QuestFont_Outline_Huge" justifyH="CENTER" justifyV="CENTER" wordwrap="true">
@@ -439,13 +496,13 @@
 				</Anchors>
 				<Layers>
 					<Layer level="BACKGROUND">
-						<Texture file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_scroll_background">
+						<Texture file="Interface/AddOns/GW2_UI/Textures/gossipview/ns_scroll_background">
 							<Anchors>
 								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="-33" y="18"/>
 								<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
 							</Anchors>
 						</Texture>
-						<Texture parentKey="Icon" file="Interface/AddOns/GW2_UI/textures/questview/advanced/ns_player_say" hidden="true">
+						<Texture parentKey="Icon" file="Interface/AddOns/GW2_UI/Textures/gossipview/ns_player_say" hidden="true">
 							<Size x="30" y="20"/>
 							<Anchors>
 								<Anchor point="BOTTOMLEFT" relativeKey="$parent.$parent.Models.Player" relativePoint="BOTTOMRIGHT" x="-15" y="15"/>
@@ -544,7 +601,7 @@
 			<OnLoad>
 				self.mode = "NORMAL";
 				self.maxSizeText = 300
-				self.titleHighlightTexture = "Interface/AddOns/GW2_UI/textures/questview/advanced/ns_title_button_highlight"
+				self.titleHighlightTexture = "Interface/AddOns/GW2_UI/Textures/gossipview/ns_title_button_highlight"
 				self.FontColor = function()
 					IGNORED_QUEST_DISPLAY = "|cFF8C8C8C%s";
 					TRIVIAL_QUEST_DISPLAY = "|cffffffff%s";
