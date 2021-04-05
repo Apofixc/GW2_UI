@@ -43,6 +43,7 @@ GW.screenwidth, GW.screenHeight = GetPhysicalScreenSize()
 GW.resolution = format("%dx%d", GW.screenwidth, GW.screenHeight)
 GW.wowpatch, GW.wowbuild = GetBuildInfo()
 GW.wowbuild = tonumber(GW.wowbuild)
+GW.Gw2Color = "|cffffedba" -- Color used for chat prints or buttons
 
 GW.ScanTooltip = CreateFrame("GameTooltip", "GW2_UI_ScanTooltip", UIParent, "GameTooltipTemplate")
 GW.HiddenFrame = CreateFrame("Frame")
@@ -103,16 +104,16 @@ local function RemoveNPE(self, event)
         end
 
         if event then
-            NPERemoveFrame:UnregisterEvent(event)
+            self:UnregisterEvent(event)
         end
     end
 end
 
 if _G.NewPlayerExperience then
-    RemoveNPE()
+    RemoveNPE(NPERemoveFrame)
 else
     NPERemoveFrame:RegisterEvent("ADDON_LOADED")
-    NPERemoveFrame:SetScript("OnEvent",RemoveNPE)
+    NPERemoveFrame:SetScript("OnEvent", RemoveNPE)
 end
 
 local function AcknowledgeTips()

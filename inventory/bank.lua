@@ -156,7 +156,7 @@ local function setBagBarOrder(f)
 end
 GW.AddForProfiling("bank", "setBagBarOrder", setBagBarOrder)
 
-local function bag_OnClick(self, button, down)
+local function bag_OnClick(self, button)
     -- on left click, test if this is a purchase slot and do purchase confirm,
     -- otherwise ensure that the bag stays open despite default toggle behavior
     if button == "LeftButton" then
@@ -278,7 +278,7 @@ local function onBankResizeStop(self)
 end
 GW.AddForProfiling("bank", "onBankResizeStop", onBankResizeStop)
 
-local function onBankFrameChangeSize(self, width, height, skip)
+local function onBankFrameChangeSize(self, _, _, skip)
     local cols = inv.colCount(BANK_ITEM_SIZE, BANK_ITEM_PADDING, self:GetWidth())
 
     if not self.gw_bank_cols or self.gw_bank_cols ~= cols then
@@ -528,7 +528,7 @@ local function LoadBank(helpers)
     f.ReagentFrame.Containers[REAGENTBANK_CONTAINER] = cf
 
     -- anytime a ContainerFrame is populated with a bank bagId, we take its buttons
-    hooksecurefunc("ContainerFrame_GenerateFrame", function(frame, size, id)
+    hooksecurefunc("ContainerFrame_GenerateFrame", function(_, _, id)
         if id > NUM_BAG_SLOTS and id <= NUM_BAG_SLOTS + NUM_BANKBAGSLOTS then
             rescanBankContainers(f)
         end
@@ -620,7 +620,7 @@ local function LoadBank(helpers)
 
         dd.bagOrder.checkbutton:SetScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BANK_REVERSE_SORT")
                 dd.bagOrder.checkbutton:SetChecked(newStatus)
                 SetSetting("BANK_REVERSE_SORT", newStatus)
@@ -631,7 +631,7 @@ local function LoadBank(helpers)
 
         dd.itemBorder.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_ITEM_QUALITY_BORDER_SHOW")
                 dd.itemBorder.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_ITEM_QUALITY_BORDER_SHOW", newStatus)
@@ -643,7 +643,7 @@ local function LoadBank(helpers)
         dd.compactBank.checkbutton:SetChecked(GetSetting("BAG_ITEM_SIZE") == BANK_ITEM_COMPACT_SIZE)
         dd.bagOrder.checkbutton:SetChecked(GetSetting("BANK_REVERSE_SORT"))
         dd.itemBorder.checkbutton:SetChecked(GetSetting("BAG_ITEM_QUALITY_BORDER_SHOW"))
-        
+
         -- setup bag setting icons locals
         dd.compactBank.title:SetText(L["Compact Icons"])
         dd.bagOrder.title:SetText(L["Reverse Bag Order"])
@@ -690,7 +690,7 @@ local function LoadBank(helpers)
     f.DepositAll:SetText(REAGENTBANK_DEPOSIT)
     f.DepositAll:SetScript(
         "OnClick",
-        function(self)
+        function()
             DepositReagentBank()
         end
     )

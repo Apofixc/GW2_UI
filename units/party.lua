@@ -1,5 +1,4 @@
 local _, GW = ...
-local L = GW.L
 local TimeCount = GW.TimeCount
 local PowerBarColorCustom = GW.PowerBarColorCustom
 local GetSetting = GW.GetSetting
@@ -7,7 +6,6 @@ local DEBUFF_COLOR = GW.DEBUFF_COLOR
 local COLOR_FRIENDLY = GW.COLOR_FRIENDLY
 local Bar = GW.Bar
 local SetClassIcon = GW.SetClassIcon
-local AddToAnimation = GW.AddToAnimation
 local AddToClique = GW.AddToClique
 local CommaValue = GW.CommaValue
 local RoundDec = GW.RoundDec
@@ -72,7 +70,7 @@ local function updateAwayData(self)
         self.classicon:SetTexture("Interface/AddOns/GW2_UI/textures/party/readycheck")
         if readyCheckStatus == "waiting" then
             self.classicon:SetTexCoord(0, 1, 0, 0.25)
-        elseif eadyCheckStatus == "notready" then
+        elseif readyCheckStatus == "notready" then
             self.classicon:SetTexCoord(0, 1, 0.25, 0.50)
         elseif readyCheckStatus == "ready" then
             self.classicon:SetTexCoord(0, 1, 0.50, 0.75)
@@ -129,7 +127,7 @@ local function getUnitDebuffs(unit)
 
             if shouldDisplay then
                 debuffList[counter] = {}
-                
+
                 debuffList[counter].name = debuffName
                 debuffList[counter].icon = icon
                 debuffList[counter].count = count
@@ -167,48 +165,34 @@ local function updatePartyDebuffs(self, x, y)
     local unit = self.unit
     local debuffList = getUnitDebuffs(unit)
 
-    for i = 1, 40 do
-        local indexBuffFrame = _G["Gw" .. unit .. "DebuffItemFrame" .. i]
+    for i, debuffFrame in pairs(self.debuffFrames) do
         if debuffList[i] then
-            if indexBuffFrame == nil then
-                indexBuffFrame = CreateFrame("Frame", "Gw" .. unit .. "DebuffItemFrame" .. i, _G[self:GetName() .. "Auras"],  "GwDeBuffIcon")
-                indexBuffFrame:SetParent(_G[self:GetName() .. "Auras"])
+            debuffFrame.icon:SetTexture(debuffList[i].icon)
+            debuffFrame.icon:SetParent(debuffFrame)
 
-                _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "DeBuffBackground"]:SetVertexColor(COLOR_FRIENDLY[2].r, COLOR_FRIENDLY[2].g, COLOR_FRIENDLY[2].b)
-                _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "Cooldown"]:SetDrawEdge(0)
-                _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "Cooldown"]:SetDrawSwipe(1)
-                _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "Cooldown"]:SetReverse(1)
-                _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "Cooldown"]:SetHideCountdownNumbers(true)
-                indexBuffFrame:SetSize(24, 24)
-            end
-            _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "IconBuffIcon"]:SetTexture(debuffList[i].icon)
-            _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "IconBuffIcon"]:SetParent(_G["Gw" .. unit .. "DebuffItemFrame" .. i])
+            debuffFrame.expires = debuffList[i].expires
+            debuffFrame.duration = debuffList[i].duration
 
-            indexBuffFrame.expires = debuffList[i].expires
-            indexBuffFrame.duration = debuffList[i].duration
-
-            _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "DeBuffBackground"]:SetVertexColor(COLOR_FRIENDLY[2].r, COLOR_FRIENDLY[2].g, COLOR_FRIENDLY[2].b)
+            debuffFrame.background:SetVertexColor(COLOR_FRIENDLY[2].r, COLOR_FRIENDLY[2].g, COLOR_FRIENDLY[2].b)
             if debuffList[i].dispelType ~= nil and DEBUFF_COLOR[debuffList[i].dispelType] ~= nil then
-                _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "DeBuffBackground"]:SetVertexColor(DEBUFF_COLOR[debuffList[i].dispelType].r, DEBUFF_COLOR[debuffList[i].dispelType].g, DEBUFF_COLOR[debuffList[i].dispelType].b)
+                debuffFrame.background:SetVertexColor(DEBUFF_COLOR[debuffList[i].dispelType].r, DEBUFF_COLOR[debuffList[i].dispelType].g, DEBUFF_COLOR[debuffList[i].dispelType].b)
             end
 
-            _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "CooldownBuffDuration"]:SetText(debuffList[i].duration > 0 and TimeCount(debuffList[i].timeRemaining) or "")
-            _G["Gw" .. unit .. "DebuffItemFrame" .. i .. "IconBuffStacks"]:SetText((debuffList[i].count or 1) > 1 and debuffList[i].count or "")
-            indexBuffFrame:ClearAllPoints()
-            indexBuffFrame:SetPoint("BOTTOMRIGHT", (26 * x), 26 * y)
+            debuffFrame.cooldown.duration:SetText(debuffList[i].duration > 0 and TimeCount(debuffList[i].timeRemaining) or "")
+            debuffFrame.debuffIcon.stacks:SetText((debuffList[i].count or 1) > 1 and debuffList[i].count or "")
+            debuffFrame.debuffIcon.stacks:SetFont(UNIT_NAME_FONT, (debuffList[i].count or 1) > 9 and 11 or 14, "OUTLINE")
+            debuffFrame:ClearAllPoints()
+            debuffFrame:SetPoint("BOTTOMRIGHT", (26 * x), 26 * y)
 
-            indexBuffFrame:SetScript(
-                "OnEnter",
-                function()
-                    GameTooltip:SetOwner(indexBuffFrame, "ANCHOR_BOTTOMLEFT")
-                    GameTooltip:ClearLines()
-                    GameTooltip:SetUnitDebuff(unit, debuffList[i].key)
-                    GameTooltip:Show()
-                end
-            )
-            indexBuffFrame:SetScript("OnLeave", GameTooltip_Hide)
+            debuffFrame:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+                GameTooltip:ClearLines()
+                GameTooltip:SetUnitDebuff(unit, debuffList[i].key)
+                GameTooltip:Show()
+            end)
+            debuffFrame:SetScript("OnLeave", GameTooltip_Hide)
 
-            indexBuffFrame:Show()
+            debuffFrame:Show()
 
             x = x + 1
             if x > 8 then
@@ -216,9 +200,9 @@ local function updatePartyDebuffs(self, x, y)
                 x = 0
             end
         else
-            if indexBuffFrame then
-                indexBuffFrame:Hide()
-            end
+            debuffFrame:Hide()
+            debuffFrame:SetScript("OnEnter", nil)
+            debuffFrame:SetScript("OnLeave", nil)
         end
     end
 end
@@ -263,46 +247,31 @@ local function updatePartyAuras(self)
     local unit = self.unit
 
     local buffList = getUnitBuffs(unit)
-    local fname = self:GetName()
 
-    for i = 1, 40 do
-        local indexBuffFrame = _G["Gw" .. unit .. "BuffItemFrame" .. i]
+    for i, buffFrame in pairs(self.buffFrames) do
         if buffList[i] then
-            if indexBuffFrame == nil then
-                indexBuffFrame = CreateFrame("Button", "Gw" .. unit .. "BuffItemFrame" .. i, _G[fname .. "Auras"], "GwBuffIconBig")
-                indexBuffFrame:RegisterForClicks("RightButtonUp")
-                _G[indexBuffFrame:GetName() .. "BuffDuration"]:SetFont(UNIT_NAME_FONT, 11)
-                _G[indexBuffFrame:GetName() .. "BuffDuration"]:SetTextColor(1, 1, 1)
-                _G[indexBuffFrame:GetName() .. "BuffStacks"]:SetFont(UNIT_NAME_FONT, 11, "OUTLINED")
-                _G[indexBuffFrame:GetName() .. "BuffStacks"]:SetTextColor(1, 1, 1)
-                indexBuffFrame:SetParent(_G[fname .. "Auras"])
-                indexBuffFrame:SetSize(20, 20)
-            end
-            local margin = -indexBuffFrame:GetWidth() + -2
-            local marginy = indexBuffFrame:GetWidth() + 12
-            _G["Gw" .. unit .. "BuffItemFrame" .. i .. "BuffIcon"]:SetTexture(buffList[i].icon)
-            _G["Gw" .. unit .. "BuffItemFrame" .. i .. "BuffIcon"]:SetParent(_G["Gw" .. unit .. "BuffItemFrame" .. i])
+            local margin = -buffFrame:GetWidth() + -2
+            local marginy = buffFrame:GetWidth() + 5
+            buffFrame.buffIcon:SetTexture(buffList[i].icon)
+            buffFrame.buffIcon:SetParent(buffFrame)
 
-            indexBuffFrame.expires = buffList[i].expires
-            indexBuffFrame.duration = buffList[i].duration
+            buffFrame.expires = buffList[i].expires
+            buffFrame.duration = buffList[i].duration
 
-            _G["Gw" .. unit .. "BuffItemFrame" .. i .. "BuffDuration"]:SetText("")
-            _G["Gw" .. unit .. "BuffItemFrame" .. i .. "BuffStacks"]:SetText((buffList[i].count or 1) > 1 and buffList[i].count or "")
-            indexBuffFrame:ClearAllPoints()
-            indexBuffFrame:SetPoint("BOTTOMRIGHT", (-margin * x), marginy * y)
+            buffFrame.buffDuration:SetText("")
+            buffFrame.buffStacks:SetText((buffList[i].count or 1) > 1 and buffList[i].count or "")
+            buffFrame:ClearAllPoints()
+            buffFrame:SetPoint("BOTTOMRIGHT", (-margin * x), marginy * y)
 
-            indexBuffFrame:SetScript(
-                "OnEnter",
-                function()
-                    GameTooltip:SetOwner(indexBuffFrame, "ANCHOR_BOTTOMLEFT", 28, 0)
-                    GameTooltip:ClearLines()
-                    GameTooltip:SetUnitBuff(unit, buffList[i].key)
-                    GameTooltip:Show()
-                end
-            )
-            indexBuffFrame:SetScript("OnLeave", GameTooltip_Hide)
+            buffFrame:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 28, 0)
+                GameTooltip:ClearLines()
+                GameTooltip:SetUnitBuff(unit, buffList[i].key)
+                GameTooltip:Show()
+            end)
+            buffFrame:SetScript("OnLeave", GameTooltip_Hide)
 
-            indexBuffFrame:Show()
+            buffFrame:Show()
 
             x = x + 1
             if x > 8 then
@@ -310,12 +279,9 @@ local function updatePartyAuras(self)
                 x = 0
             end
         else
-            if indexBuffFrame then
-                indexBuffFrame:Hide()
-                indexBuffFrame:SetScript("OnEnter", nil)
-                indexBuffFrame:SetScript("OnClick", nil)
-                indexBuffFrame:SetScript("OnLeave", nil)
-            end
+            buffFrame:Hide()
+            buffFrame:SetScript("OnEnter", nil)
+            buffFrame:SetScript("OnLeave", nil)
         end
     end
     updatePartyDebuffs(self, x, y)
@@ -339,7 +305,7 @@ local function setUnitName(self)
     if UnitIsGroupLeader(self.unit) then
         nameString = "|TInterface/AddOns/GW2_UI/textures/party/icon-groupleader:18:18:0:-3|t" .. nameString
     end
-    
+
     self.name:SetText(nameString)
 end
 GW.AddForProfiling("party", "setUnitName", setUnitName)
@@ -364,7 +330,7 @@ local function setHealthValue(self, healthCur, healthMax, healthPrec)
         self.healthstring:SetText(healthstring)
         self.healthstring:SetJustifyH("RIGHT")
     end
-    if healthCur == 0 then 
+    if healthCur == 0 then
         self.healthstring:SetTextColor(255, 0, 0)
     else
         self.healthstring:SetTextColor(1, 1, 1)
@@ -374,7 +340,7 @@ end
 GW.AddForProfiling("party", "setHealthValue", setHealthValue)
 
 local function setHealPrediction(self, predictionPrecentage)
-    self.predictionbar:SetValue(predictionPrecentage)    
+    self.predictionbar:SetValue(predictionPrecentage)
 end
 GW.AddForProfiling("party", "setHealPrediction", setHealPrediction)
 
@@ -449,7 +415,7 @@ local function updatePartyData(self)
 end
 GW.AddForProfiling("party", "updatePartyData", updatePartyData)
 
-local function party_OnEvent(self, event, unit, arg1)
+local function party_OnEvent(self, event, unit)
     if not UnitExists(self.unit) or IsInRaid() then
         return
     end
@@ -552,24 +518,17 @@ local function createPartyFrame(i)
     if i > 0 then
         RegisterUnitWatch(frame)
     else
-        RegisterStateDriver(
-        frame,
-        "visibility",
-        "[group:raid] hide; [group:party] show; hide"
-    )
+        RegisterStateDriver(frame, "visibility", "[group:raid] hide; [group:party] show; hide")
     end
     frame:EnableMouse(true)
     frame:RegisterForClicks("AnyUp")
 
     frame:SetScript("OnLeave", GameTooltip_Hide)
-    frame:SetScript(
-        "OnEnter",
-        function()
-            GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
-            GameTooltip:SetUnit(registerUnit)
-            GameTooltip:Show()
-        end
-    )
+    frame:SetScript("OnEnter", function()
+        GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
+        GameTooltip:SetUnit(registerUnit)
+        GameTooltip:Show()
+    end)
 
     AddToClique(frame)
 
@@ -603,6 +562,32 @@ local function createPartyFrame(i)
     frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", registerUnit)
     frame:RegisterUnitEvent("UNIT_THREAT_SITUATION_UPDATE", registerUnit)
     frame:RegisterUnitEvent("UNIT_PORTRAIT_UPDATE", registerUnit)
+
+    -- create de/buff frames
+    frame.buffFrames = {}
+    frame.debuffFrames = {}
+    for k = 1, 40 do
+        local debuffFrame = CreateFrame("Frame", nil, frame.auras,  "GwDeBuffIcon")
+        debuffFrame:SetParent(frame.auras)
+        debuffFrame.background:SetVertexColor(COLOR_FRIENDLY[2].r, COLOR_FRIENDLY[2].g, COLOR_FRIENDLY[2].b)
+        debuffFrame.cooldown:SetDrawEdge(0)
+        debuffFrame.cooldown:SetDrawSwipe(1)
+        debuffFrame.cooldown:SetReverse(1)
+        debuffFrame.cooldown:SetHideCountdownNumbers(true)
+        debuffFrame:SetSize(24, 24)
+
+        frame.debuffFrames[k] = debuffFrame
+
+        local buffFrame = CreateFrame("Button", nil, frame.auras, "GwBuffIconBig")
+        buffFrame.buffDuration:SetFont(UNIT_NAME_FONT, 11)
+        buffFrame.buffDuration:SetTextColor(1, 1, 1)
+        buffFrame.buffStacks:SetFont(UNIT_NAME_FONT, 11, "OUTLINED")
+        buffFrame.buffStacks:SetTextColor(1, 1, 1)
+        buffFrame:SetParent(frame.auras)
+        buffFrame:SetSize(20, 20)
+
+        frame.buffFrames[k] = buffFrame
+    end
 
     party_OnEvent(frame, "load")
 

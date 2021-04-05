@@ -1,4 +1,5 @@
 local _, GW = ...
+local L = GW.L
 local CommaValue = GW.CommaValue
 local AddToClique = GW.AddToClique
 local Self_Hide = GW.Self_Hide
@@ -7,7 +8,7 @@ local IsIn = GW.IsIn
 local MixinHideDuringPetAndOverride = GW.MixinHideDuringPetAndOverride
 local GetSetting = GW.GetSetting
 
-local function repair_OnEvent(self, event, ...)
+local function repair_OnEvent(self, event)
     if event ~= "PLAYER_ENTERING_WORLD" and not GW.inWorld then
         return
     end
@@ -161,11 +162,11 @@ local function updateHealthData(self, anims)
     self.text_h.value:SetText(hv)
     self.text_a.value:SetText(av)
 
-    for i, v in ipairs(self.text_h.shadow) do
+    for _, v in ipairs(self.text_h.shadow) do
         v:SetText(hv)
     end
 
-    for i, v in ipairs(self.text_a.shadow) do
+    for _, v in ipairs(self.text_a.shadow) do
         v:SetText(av)
     end
 
@@ -200,7 +201,7 @@ end
 GW.PlayerSelectPvp = selectPvp
 GW.AddForProfiling("healthglobe", "selectPvp", selectPvp)
 
-local function globe_OnEvent(self, event, ...)
+local function globe_OnEvent(self, event)
     if event == "PLAYER_ENTERING_WORLD" then
         MixinHideDuringPetAndOverride(self)
         updateHealthData(self, false)
@@ -237,16 +238,26 @@ local function globe_OnEnter(self)
             if pvpactive then
                 local pvpTime = GetPVPTimer()
                 if pvpTime > 0 and pvpTime < 301000 then
-                    local _, nMin, nSec, _ = TimeParts(pvpTime)
-                    GameTooltip_AddNormalLine(
-                        GameTooltip,
-                        TIME_REMAINING .. " " .. string.format(TIMER_MINUTES_DISPLAY, nMin, nSec)
-                    )
+                    local _, nMin, nSec = TimeParts(pvpTime)
+                    GameTooltip_AddNormalLine(GameTooltip, TIME_REMAINING .. " " .. string.format(TIMER_MINUTES_DISPLAY, nMin, nSec))
                 end
                 GameTooltip_AddNormalLine(GameTooltip, PVP_TOGGLE_OFF_VERBOSE, true)
             else
                 GameTooltip_AddNormalLine(GameTooltip, PVP_WARMODE_TOGGLE_OFF, true)
             end
+        end
+    end
+
+    if IsInRaid() then
+        local groupNumber
+        for i = 1, GetNumGroupMembers() do
+            if UnitIsUnit("raid" .. i, "player") then
+                groupNumber = select(3, GetRaidRosterInfo(i))
+            end
+        end
+        if groupNumber then
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(format(QUEST_SUGGESTED_GROUP_NUM_TAG, groupNumber), 1, 1, 1)
         end
     end
     GameTooltip:Show()
@@ -310,7 +321,7 @@ local function LoadHealthGlobe()
     hg:RegisterForClicks("AnyUp")
 
     -- setup masking textures
-    for i, v in ipairs(hg.fill.masked) do
+    for _, v in ipairs(hg.fill.masked) do
         v:AddMaskTexture(hg.fill.mask)
     end
 
@@ -433,7 +444,7 @@ local function LoadHealthGlobe()
     fadeIn:SetToAlpha(1.0)
     fadeIn:SetDuration(0.1)
 
-    pvp.fadeOut = function(self)
+    pvp.fadeOut = function()
         pagIn:Stop()
         pagOut:Stop()
         pagOut:Play()

@@ -211,10 +211,10 @@ GW.AddForProfiling("inventory", "hookItemQuality", hookItemQuality)
 local function hookQuestItemBorder(self)
     local id = self:GetID()
     local name = self:GetName()
-    
-    for i=1, self.size, 1 do
+
+    for i = 1, self.size, 1 do
         local itemButton = _G[name .. "Item" .. i]
-        local isQuestItem, questId, _ = GetContainerItemQuestInfo(id, itemButton:GetID())
+        local isQuestItem, questId = GetContainerItemQuestInfo(id, itemButton:GetID())
         if itemButton.IconQuestTexture then
             if questId or isQuestItem then
                 itemButton.IconQuestTexture:SetTexture("Interface/AddOns/GW2_UI/textures/bag/stancebar-border")
@@ -255,7 +255,7 @@ local function getContainerFrame(bag_id)
 end
 GW.AddForProfiling("inventory", "getContainerFrame", getContainerFrame)
 
-local function freeItemButtons(cf, p, bag_id)
+local function freeItemButtons(cf, p)
     -- return all of the ItemButtons we previously took before taking new ones, as long as
     -- we are still the frame that took them to start with (bank/bag might have grabbed
     -- them from each other in the mean-time)
@@ -423,7 +423,7 @@ GW.AddForProfiling("inventory", "bag_OnMouseDown", bag_OnMouseDown)
 -- positions ItemButtons fluidly for this container
 local function layoutContainerFrame(cf, max_col, row, col, rev, item_off)
     if not cf or not cf.gw_num_slots or cf.gw_num_slots <= 0 then
-        return col, row
+        return col, row, false, 0
     end
     
     local unfinishedRow = false
@@ -645,7 +645,7 @@ local function LoadInventory()
     _G["BINDING_HEADER_GW2UI_INVENTORY_BINDINGS"] = INVENTORY_TOOLTIP
     _G["BINDING_NAME_GW2UI_BAG_SORT"] = BAG_CLEANUP_BAGS
     _G["BINDING_NAME_GW2UI_BANK_SORT"] = BAG_CLEANUP_BANK
-    
+
     item_size = GetSetting("BAG_ITEM_SIZE")
 
     -- anytime a ContainerFrame has its anchors set, we re-hide it
@@ -688,7 +688,7 @@ local function LoadInventory()
     helpers.onSizerMouseUp = onSizerMouseUp
     helpers.onMoverDragStart = onMoverDragStart
     helpers.onMoverDragStop = onMoverDragStop
-    
+
     bag_resize = GW.LoadBag(helpers)
     bank_resize = GW.LoadBank(helpers)
 

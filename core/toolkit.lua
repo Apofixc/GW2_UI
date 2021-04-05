@@ -175,7 +175,7 @@ local function SkinCheckButton(button)
     if button.SetDisabledTexture then button:SetDisabledTexture("Interface/AddOns/GW2_UI/textures/uistuff/window-close-button-normal") end
 end
 
-function SkinSliderFrame(frame)
+local function SkinSliderFrame(frame)
     local orientation = frame:GetOrientation()
     local SIZE = 12
 
@@ -188,7 +188,7 @@ function SkinSliderFrame(frame)
 
     local thumb = frame:GetThumbTexture()
     thumb:SetSize(SIZE - 2, SIZE - 2)
-    
+
     local tex = frame:CreateTexture("bg", "BACKGROUND")
     tex:SetTexture("Interface/AddOns/GW2_UI/textures/uistuff/sliderbg")
     frame.tex = tex
@@ -464,7 +464,7 @@ local function HandleNextPrevButton(button, arrowDir)
     end
 
     button:StripTextures()
-    
+
     button:SetNormalTexture("Interface/AddOns/GW2_UI/Textures/uistuff/arrowup_down")
     button:SetPushedTexture("Interface/AddOns/GW2_UI/Textures/uistuff/arrowup_down")
     button:SetDisabledTexture("Interface/AddOns/GW2_UI/Texturesuistuff//arrowup_down")

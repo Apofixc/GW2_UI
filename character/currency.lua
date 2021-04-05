@@ -363,9 +363,9 @@ local function raidInfoSetup(raidinfo)
 end
 GW.AddForProfiling("currency", "raidInfoSetup", raidInfoSetup)
 
-local function menuItem_OnClick(self, button)
+local function menuItem_OnClick(self)
     local menuItems = self:GetParent().items
-    for k, v in pairs(menuItems) do
+    for _, v in pairs(menuItems) do
         v:SetNormalTexture(nil)
         v.ToggleMe:Hide()
     end
@@ -389,15 +389,9 @@ local function LoadCurrency(tabContainer)
     -- update currency window when a currency update event occurs
     curwin:SetScript(
         "OnEvent",
-        function(self, event, ...)
-            if not GW.inWorld then
-                return
-            end
-            if event == "CURRENCY_DISPLAY_UPDATE" then
-                if self:IsShown() then
-                    loadCurrency(self)
-                end
-            --watchCurrency()
+        function(self)
+            if GW.inWorld and self:IsShown() then
+                loadCurrency(self)
             end
         end
     )
@@ -422,14 +416,9 @@ local function LoadCurrency(tabContainer)
     -- update currency window when a currency update event occurs
     raidinfo:SetScript(
         "OnEvent",
-        function(self, event, ...)
-            if not GW.inWorld then
-                return
-            end
-            if event == "UPDATE_INSTANCE_INFO" then
-                if self:IsShown() then
-                    loadRaidInfo(self)
-                end
+        function(self)
+            if GW.inWorld and self:IsShown() then
+                loadRaidInfo(self)
             end
         end
     )
@@ -450,7 +439,7 @@ local function LoadCurrency(tabContainer)
     item = CreateFrame("Button", "RaidInfoFrame", fmMenu, "GwCharacterMenuButtonTemplate")
     item.ToggleMe = raidinfo
     item:SetScript("OnClick", menuItem_OnClick)
-    item:SetText(RAID_INFO)
+    item:SetText(RAID_INFORMATION)
     item:ClearAllPoints()
     item:SetPoint("TOPLEFT", fmMenu.items["currency"], "BOTTOMLEFT")
     fmMenu.items["raidinfo"] = item

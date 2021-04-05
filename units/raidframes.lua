@@ -326,7 +326,7 @@ local function updateAwayData(self)
         self.classicon:SetTexture("Interface/AddOns/GW2_UI/textures/party/readycheck")
         if readyCheckStatus == "waiting" then
             self.classicon:SetTexCoord(0, 1, 0, 0.25)
-        elseif eadyCheckStatus == "notready" then
+        elseif readyCheckStatus == "notready" then
             self.classicon:SetTexCoord(0, 1, 0.25, 0.50)
         elseif readyCheckStatus == "ready" then
             self.classicon:SetTexCoord(0, 1, 0.50, 0.75)
@@ -380,20 +380,19 @@ end
 local function showDebuffIcon(parent, i, btnIndex, x, y, filter, icon, count, debuffType, duration, expires)
     local size = 16
     local marginX, marginY = x * (size + 2), y * (size + 2)
-    local name = "Gw" .. parent:GetName() .. "DeBuffItemFrame" .. btnIndex
-    local frame = _G[name]
+    local frame = _G["Gw" .. parent:GetName() .. "DeBuffItemFrame" .. btnIndex]
 
     if not frame then
-        frame = CreateFrame("Button", name, parent, "GwDeBuffIcon")
+        frame = CreateFrame("Button", "Gw" .. parent:GetName() .. "DeBuffItemFrame" .. btnIndex, parent, "GwDeBuffIcon")
         frame:SetParent(parent)
         frame:SetFrameStrata("MEDIUM")
         frame:SetSize(size, size)
         frame:ClearAllPoints()
         frame:SetPoint("BOTTOMLEFT", parent.healthbar, "BOTTOMLEFT", marginX + 3, marginY + 3)
 
-        _G[name .. "Icon"]:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
-        _G[name .. "Icon"]:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
-        
+        frame.debuffIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
+        frame.debuffIcon:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
+
         frame:SetScript("OnEnter", onDebuffEnter)
         frame:SetScript("OnLeave", GameTooltip_Hide)
         frame:SetScript("OnMouseUp", onDebuffMouseUp)
@@ -420,9 +419,9 @@ local function showDebuffIcon(parent, i, btnIndex, x, y, filter, icon, count, de
     frame.index = i
     frame.filter = filter
 
-    _G[frame:GetName() .. "CooldownBuffDuration"]:SetText(expires and TimeCount(expires - GetTime()) or 0)
-    _G[frame:GetName() .. "IconBuffStacks"]:SetText((count or 1) > 1 and count or "")
-    _G[frame:GetName() .. "IconBuffStacks"]:SetFont(UNIT_NAME_FONT, (count or 1) > 9 and 9 or 14)
+    frame.cooldown.duration:SetText(expires and TimeCount(expires - GetTime()) or 0)
+    frame.debuffIcon.stacks:SetText((count or 1) > 1 and count or "")
+    frame.debuffIcon.stacks:SetFont(UNIT_NAME_FONT, (count or 1) > 9 and 9 or 14)
 
     frame:Show()
 
@@ -516,21 +515,20 @@ end
 local function showBuffIcon(parent, i, btnIndex, x, y, icon, isMissing)
     local size = 14
     local marginX, marginY = x * (size + 2), y * (size + 2)
-    local name = "Gw" .. parent:GetName() .. "BuffItemFrame" .. btnIndex
-    local frame = _G[name]
+    local frame = _G["Gw" .. parent:GetName() .. "BuffItemFrame" .. btnIndex]
 
     if not frame then
-        frame = CreateFrame("Button", name, parent, "GwBuffIconBig")
+        frame = CreateFrame("Button", "Gw" .. parent:GetName() .. "BuffItemFrame" .. btnIndex, parent, "GwBuffIconBig")
         frame:SetParent(parent)
         frame:SetFrameStrata("MEDIUM")
         frame:SetSize(14, 14)
         frame:ClearAllPoints()
         frame:SetPoint("BOTTOMRIGHT", parent.healthbar, "BOTTOMRIGHT", -(marginX + 3), marginY + 3)
 
-        _G[name .. "BuffDuration"]:SetFont(UNIT_NAME_FONT, 11)
-        _G[name .. "BuffDuration"]:SetTextColor(1, 1, 1)
-        _G[name .. "BuffStacks"]:SetFont(UNIT_NAME_FONT, 11, "OUTLINED")
-        _G[name .. "BuffStacks"]:SetTextColor(1, 1, 1)
+        frame.buffDuration:SetFont(UNIT_NAME_FONT, 11)
+        frame.buffDuration:SetTextColor(1, 1, 1)
+        frame.buffStacks:SetFont(UNIT_NAME_FONT, 11, "OUTLINED")
+        frame.buffStacks:SetTextColor(1, 1, 1)
 
         frame:SetScript("OnEnter", onBuffEnter)
         frame:SetScript("OnLeave", GameTooltip_Hide)
@@ -542,10 +540,10 @@ local function showBuffIcon(parent, i, btnIndex, x, y, icon, isMissing)
     frame.index = i
     frame.isMissing = isMissing
 
-    _G[name .. "BuffIcon"]:SetTexture(icon)
-    _G[name .. "BuffIcon"]:SetVertexColor(1, isMissing and .75 or 1, isMissing and .75 or 1)
-    _G[name .. "BuffDuration"]:SetText("")
-    _G[name .. "BuffStacks"]:SetText("")
+    frame.buffIcon:SetTexture(icon)
+    frame.buffIcon:SetVertexColor(1, isMissing and .75 or 1, isMissing and .75 or 1)
+    frame.buffDuration:SetText("")
+    frame.buffStacks:SetText("")
 
     frame:Show()
 
@@ -570,7 +568,7 @@ local function updateBuffs(self)
 
     -- missing buffs
     if not UnitIsDeadOrGhost(self.unit) then
-        
+
         repeat
             i, name = i + 1, UnitBuff(self.unit, i)
             if name and missing[name] then
@@ -665,7 +663,7 @@ local function updateBuffs(self)
 
                                     shouldDisplay = false
                                 end
-                                
+
                                 frame:Show()
                             end
                         end
@@ -690,7 +688,7 @@ local function updateAuras(self)
 end
 GW.AddForProfiling("raidframes", "updateAuras", updateAuras)
 
-local function raidframe_OnEvent(self, event, unit, arg1)
+local function raidframe_OnEvent(self, event, unit)
     if event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
         -- Enable or disable mouse handling on aura frames
         local name, enable = self:GetName(), event == "PLAYER_REGEN_ENABLED" or GetSetting("RAID_AURA_TOOLTIP_IN_COMBAT")
@@ -903,7 +901,7 @@ local function PositionRaidFrame(frame, parent, i, grow1, grow2, cells1, sizePer
     if not isV then
         dir1, dir2 = dir2, dir1
     end
-    
+
     local pos1, pos2 = dir1 * ((i - 1) % cells1), dir2 * (ceil(i / cells1) - 1)
 
     local a = (isU and "BOTTOM" or "TOP") .. (isR and "LEFT" or "RIGHT")
@@ -960,7 +958,7 @@ local function ToggleRaidFramesPreview()
         GwRaidFrameContainer.gwMover:SetMovable(true)
         UpdateRaidFramesPosition()
     end
-    GwToggleRaidPreview:SetText(previewStep == 0 and "-" or previewSteps[previewStep])
+    GwSettingsRaidPanel.buttonRaidPreview:SetText(previewStep == 0 and "-" or previewSteps[previewStep])
 end
 
 local function sortByRole()
@@ -968,7 +966,7 @@ local function sortByRole()
     local roleIndex = {"TANK", "HEALER", "DAMAGER", "NONE"}
     local unitString = IsInRaid() and "raid" or "party"
 
-    for k, v in pairs(roleIndex) do
+    for _, v in pairs(roleIndex) do
         if unitString == "party" and UnitGroupRolesAssigned("player") == v then
             tinsert(sorted, "player")
         end
@@ -1059,7 +1057,7 @@ local function createRaidFrame(registerUnit, index)
         hooksecurefunc(
             frame.healthbar,
             "SetStatusBarColor",
-            function(bar, r, g, b, a)
+            function(_, r, g, b, a)
                 frame.healthbar.spark:SetVertexColor(r, g, b, a)
             end
         )
@@ -1212,22 +1210,21 @@ local function LoadRaidFrames()
     UpdateRaidFramesPosition()
     UpdateRaidFramesLayout()
 
-    GwToggleRaidPreview:SetScript("OnClick", ToggleRaidFramesPreview)
-    GwToggleRaidPreview:SetScript("OnEnter", function(self)
+    GwSettingsRaidPanel.buttonRaidPreview:SetScript("OnClick", ToggleRaidFramesPreview)
+    GwSettingsRaidPanel.buttonRaidPreview:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 28, 0)
         GameTooltip:ClearLines()
         GameTooltip:AddLine(L["Preview Raid Frames"], 1, 1, 1)
         GameTooltip:AddLine(L["Click to toggle raid frame preview and cycle through different group sizes."], 1, 1, 1)
         GameTooltip:Show()
     end)
-    GwToggleRaidPreview:SetScript("OnLeave", GameTooltip_Hide)
+    GwSettingsRaidPanel.buttonRaidPreview:SetScript("OnLeave", GameTooltip_Hide)
     GwSettingsWindowMoveHud:HookScript("OnClick", function ()
         hudMoving = true
         if previewStep == 0 then
             ToggleRaidFramesPreview()
         end
     end)
-    GwToggleRaidPreview.label:SetText(PREVIEW)
 
     GwRaidFrameContainer:RegisterEvent("RAID_ROSTER_UPDATE")
     GwRaidFrameContainer:RegisterEvent("GROUP_ROSTER_UPDATE")

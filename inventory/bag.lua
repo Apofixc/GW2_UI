@@ -4,10 +4,7 @@ local CommaValue = GW.CommaValue
 local GetSetting = GW.GetSetting
 local SetSetting = GW.SetSetting
 local UpdateMoney = GW.UpdateMoney
-local GetStorage = GW.GetStorage
-local ClearStorage = GW.ClearStorage
 local EnableTooltip = GW.EnableTooltip
-local FormatMoneyForChat = GW.FormatMoneyForChat
 local inv
 
 local BAG_ITEM_SIZE = 40
@@ -15,8 +12,6 @@ local BAG_ITEM_LARGE_SIZE = 40
 local BAG_ITEM_COMPACT_SIZE = 32
 local BAG_ITEM_PADDING = 5
 local BAG_WINDOW_SIZE = 480
-
-local BAG1
 
 local IterationCount = 500
 local SellJunkFrame = CreateFrame("FRAME")
@@ -41,7 +36,6 @@ local function sellJunk()
             CurrentItemLink = GetContainerItemLink(BagID, BagSlot)
             if CurrentItemLink then
                 _, _, Rarity, _, _, _, _, _, _, _, ItemPrice = GetItemInfo(CurrentItemLink)
-                local _, itemCount = GetContainerItemInfo(BagID, BagSlot)
                 if Rarity == 0 and ItemPrice ~= 0 then
                     SoldCount = SoldCount + 1
                     if MerchantFrame:IsShown() then
@@ -73,20 +67,20 @@ end
 local function SellJunkFrame_OnEvent(self, event)
     if event == "MERCHANT_SHOW" then
         -- Reset variables
-        totalPrice, mBagID, mBagSlot = 0, -1, -1
+        mBagID, mBagSlot = -1, -1
         -- Do nothing if shift key is held down
         if IsShiftKeyDown() then return end
         -- Cancel existing ticker if present
         if SellJunkTicker then SellJunkTicker:Cancel() end
         -- Sell grey items using ticker (ends when all grey items are sold or iteration count reached)
         SellJunkTicker = C_Timer.NewTicker(0.2, sellJunk, IterationCount)
-        SellJunkFrame:RegisterEvent("ITEM_LOCKED")
-        SellJunkFrame:RegisterEvent("ITEM_UNLOCKED")
+        self:RegisterEvent("ITEM_LOCKED")
+        self:RegisterEvent("ITEM_UNLOCKED")
     elseif event == "ITEM_LOCKED" then
         GwBagFrame.smsj:Show()
-        SellJunkFrame:UnregisterEvent("ITEM_LOCKED")
+        self:UnregisterEvent("ITEM_LOCKED")
     elseif event == "ITEM_UNLOCKED" then
-        SellJunkFrame:UnregisterEvent("ITEM_UNLOCKED")
+        self:UnregisterEvent("ITEM_UNLOCKED")
         -- Check whether vendor refuses to buy items
         if mBagID and mBagSlot and mBagID ~= -1 and mBagSlot ~= -1 then
             local _, count, locked = GetContainerItemInfo(mBagID, mBagSlot)
@@ -123,7 +117,7 @@ local function setBagHeaders()
             local r, g, b = 1, 1, 1
             local itemName, _, itemRarity = GetItemInfo(itemID)
             if itemRarity then r, g, b = GetItemQualityColor(itemRarity) end
-            
+
             _G["GwBagFrameGwBagHeader" .. i].nameString:SetText(strlen(customBagHeaderName) > 0 and customBagHeaderName or itemName and itemName or UNKNOWN)
             _G["GwBagFrameGwBagHeader" .. i].nameString:SetTextColor(r, g, b, 1)
         else
@@ -143,7 +137,7 @@ local function layoutBagItems(f)
     local row = sep and 1 or 0
     local item_off = BAG_ITEM_SIZE + BAG_ITEM_PADDING
     local unfinishedRow = false
-    local finishedRow = 0
+    local finishedRows = 0
 
     local iS = BACKPACK_CONTAINER
     local iE = NUM_BAG_SLOTS
@@ -180,7 +174,7 @@ local function layoutBagItems(f)
         end
 
         if unfinishedRow then f:GetParent().unfinishedRow = f:GetParent().unfinishedRow  + 1 end
-        if finishedRows then f:GetParent().finishedRow = f:GetParent().finishedRow + finishedRows end
+        f:GetParent().finishedRow = f:GetParent().finishedRow + finishedRows
 
         if not rev and bag_id < 4 then 
             slotID = GetInventorySlotInfo("Bag" .. bag_id .. "Slot")
@@ -317,7 +311,7 @@ local function setBagBarOrder(f)
 end
 GW.AddForProfiling("bag", "setBagBarOrder", setBagBarOrder)
 
-local function bag_OnClick(self, button, down)
+local function bag_OnClick(self, button)
     -- on left click, ensure that the bag stays open despite default toggle behavior
     if button == "LeftButton" then
         if self.gwHasBag and not IsBagOpen(self:GetBagID()) then
@@ -421,7 +415,7 @@ local function onBagResizeStop(self)
 end
 GW.AddForProfiling("bag", "onBagResizeStop", onBagResizeStop)
 
-local function onBagFrameChangeSize(self, width, height, skip)
+local function onBagFrameChangeSize(self, _, _, skip)
     local cols = inv.colCount(BAG_ITEM_SIZE, BAG_ITEM_PADDING, self:GetWidth())
 
     if not self.gw_bag_cols or self.gw_bag_cols ~= cols then
@@ -515,7 +509,8 @@ local function bag_OnShow(self)
     end
 
     updateBagBar(self.ItemFrame)
-    updateBagContainers(self)
+    --updateBagContainers(self) -- Already triggered in 'rescanBagContainers'
+    rescanBagContainers(self)
 end
 GW.AddForProfiling("bag", "bag_OnShow", bag_OnShow)
 
@@ -684,9 +679,9 @@ local function LoadBag(helpers)
     end
 
     -- anytime a ContainerFrame is populated with a backpack bagId, we take its buttons
-    hooksecurefunc("ContainerFrame_GenerateFrame", function(frame, size, id)
+    hooksecurefunc("ContainerFrame_GenerateFrame", function(frame, _, id)
         if id >= BACKPACK_CONTAINER and id <= NUM_BAG_SLOTS then
-            rescanBagContainers(f)
+            --rescanBagContainers(f) -- Testing if this is causing the delay
             if frame.ExtraBagSlotsHelpBox then
                 local h = frame.ExtraBagSlotsHelpBox
                 h:ClearAllPoints()
@@ -724,7 +719,7 @@ local function LoadBag(helpers)
     -- setup settings button and its dropdown items
     f.buttonSort:HookScript(
         "OnClick",
-        function(self)
+        function()
             PlaySound(SOUNDKIT.UI_BAG_SORTING_01)
             SortBags()
         end
@@ -766,7 +761,7 @@ local function LoadBag(helpers)
 
         dd.newOrder.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_REVERSE_NEW_LOOT")
                 SetInsertItemsLeftToRight(newStatus)
                 dd.newOrder.checkbutton:SetChecked(newStatus)
@@ -777,7 +772,7 @@ local function LoadBag(helpers)
 
         dd.sortOrder.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_ITEMS_REVERSE_SORT")
                 SetSortBagsRightToLeft(newStatus)
                 dd.sortOrder.checkbutton:SetChecked(newStatus)
@@ -788,7 +783,7 @@ local function LoadBag(helpers)
 
         dd.bagOrder.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_REVERSE_SORT")
                 dd.bagOrder.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_REVERSE_SORT", newStatus)
@@ -800,7 +795,7 @@ local function LoadBag(helpers)
 
         dd.itemBorder.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_ITEM_QUALITY_BORDER_SHOW")
                 dd.itemBorder.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_ITEM_QUALITY_BORDER_SHOW", newStatus)
@@ -811,7 +806,7 @@ local function LoadBag(helpers)
 
         dd.junkIcon.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_ITEM_JUNK_ICON_SHOW")
                 dd.junkIcon.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_ITEM_JUNK_ICON_SHOW", newStatus)
@@ -822,7 +817,7 @@ local function LoadBag(helpers)
 
         dd.scrapIcon.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_ITEM_SCRAP_ICON_SHOW")
                 dd.scrapIcon.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_ITEM_SCRAP_ICON_SHOW", newStatus)
@@ -833,7 +828,7 @@ local function LoadBag(helpers)
 
         dd.upgradeIcon.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_ITEM_UPGRADE_ICON_SHOW")
                 dd.upgradeIcon.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_ITEM_UPGRADE_ICON_SHOW", newStatus)
@@ -844,7 +839,7 @@ local function LoadBag(helpers)
 
         dd.professionColor.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_PROFESSION_BAG_COLOR")
                 dd.professionColor.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_PROFESSION_BAG_COLOR", newStatus)
@@ -855,7 +850,7 @@ local function LoadBag(helpers)
 
         dd.vendorGrays.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_VENDOR_GRAYS")
                 dd.vendorGrays.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_VENDOR_GRAYS", newStatus)
@@ -866,7 +861,7 @@ local function LoadBag(helpers)
 
         dd.showItemLvl.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_SHOW_ILVL")
                 dd.showItemLvl.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_SHOW_ILVL", newStatus)
@@ -877,7 +872,7 @@ local function LoadBag(helpers)
 
         dd.separateBags.checkbutton:HookScript(
             "OnClick",
-            function(self)
+            function()
                 local newStatus = not GetSetting("BAG_SEPARATE_BAGS")
                 dd.separateBags.checkbutton:SetChecked(newStatus)
                 SetSetting("BAG_SEPARATE_BAGS", newStatus)
@@ -931,29 +926,20 @@ local function LoadBag(helpers)
     f.moneyFrame:SetScript("OnClick", GW.Money_OnClick)
 
     -- update money when applicable
-    f.moneyFrame:SetScript(
-        "OnEvent",
-        function(self, event, ...)
-            if not GW.inWorld then
-                return
-            end
-            if event == "PLAYER_MONEY" then
-                updateMoney(self:GetParent())
-            end
+    f.moneyFrame:SetScript("OnEvent", function(self)
+        if GW.inWorld then
+            updateMoney(self:GetParent())
         end
-    )
+    end)
     f.moneyFrame:RegisterEvent("PLAYER_MONEY")
     updateMoney(f)
 
-    f.currency:SetScript(
-        "OnClick",
-        function(self, button)
-            -- TODO: cannot do this properly until we make the whole bag frame secure
-            if not InCombatLockdown() then
-                ToggleCharacter("TokenFrame")
-            end
+    f.currency:SetScript("OnClick", function()
+        -- TODO: cannot do this properly until we make the whole bag frame secure
+        if not InCombatLockdown() then
+            ToggleCharacter("TokenFrame")
         end
-    )
+    end)
 
     -- setup watch currencies
     f.currency1:SetFont(UNIT_NAME_FONT, 12)
@@ -964,54 +950,39 @@ local function LoadBag(helpers)
     f.currency3:SetTextColor(1, 1, 1)
 
     -- set warch currencies tooltips
-    f.currency1Frame:SetScript(
-        "OnEnter",
-        function(self)
-            if not self.CurrencyIdx then
-                return
-            end
-            GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-            GameTooltip:ClearLines()
-            GameTooltip:SetCurrencyToken(self.CurrencyIdx)
-            GameTooltip:Show()
+    f.currency1Frame:SetScript("OnEnter", function(self)
+        if not self.CurrencyIdx then
+            return
         end
-    )
-    f.currency2Frame:SetScript(
-        "OnEnter",
-        function(self)
-            if not self.CurrencyIdx then
-                return
-            end
-            GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-            GameTooltip:ClearLines()
-            GameTooltip:SetCurrencyToken(self.CurrencyIdx)
-            GameTooltip:Show()
+        GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+        GameTooltip:ClearLines()
+        GameTooltip:SetCurrencyToken(self.CurrencyIdx)
+        GameTooltip:Show()
+    end)
+    f.currency2Frame:SetScript("OnEnter", function(self)
+        if not self.CurrencyIdx then
+            return
         end
-    )
-    f.currency3Frame:SetScript(
-        "OnEnter",
-        function(self)
-            if not self.CurrencyIdx then
-                return
-            end
-            GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-            GameTooltip:ClearLines()
-            GameTooltip:SetCurrencyToken(self.CurrencyIdx)
-            GameTooltip:Show()
+        GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+        GameTooltip:ClearLines()
+        GameTooltip:SetCurrencyToken(self.CurrencyIdx)
+        GameTooltip:Show()
+    end)
+    f.currency3Frame:SetScript("OnEnter", function(self)
+        if not self.CurrencyIdx then
+            return
         end
-    )
+        GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+        GameTooltip:ClearLines()
+        GameTooltip:SetCurrencyToken(self.CurrencyIdx)
+        GameTooltip:Show()
+    end)
 
-    f.currency:SetScript(
-        "OnEvent",
-        function(self, event, ...)
-            if not GW.inWorld then
-                return
-            end
-            if event == "CURRENCY_DISPLAY_UPDATE" then
-                watchCurrency(self:GetParent())
-            end
+    f.currency:SetScript("OnEvent", function(self)
+        if GW.inWorld then
+            watchCurrency(self:GetParent())
         end
-    )
+    end)
     f.currency:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
     hooksecurefunc(
         C_CurrencyInfo, "SetCurrencyBackpack",
@@ -1045,7 +1016,7 @@ local function LoadBag(helpers)
     smsj.text:SetText(L["Selling junk"])
 
     f.smsj = smsj
-    
+
     StaticPopupDialogs["GW_CHANGE_BAG_HEADER"] = {
         text = L["New Bag Name"],
         button1 = SAVE,
@@ -1056,13 +1027,13 @@ local function LoadBag(helpers)
             _G["GwBagFrameGwBagHeader" .. data].nameString:SetText(self.editBox:GetText())
             return
         end,
-        OnButton2 = function(self, data)
+        OnButton2 = function(_, data)
             SetSetting("BAG_HEADER_NAME" .. data, "")
 
             if tonumber(data) > 0 then
                 local slotID = GetInventorySlotInfo("Bag" .. data - 1 .. "Slot")
                 local itemID = GetInventoryItemID("player", slotID)
-            
+
                 if itemID then
                     local r, g, b = 1, 1, 1
                     local itemName, _, itemRarity = GetItemInfo(itemID)

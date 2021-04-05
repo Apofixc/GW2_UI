@@ -61,7 +61,7 @@ local actionBarEquipUpdate
 local actionBar_OnUpdate
 
 local function hideBlizzardsActionbars()
-    for k, v in pairs(GW_BLIZZARD_HIDE_FRAMES) do
+    for _, v in pairs(GW_BLIZZARD_HIDE_FRAMES) do
         if v and v.Hide ~= nil then
             v:Hide()
             if v.UnregisterAllEvents ~= nil then
@@ -69,7 +69,7 @@ local function hideBlizzardsActionbars()
             end
         end
     end
-    for k, object in pairs(GW_BLIZZARD_FORCE_HIDE) do
+    for _, object in pairs(GW_BLIZZARD_FORCE_HIDE) do
         if object:IsObjectType("Frame") then
             object:UnregisterAllEvents()
             object:SetScript("OnEnter", nil)
@@ -98,7 +98,7 @@ end
 GW.AddActionBarCallback = AddActionBarCallback
 
 local function stateChanged()
-    for k, v in pairs(callback) do
+    for _, v in pairs(callback) do
         v()
     end
 end
@@ -118,7 +118,6 @@ local function FlyoutDirection(actionbar)
                 arrowDistance = 5
             end
 
-            local direction = "AUTOMATIC"
             local point = GW.GetScreenQuadrant(actionbar)
 
             if point ~= "UNKNOWN" then
@@ -317,7 +316,7 @@ local function createFaderAnim(self, state)
     bar.fadeTimer = -1
 end
 
-local function updateHotkey(self, actionButtonType)
+local function updateHotkey(self)
     local hotkey = self.HotKey
     local text = hotkey:GetText()
 
@@ -440,7 +439,7 @@ local function setActionButtonStyle(buttonName, noBackDrop, hideUnused, isStance
 end
 GW.AddForProfiling("Actionbars2", "setActionButtonStyle", setActionButtonStyle)
 
-local function main_OnEvent(self, event, ...)
+local function main_OnEvent(self, event)
     if event == "PLAYER_EQUIPMENT_CHANGED" then
         actionBarEquipUpdate()
     elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
@@ -450,7 +449,7 @@ local function main_OnEvent(self, event, ...)
 end
 GW.AddForProfiling("Actionbars2", "main_OnEvent", main_OnEvent)
 
-local function updateMainBar(toggle)
+local function updateMainBar()
     local fmActionbar = MainMenuBarArtFrame
 
     local used_height = MAIN_MENU_BAR_BUTTON_SIZE
@@ -705,7 +704,7 @@ local function updateMultiBar(lm, barName, buttonName, actionPage, state)
 end
 GW.AddForProfiling("Actionbars2", "updateMultiBar", updateMultiBar)
 
-local function stance_OnEvent(self, event, ...)
+local function stance_OnEvent(_, _, ...)
     local unit = ...
     if InCombatLockdown() or unit ~= "player" then
         return
@@ -1054,7 +1053,7 @@ local function changeFlyoutStyle(self)
     if not self.FlyoutArrow then
         return
     end
-    
+
     self.FlyoutBorder:Hide()
     self.FlyoutBorderShadow:Hide()
     SpellFlyoutHorizontalBackground:SetTexture("Interface/AddOns/GW2_UI/textures/uistuff/UI-Tooltip-Background")
@@ -1139,5 +1138,26 @@ local function LoadActionBars(lm)
         ExtraActionBarFrame:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 130)
         ExtraActionBarFrame:SetFrameStrata("MEDIUM")
     end
+
+    local HIDE_MOST = {
+        GwStanceBarButton = "hidden",
+        StanceButton1 = "hidden",
+        StanceButton2 = "hidden",
+        StanceButton3 = "hidden",
+        StanceButton4 = "hidden",
+        StanceButton5 = "hidden",
+        StanceButton6 = "hidden",
+    -- Add new frames/ buttons to hide
+    }
+
+    FRAMELOCK_STATES.COMMENTATOR_SPECTATING_MODE = Mixin(FRAMELOCK_STATES.COMMENTATOR_SPECTATING_MODE, HIDE_MOST)
+    FRAMELOCK_STATES.PETBATTLES = Mixin(FRAMELOCK_STATES.PETBATTLES, HIDE_MOST)
+
+    --ActionBarController:HookScript("OnEvent", function(_, event)
+        --if event == "UPDATE_BONUS_ACTIONBAR" then
+            --ActionBarController_ResetToDefault()
+            --ValidateActionBarTransition()
+        --end
+    --end)
 end
 GW.LoadActionBars = LoadActionBars

@@ -139,7 +139,7 @@ local function updateActiveSpec()
         return
     end
 
-    setSpecTabIconAndTooltip(GwspellbookTab3)
+    setSpecTabIconAndTooltip(GwSpellbookMenu.tab3)
 
     for i = 1, GetNumSpecializations() do
         local container = _G["GwSpecFrame" .. i]
@@ -166,7 +166,7 @@ local function updateActiveSpec()
                 local button = _G["GwSpecFrameSpec" .. i .. "Teir" .. row .. "index" .. index]
                 local talentID, _, texture, selected, available, spellid, _, _, _, _, known = GetTalentInfo(row, index, 1, false, "player")
 
-                if not availible then
+                if not available then
                     allAvalible = false
                 end
                 if not selected then
@@ -281,7 +281,7 @@ local function loadTalents()
     local fnContainer_OnHide = function(self)
         self:SetScript("OnUpdate", nil)
     end
-    local fnContainer_OnClick = function(self, button)
+    local fnContainer_OnClick = function(self)
         if not self.active and C_SpecializationInfo.CanPlayerUseTalentSpecUI() then
             SetSpecialization(self.specIndex)
         end
@@ -342,7 +342,7 @@ local function loadTalents()
             end
             PickupSpell(self.spellId)
         end
-        local fnTalentButton_OnClick = function(self, button)
+        local fnTalentButton_OnClick = function(self)
             if IsModifiedClick("CHATLINK") then
                 local link = GetSpellLink(self.spellId)
                 ChatEdit_InsertLink(link)
@@ -380,8 +380,7 @@ local function loadTalents()
                 end
             end
             if i == 1 then
-                local numberDisplay =
-                    CreateFrame("Frame", "GwTalentsLevelLabel" .. row, GwSpecContainerFrame, "GwTalentsLevelLabel")
+                local numberDisplay = CreateFrame("Frame", "GwTalentsLevelLabel" .. row, GwSpecContainerFrame, "GwTalentsLevelLabel")
                 numberDisplay.title:SetFont(DAMAGE_TEXT_FONT, 14)
                 numberDisplay.title:SetTextColor(0.7, 0.7, 0.7, 1)
                 numberDisplay.title:SetShadowColor(0, 0, 0, 0)
@@ -473,7 +472,7 @@ local spellButtonSecure_OnDragStart =
     return "clear", "spell", spellId
     ]=]
 
-local function setButton(btn, spellId, skillType, icon, spellbookIndex, booktype, tab, name)
+local function setButton(btn, spellId, skillType, icon, spellbookIndex, booktype)
     btn.isFuture = (skillType == "FUTURESPELL")
     btn.spellbookIndex = spellbookIndex
     btn.booktype = booktype
@@ -739,7 +738,7 @@ local function updateTab(fmSpellbook)
     for tab = 1, 5 do
         local fmTab = fmSpellbook.tabContainers[tab]
         if tab == 4 then
-            UpdatePvPTab(fmSpellbook, fmTab)
+            UpdatePvPTab(fmTab)
         else
             updateRegTab(fmSpellbook, fmTab, tab)
         end
@@ -747,7 +746,7 @@ local function updateTab(fmSpellbook)
 end
 GW.AddForProfiling("talents", "updateTab", updateTab)
 
-local function spellMenu_OnUpdate(self, elapsed)
+local function spellMenu_OnUpdate(self)
     self:SetScript("OnUpdate", nil)
     updateTab(self)
     self.queuedUpdateTab = false
@@ -764,7 +763,7 @@ local function queueUpdateTab(fm)
 end
 GW.AddForProfiling("talents", "queueUpdateTab", queueUpdateTab)
 
-local function talentFrame_OnUpdate(self, elapsed)
+local function talentFrame_OnUpdate(self)
     self:SetScript("OnUpdate", nil)
     updateActiveSpec()
     self.queuedUpdateActiveSpec = false
@@ -789,7 +788,7 @@ local function spellTab_OnEnter(self)
 end
 GW.AddForProfiling("talents", "spellTab_OnEnter", spellTab_OnEnter)
 
-local function activePoolCommon_Resetter(self, btn)
+local function activePoolCommon_Resetter(_, btn)
     btn:EnableMouse(false)
     btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     btn:RegisterForDrag("LeftButton")
@@ -798,7 +797,7 @@ local function activePoolCommon_Resetter(self, btn)
     btn.autocast:Hide()
     btn:SetScript("OnEnter", spellButton_OnEnter)
     btn:SetScript("OnLeave", GameTooltip_Hide)
-    btn:SetScript("OnEvent", spellButton_OnEvent)
+    btn:SetScript("OnEvent", SpellButton_OnEvent) --spellButton_OnEvent??
     btn:SetAttribute("flyout", nil)
     btn:SetAttribute("flyoutDirection", nil)
     btn:SetAttribute("type1", nil)
@@ -831,7 +830,7 @@ local function activePoolNSD_Resetter(self, btn)
 end
 GW.AddForProfiling("talents", "activePoolNSD_Resetter", activePoolNSD_Resetter)
 
-local function passivePool_Resetter(self, btn)
+local function passivePool_Resetter(_, btn)
     btn:EnableMouse(false)
     btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     btn:Hide()
@@ -1043,7 +1042,7 @@ local function LoadTalents(tabContainer)
     GwSpecContainerFrame:SetPoint("TOPLEFT", GwTalentFrame, "TOPLEFT")
     GwSpecContainerFrame:SetPoint("BOTTOMRIGHT", GwTalentFrame, "BOTTOMRIGHT")
 
-    local fmSpellbook = CreateFrame("Frame", nil, GwTalentFrame, "GwSpellbookMenu")
+    local fmSpellbook = CreateFrame("Frame", "GwSpellbookMenu", GwTalentFrame, "GwSpellbookMenu")
     -- TODO: change this to do all attribute stuff on container instead of menu
     GwCharacterWindow:SetFrameRef("GwSpellbookMenu", fmSpellbook)
 
@@ -1075,57 +1074,69 @@ local function LoadTalents(tabContainer)
     loadTalents()
     updateTab(fmSpellbook)
 
-    GwspellbookTab1:SetFrameRef("GwSpellbookMenu", fmSpellbook)
-    GwspellbookTab1:SetAttribute(
+    fmSpellbook.tab1:SetFrameRef("GwSpellbookMenu", fmSpellbook)
+    fmSpellbook.tab1:SetAttribute(
         "_onclick",
         [=[
         self:GetFrameRef('GwSpellbookMenu'):SetAttribute('tabopen',1)
         ]=]
     )
-    GwspellbookTab2:SetFrameRef("GwSpellbookMenu", fmSpellbook)
-    GwspellbookTab2:SetAttribute(
+    fmSpellbook.tab2:SetFrameRef("GwSpellbookMenu", fmSpellbook)
+    fmSpellbook.tab2:SetAttribute(
         "_onclick",
         [=[
         self:GetFrameRef('GwSpellbookMenu'):SetAttribute('tabopen',2)
         ]=]
     )
-    GwspellbookTab3:SetFrameRef("GwSpellbookMenu", fmSpellbook)
-    GwspellbookTab3:SetAttribute(
+    fmSpellbook.tab3:SetFrameRef("GwSpellbookMenu", fmSpellbook)
+    fmSpellbook.tab3:SetAttribute(
         "_onclick",
         [=[
         self:GetFrameRef('GwSpellbookMenu'):SetAttribute('tabopen',3)
         ]=]
     )
-    GwspellbookTab4:SetFrameRef("GwSpellbookMenu", fmSpellbook)
-    GwspellbookTab4:SetAttribute(
+    fmSpellbook.tab4:SetFrameRef("GwSpellbookMenu", fmSpellbook)
+    fmSpellbook.tab4:SetAttribute(
         "_onclick",
         [=[
         self:GetFrameRef('GwSpellbookMenu'):SetAttribute('tabopen',4)
         ]=]
     )
-    GwspellbookTab5:SetFrameRef("GwSpellbookMenu", fmSpellbook)
-    GwspellbookTab5:SetAttribute(
+    fmSpellbook.tab5:SetFrameRef("GwSpellbookMenu", fmSpellbook)
+    fmSpellbook.tab5:SetAttribute(
         "_onclick",
         [=[
         self:GetFrameRef('GwSpellbookMenu'):SetAttribute('tabopen',5)
         ]=]
     )
 
-    fmSpellbook:SetFrameRef("GwspellbookTab1", GwspellbookTab1)
-    fmSpellbook:SetFrameRef("GwspellbookTab2", GwspellbookTab2)
-    fmSpellbook:SetFrameRef("GwspellbookTab3", GwspellbookTab3)
-    fmSpellbook:SetFrameRef("GwspellbookTab4", GwspellbookTab4)
-    fmSpellbook:SetFrameRef("GwspellbookTab5", GwspellbookTab5)
+    fmSpellbook:SetFrameRef("GwspellbookTab1", fmSpellbook.tab1)
+    fmSpellbook:SetFrameRef("GwspellbookTab2", fmSpellbook.tab2)
+    fmSpellbook:SetFrameRef("GwspellbookTab3", fmSpellbook.tab3)
+    fmSpellbook:SetFrameRef("GwspellbookTab4", fmSpellbook.tab4)
+    fmSpellbook:SetFrameRef("GwspellbookTab5", fmSpellbook.tab5)
     fmSpellbook:SetFrameRef("GwSpecContainerFrame", GwSpecContainerFrame)
-    fmSpellbook.UnselectAllTabs = function(self)
-        GwspellbookTab1.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
-        GwspellbookTab2.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
-        GwspellbookTab3.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
-        GwspellbookTab4.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
-        GwspellbookTab5.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
+    fmSpellbook.UnselectAllTabs = function()
+        fmSpellbook.tab1.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
+        fmSpellbook.tab2.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
+        fmSpellbook.tab3.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
+        fmSpellbook.tab4.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
+        fmSpellbook.tab5.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg_inactive")
     end
-    fmSpellbook.SelectTab = function(self, tab)
-        _G["GwspellbookTab" .. tab].background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg")
+    fmSpellbook.SelectTab = function(_, tab)
+        local frame
+        if tab == 1 then
+            frame = fmSpellbook.tab1
+        elseif tab == 2 then
+            frame = fmSpellbook.tab2
+        elseif tab == 3 then
+            frame = fmSpellbook.tab3
+        elseif tab == 4 then
+            frame = fmSpellbook.tab4
+        elseif tab == 5 then
+            frame = fmSpellbook.tab5
+        end
+        frame.background:SetTexture("Interface/AddOns/GW2_UI/textures/talents/spellbooktab_bg")
     end
     fmSpellbook:SetAttribute(
         "_onattributechanged",
@@ -1165,26 +1176,26 @@ local function LoadTalents(tabContainer)
     fmSpellbook:SetAttribute("tabOpen", 2)
 
     local _, specName, _ = GetSpecializationInfo(GW.myspec)
-    GwspellbookTab1.gwTipLabel = GENERAL_SPELLS
-    GwspellbookTab2.gwTipLabel = GW.myLocalizedClass
-    GwspellbookTab3.gwTipLabel = specName
-    GwspellbookTab4.gwTipLabel = PVP_LABEL_PVP_TALENTS
-    GwspellbookTab5.gwTipLabel = PET
+    fmSpellbook.tab1.gwTipLabel = GENERAL_SPELLS
+    fmSpellbook.tab2.gwTipLabel = GW.myLocalizedClass
+    fmSpellbook.tab3.gwTipLabel = specName
+    fmSpellbook.tab4.gwTipLabel = PVP_LABEL_PVP_TALENTS
+    fmSpellbook.tab5.gwTipLabel = PET
 
-    GwspellbookTab1:SetScript("OnEnter", spellTab_OnEnter)
-    GwspellbookTab1:SetScript("OnLeave", GameTooltip_Hide)
-    GwspellbookTab2:SetScript("OnEnter", spellTab_OnEnter)
-    GwspellbookTab2:SetScript("OnLeave", GameTooltip_Hide)
-    GwspellbookTab3:SetScript("OnEnter", spellTab_OnEnter)
-    GwspellbookTab3:SetScript("OnLeave", GameTooltip_Hide)
-    GwspellbookTab4:SetScript("OnEnter", spellTab_OnEnter)
-    GwspellbookTab4:SetScript("OnLeave", GameTooltip_Hide)
-    GwspellbookTab5:SetScript("OnEnter", spellTab_OnEnter)
-    GwspellbookTab5:SetScript("OnLeave", GameTooltip_Hide)
+    fmSpellbook.tab1:SetScript("OnEnter", spellTab_OnEnter)
+    fmSpellbook.tab1:SetScript("OnLeave", GameTooltip_Hide)
+    fmSpellbook.tab2:SetScript("OnEnter", spellTab_OnEnter)
+    fmSpellbook.tab2:SetScript("OnLeave", GameTooltip_Hide)
+    fmSpellbook.tab3:SetScript("OnEnter", spellTab_OnEnter)
+    fmSpellbook.tab3:SetScript("OnLeave", GameTooltip_Hide)
+    fmSpellbook.tab4:SetScript("OnEnter", spellTab_OnEnter)
+    fmSpellbook.tab4:SetScript("OnLeave", GameTooltip_Hide)
+    fmSpellbook.tab5:SetScript("OnEnter", spellTab_OnEnter)
+    fmSpellbook.tab5:SetScript("OnLeave", GameTooltip_Hide)
 
     -- set tab 2/3 to class/spec icon
-    SetClassIcon(GwspellbookTab2.icon, GW.myClassID)
-    setSpecTabIconAndTooltip(GwspellbookTab3)
+    SetClassIcon(fmSpellbook.tab2.icon, GW.myClassID)
+    setSpecTabIconAndTooltip(fmSpellbook.tab3)
 
     GwTalentFrame:HookScript(
         "OnShow",

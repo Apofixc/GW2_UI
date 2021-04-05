@@ -21,7 +21,7 @@ do
     local myRealm = gsub(GW.myrealm, "[%s%-]", "")
     local myName = GW.myname .. "-" .. myRealm
     local printChatMessage = false
-    local function SendRecieve(self, event, prefix, message, _, sender)
+    local function SendRecieve(_, event, prefix, message, _, sender)
         if event == "CHAT_MSG_ADDON" then
             if sender == myName then return end
             if prefix == "GW2UI_VERSIONCHK" then
@@ -43,7 +43,7 @@ do
 
                 if isUpdate and not printChatMessage then
                     GW.FrameFlash(updateIcon, 1, 0.3, 1, true)
-                    DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r " .. updateIcon.tooltipText)
+                    DEFAULT_CHAT_FRAME:AddMessage(("*GW2 UI:|r " .. updateIcon.tooltipText):gsub("*", GW.Gw2Color))
                     updateIcon:Show()
                     printChatMessage = true
                 end
@@ -115,7 +115,7 @@ local function updateGuildButton(self, event)
 end
 GW.AddForProfiling("micromenu", "updateGuildButton", updateGuildButton)
 
-local function updateQuestLogButton(self, event)
+local function updateQuestLogButton(_, event)
     if event ~= "QUEST_LOG_UPDATE" then
         return
     end
@@ -451,7 +451,7 @@ local function setupMicroButtons(mbf)
     greatVaultIcon.tooltipText = RATED_PVP_WEEKLY_VAULT
     reskinMicroButton(greatVaultIcon, "GreatVaultMicroButton", mbf)
     greatVaultIcon:ClearAllPoints()
-    greatVaultIcon:SetPoint("BOTTOMLEFT", StoreMicroButton, "BOTTOMRIGHT", 4, 0)
+    greatVaultIcon:SetPoint("BOTTOMLEFT", IsAddOnLoaded("Dominos") and HelpMicroButton or StoreMicroButton, "BOTTOMRIGHT", 4, 0)
     greatVaultIcon:SetScript("OnMouseUp", function(self, button, upInside)
         if button == "LeftButton" and upInside and self:IsEnabled() then
             GW.StopFlash(self) -- Hide flasher if playing
@@ -466,6 +466,7 @@ local function setupMicroButtons(mbf)
     greatVaultIcon:SetEnabled(IsPlayerAtEffectiveMaxLevel())
     greatVaultIcon:RegisterEvent("PLAYER_LEVEL_UP")
     greatVaultIcon:RegisterEvent("WEEKLY_REWARDS_UPDATE")
+    greatVaultIcon:RegisterEvent("PLAYER_ENTERING_WORLD")
     greatVaultIcon:SetScript("OnEvent", function(self, event, ...)
         if event == "PLAYER_LEVEL_UP" then
             local level = ...
@@ -473,14 +474,16 @@ local function setupMicroButtons(mbf)
                 self:SetEnabled(true)
                 GW.FrameFlash(self, 1, 0.3, 1, true)
             end
-        elseif event == "WEEKLY_REWARDS_UPDATE" then
-            if C_WeeklyRewards.HasAvailableRewards() then
-                self.tooltipText = RATED_PVP_WEEKLY_VAULT .. "\n" .. GW.RGBToHex(GREEN_FONT_COLOR:GetRGB()) .. MYTHIC_PLUS_COLLECT_GREAT_VAULT .. "|r"
-                GW.FrameFlash(self, 1, 0.3, 1, true)
-            else
-                self.tooltipText = RATED_PVP_WEEKLY_VAULT
-                GW.StopFlash(self)
-            end
+        elseif event == "WEEKLY_REWARDS_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
+            C_Timer.After(0.5, function()
+                if C_WeeklyRewards.HasAvailableRewards() then
+                    greatVaultIcon.tooltipText = RATED_PVP_WEEKLY_VAULT .. "\n" .. GW.RGBToHex(GREEN_FONT_COLOR:GetRGB()) .. MYTHIC_PLUS_COLLECT_GREAT_VAULT .. "|r"
+                    GW.FrameFlash(greatVaultIcon, 1, 0.3, 1, true)
+                else
+                    greatVaultIcon.tooltipText = RATED_PVP_WEEKLY_VAULT
+                    GW.StopFlash(greatVaultIcon)
+                end
+            end)
         end
     end)
 
@@ -627,7 +630,7 @@ local function LoadMicroMenu()
     --end
     hooksecurefunc(
         "MainMenuMicroButton_ShowAlert",
-        function(f, t)
+        function(f)
             if f == TalentMicroButtonAlert and not TalentMicroButton:HasTalentAlertToShow() then
                 f:Hide()
             end
@@ -657,7 +660,7 @@ local function LoadMicroMenu()
         fadeIn:SetFromAlpha(0.0)
         fadeIn:SetToAlpha(1.0)
         fadeIn:SetDuration(mbf.cf:GetAttribute("fadeTime"))
-        mbf.cf.fadeOut = function(self)
+        mbf.cf.fadeOut = function()
             fi:Stop()
             fo:Stop()
             fo:Play()
@@ -668,7 +671,7 @@ local function LoadMicroMenu()
             fo:Stop()
             fi:Play()
         end
-    
+
         mbf:SetFrameRef("cf", mbf.cf)
 
         mbf:SetAttribute("_onenter", [=[

@@ -15,12 +15,12 @@ GW.VERSION_STRING = "GW2_UI @project-version@"
 _G.BINDING_HEADER_GW2UI = GetAddOnMetadata(..., "Title")
 
 if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then
-    DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r You have installed GW2_UI retail version. Please install the classic version to use GW2_UI.")
+    DEFAULT_CHAT_FRAME:AddMessage(("*GW2 UI:|r You have installed GW2_UI retail version. Please install the classic version to use GW2_UI."):gsub("*", GW.Gw2Color))
     return
 end
 
 if GW.CheckForPasteAddon() and GetSetting("ACTIONBARS_ENABLED") then
-    DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r |cffff0000You have installed the Addon 'Paste'. This can cause, that our actionbars are empty. Deactive 'Paste' to use our actionbars.|r")
+    DEFAULT_CHAT_FRAME:AddMessage(("*GW2 UI:|r |cffff0000You have installed the Addon 'Paste'. This can cause, that our actionbars are empty. Deactive 'Paste' to use our actionbars.|r"):gsub("*", GW.Gw2Color))
 end
 
 local loaded = false
@@ -28,6 +28,7 @@ local forcedMABags = false
 
 local swimAnimation = 0
 local lastSwimState = true
+local hudArtFrame
 
 if Profiler then
     _G.GW_Addon_Scope = GW
@@ -244,7 +245,7 @@ local function SetDeadIcon(self)
 end
 GW.SetDeadIcon = SetDeadIcon
 
-local function StopAnimation(k, safe)
+local function StopAnimation(k)
     if animations[k] ~= nil then
         animations[k] = nil
     end
@@ -254,9 +255,9 @@ GW.StopAnimation = StopAnimation
 local l = CreateFrame("Frame", nil, UIParent)
 
 local function swimAnim()
-    local r, g, b = GwActionBarHud.RightSwim:GetVertexColor()
-    GwActionBarHud.RightSwim:SetVertexColor(r, g, b, animations["swimAnimation"]["progress"])
-    GwActionBarHud.LeftSwim:SetVertexColor(r, g, b, animations["swimAnimation"]["progress"])
+    local r, g, b = hudArtFrame.actionBarHud.RightSwim:GetVertexColor()
+    hudArtFrame.actionBarHud.RightSwim:SetVertexColor(r, g, b, animations["swimAnimation"]["progress"])
+    hudArtFrame.actionBarHud.LeftSwim:SetVertexColor(r, g, b, animations["swimAnimation"]["progress"])
 end
 GW.AddForProfiling("index", "swimAnim", swimAnim)
 
@@ -276,10 +277,10 @@ local function AddUpdateCB(func, payload)
 end
 GW.AddUpdateCB = AddUpdateCB
 
-local function gw_OnUpdate(self, elapsed)
+local function gw_OnUpdate(_, elapsed)
     local foundAnimation = false
     local count = 0
-    for k, v in pairs(animations) do
+    for _, v in pairs(animations) do
         count = count + 1
         if v["completed"] == false and GetTime() >= (v["start"] + v["duration"]) then
             if v["easeing"] == nil then
@@ -347,7 +348,7 @@ GW.PixelPerfection = PixelPerfection
 local SCALE_HUD_FRAMES = {}
 local function UpdateHudScale()
     local hudScale = GetSetting("HUD_SCALE")
-    for i, f in ipairs(SCALE_HUD_FRAMES) do
+    for _, f in ipairs(SCALE_HUD_FRAMES) do
         if f then
             local fm = f.gwMover
             local sf = 1.0
@@ -384,6 +385,12 @@ end
 GW.RegisterScaleFrame = RegisterScaleFrame
 
 local function loadAddon(self)
+    hooksecurefunc("StaticPopup_Show", function(which)
+        if which == "EXPERIMENTAL_CVAR_WARNING" then
+            StaticPopup_Hide("EXPERIMENTAL_CVAR_WARNING")
+        end
+    end)
+
     if GW.inDebug then
         GW.AlertTestsSetup()
     end
@@ -394,12 +401,7 @@ local function loadAddon(self)
 
     if GetSetting("PIXEL_PERFECTION") and not GetCVarBool("useUiScale") then
         PixelPerfection()
-        DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r Pixel Perfection-Mode enabled. UIScale down to perfect pixel size. Can be deactivated in HUD settings. |cFF00FF00/gw2|r")
-        hooksecurefunc("StaticPopup_Show", function(which)
-            if which == "EXPERIMENTAL_CVAR_WARNING" then
-                StaticPopup_Hide("EXPERIMENTAL_CVAR_WARNING")
-            end
-        end)
+        DEFAULT_CHAT_FRAME:AddMessage(("*GW2 UI:|r Pixel Perfection-Mode enabled. UIScale down to perfect pixel size. Can be deactivated in HUD settings. |cFF00FF00/gw2|r"):gsub("*", GW.Gw2Color))
     else
         GW.scale = UIParent:GetScale()
         GW.border = ((1 / GW.scale) - ((1 - (768 / GW.screenHeight)) / GW.scale)) * 2
@@ -427,12 +429,12 @@ local function loadAddon(self)
     else
         --Setup addon button
         local GwMainMenuFrame = CreateFrame("Button", "GW2_UI_SettingsButton", _G.GameMenuFrame, "GameMenuButtonTemplate") -- add a button name to you that for other Addons
-        GwMainMenuFrame:SetText(format("|cffffedba%s|r", GW.addonName))
+        GwMainMenuFrame:SetText(format(("*%s|r"):gsub("*", GW.Gw2Color), GW.addonName))
         GwMainMenuFrame:SetScript(
             "OnClick",
             function()
                 if InCombatLockdown() then
-                    DEFAULT_CHAT_FRAME:AddMessage("|cffffedbaGW2 UI:|r " .. L["Settings are not available in combat!"])
+                    DEFAULT_CHAT_FRAME:AddMessage(("|*GW2 UI:|r "):gsub("*", GW.Gw2Color) .. L["Settings are not available in combat!"])
                     return
                 end
                 ShowUIPanel(GwSettingsWindow)
@@ -444,7 +446,7 @@ local function loadAddon(self)
 
         if not IsAddOnLoaded("ConsolePortUI_Menu") then
             GwMainMenuFrame:SetSize(GameMenuButtonMacros:GetWidth(), GameMenuButtonMacros:GetHeight())
-            GwMainMenuFrame:SetPoint("TOPLEFT", GameMenuButtonMacros, "BOTTOMLEFT", 0, -1)
+            GwMainMenuFrame:SetPoint("TOPLEFT", GameMenuButtonUIOptions, "BOTTOMLEFT", 0, -1)
             hooksecurefunc("GameMenuFrame_UpdateVisibleButtons", GW.PositionGameMenuButton)
         end
     end
@@ -482,20 +484,20 @@ local function loadAddon(self)
     GW.WidgetUISetup()
 
     --Create hud art
-    GW.LoadHudArt()
+    hudArtFrame = GW.LoadHudArt()
 
     --Create experiencebar
     if GetSetting("XPBAR_ENABLED") then
         GW.LoadXPBar()
     else
-        GwActionBarHud:ClearAllPoints()
-        GwActionBarHud:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 0)
-        GwHudArtFrame.edgeTintBottom1:ClearAllPoints()
-        GwHudArtFrame.edgeTintBottom1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 0, 0)
-        GwHudArtFrame.edgeTintBottom1:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOM", 0, 0)
-        GwHudArtFrame.edgeTintBottom2:ClearAllPoints()
-        GwHudArtFrame.edgeTintBottom2:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
-        GwHudArtFrame.edgeTintBottom2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", 0, 0)
+        hudArtFrame.actionBarHud:ClearAllPoints()
+        hudArtFrame.actionBarHud:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 0)
+        hudArtFrame.edgeTintBottom1:ClearAllPoints()
+        hudArtFrame.edgeTintBottom1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 0, 0)
+        hudArtFrame.edgeTintBottom1:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOM", 0, 0)
+        hudArtFrame.edgeTintBottom2:ClearAllPoints()
+        hudArtFrame.edgeTintBottom2:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
+        hudArtFrame.edgeTintBottom2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", 0, 0)
     end
 
     if GetSetting("FONTS_ENABLED") then
@@ -531,15 +533,10 @@ local function loadAddon(self)
     end
 
     if GetSetting("QUESTVIEW_ENABLED") then
-        if GetSetting("ADVANCED_MODE") then
-            GW.LoadImmersiveView()
-        else
-            GW.LoadQuestview()
-        end
-
+        GW.LoadImmersiveView()
         GW.LoadSummon()
     end
-    
+
     if GetSetting("CHATFRAME_ENABLED") then
         GW.LoadChat()
     end
@@ -623,16 +620,11 @@ local function loadAddon(self)
         GW.LoadPlayerAuras(lm)
     end
 
-    if not IsAddOnLoaded("DynamicCam") then
+    if  not IsAddOnLoaded("DynamicCam") then
         if GetSetting("DYNAMIC_CAM") then
             SetCVar("test_cameraDynamicPitch", true)
             SetCVar("cameraKeepCharacterCentered", false)
             SetCVar("cameraReduceUnexpectedMovement", false)
-            hooksecurefunc("StaticPopup_Show", function(which)
-                if which == "EXPERIMENTAL_CVAR_WARNING" then
-                    StaticPopup_Hide("EXPERIMENTAL_CVAR_WARNING")
-                end
-            end)
         else
             SetCVar("test_cameraDynamicPitch", false)
             SetCVar("cameraKeepCharacterCentered", true)
@@ -758,7 +750,7 @@ GW.AddToClique = AddToClique
 
 local waitTable = {}
 local waitFrame = nil
-local function wait_OnUpdate(self, elapse)
+local function wait_OnUpdate(_, elapse)
     local count = #waitTable
     local i = 1
     while (i <= count) do

@@ -152,14 +152,14 @@
 		</Frames>
 		<Scripts>
 			<OnLoad>
-				ScrollFrame_OnLoad(self);
-				self.scrollBarHideable = true;
+                self.scrollBarHideable = true;
+				ScrollFrame_OnLoad(self);		
 			</OnLoad>
 		</Scripts>
     </ScrollFrame>
 
     <ScrollFrame name="GwScrollFrameScrollBarLeftTemplate" inherits="UIPanelScrollFrameCodeTemplate" virtual="true">
-    	<Frames>
+        <Frames>
 			<Slider parentKey="ScrollBar" inherits="GwScrollBarTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="0" y="-15"/>
@@ -169,8 +169,8 @@
 		</Frames>
 		<Scripts>
 			<OnLoad>
-				ScrollFrame_OnLoad(self);
-				self.scrollBarHideable = true;
+                self.scrollBarHideable = true;
+				ScrollFrame_OnLoad(self);	
 			</OnLoad>
 		</Scripts>
     </ScrollFrame>

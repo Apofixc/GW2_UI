@@ -1,7 +1,4 @@
-local _, GW = ...
-local v = GW.vernotes
-
-v("5.13.2", [=[
+5.13.2
 FIXES
     - Partyframes: Debuff stacks > 9 are now display correctly 
 
@@ -10,16 +7,14 @@ MISC
     - Added players raid group into player tooltip
     - Make Raid Control secure: Added Worldmakers into that menu
     - Added option to set max shown lines on copy chat frame
-]=])
 
-v("5.13.1", [=[
+5.13.1
 FIXES
     - Fix an error that raid buffs not disapearing
     - Fix an error with conduits datatext if you havent a soulbind
     - Raise PetBattleFrame so auras are not overlapping them anymore
-]=])
 
-v("5.13.0", [=[
+5.13.0
 NEW
     - Added option for important debuffs to target and focus frame
 
@@ -28,9 +23,8 @@ FIXES
 
 MISC
     - Code clean up
-]=])
 
-v("5.12.1", [=[
+5.12.1
 FIXES
     - Fix target/focus mask overlapping
     - Fix Great Vault micro menu button interaction with dominos
@@ -38,9 +32,8 @@ FIXES
 MISC
     - Update locals
     - Code clean up
-]=])
 
-v("5.12.0", [=[
+5.12.0
 NEW
     - Added "Great Vault" Button to micromenu
     - Added datatext to gametime (hover the time on minimap)
@@ -53,23 +46,20 @@ FIXES
 MISC
     - Remove auto sell junk chat output: Blizzard os doing this now
     - Right click guild micromenu button to invite or whisper guild mebers
-]=])
 
-v("5.11.2", [=[
+5.11.2
 FIXES
     - Fix some gossip skin issues
     - Some reputation issues
 
 MISC
     - Update toc
-]=])
 
-v("5.11.1", [=[
+5.11.1
 FIXES
     - Some setting dropdowns are not accessible
-]=])
 
-v("5.11.0", [=[
+5.11.0
 NEW
     - Added more info to bag and guild micromenu icons
 
@@ -77,9 +67,8 @@ FIXES
     - Fix some gossip skin issues
     - Module buttons are not inactive anymore
     - Fix UTF8 issue if font module is deactivated (for any reason blizzard is not supporting UTF8 if we set a default blizzard font)
-]=])
 
-v("5.10.0", [=[
+5.10.0
 NEW
     - Added socket frame skin
     - Added layout and functions to money tooltip (bags)
@@ -93,15 +82,13 @@ FIXES
     - Objective tracker improvments
     - Focus frame invert is now working
     - Fix auto repair
-]=])
 
-v("5.9.1", [=[
+5.9.1
 FIXES
     - Torghast tooltip issue
     - Fix M+ timer overlapping (Thanks to Sethos)
-]=])
 
-v("5.9.0", [=[
+5.9.0
 NEW
     - Added "player frame in target frame style"
     - Immersive Questing: Trigger "Next Gossip" with space
@@ -118,9 +105,8 @@ FIXES
     - Guild auto repair if not in guild
     - Gamemenu fixes to better interact with ElvUI
     - Immersive Questing: "Ignore"-Button now only shows if applicable
-]=])
 
-v("5.8.0", [=[
+5.8.0
 NEW
     - Added Talent Set Manager support (button on hero panel)
     - Button flyout direction is based on actionbar screen position
@@ -132,34 +118,29 @@ FIXES
     - Fix Postal skin issue
     - Update "Raid Debuffs"
     - Possible fix for chatframe floating max error
-]=])
 
-v("5.7.5", [=[
+5.7.5
 FIXES
     - Fix chatframe fade
     - Update party portraits correctly
     - Fix arena headers
     - Fix keybind slash command
     - Fix arena prep frames overlaps with quests
-]=])
 
-v("5.7.4", [=[
+5.7.4
 FIXES
     - Fix some castbar issues
     - Fix some mirrottimer issues
-]=])
 
-v("5.7.2", [=[
+5.7.2
 FIXES
     - Fix scrolling in dropdown settings
-]=])
 
-v("5.7.1", [=[
+5.7.1
 FIXES
     - Fix hero panel icon border if Mail skin is disabled
-]=])
 
-v("5.7.0", [=[
+5.7.0
 NEW
     - Dropdown in GW2 Settings have now scrolling
     - "Important Raid & Dungeon" Debuffs can now be disable/enabled per debuffs
@@ -173,14 +154,12 @@ FIXES
     - Added fallback for moverframes, to prevent profile corruptions
     - Fix dodgebar spell changing, if customs spell is Settings
     - Added any button to the healthglobe
-]=])
 
-v("5.6.1", [=[
+5.6.1
 FIXES
     - Fix wrong lib name
-]=])
 
-v("5.6.0", [=[
+5.6.0
 NEW
     - Added error handler, so that yo can see in the chat if a error was caused by GW2 UI
     - Added new Torghast scenario typ and its own texture
@@ -197,21 +176,14 @@ FIXES
     - Correct battleground headers
     - Now dodgebar is hidden while actionbaroverride
     - Fix some smaller issues
-]=])
 
-v("5.5.2", [=[
-FIXES
-    - Fix missing Exodar reputation background
-    - Fix error while profile renaming
-]=])
-
-v("5.5.1", [=[
+5.5.1
 FIXES
     - Fix equipment manager error
     - Fix Torghast floor/level counter mixup
-]=])
 
-v("5.5.0", [=[
+
+5.5.0
 NEW
     - Skinning support for Postal in the mail frame UI (Thanks, Hatdragon)
     - Option to disable map coordinates in both minimap and world map (Thanks, Hatdragon)
@@ -225,4 +197,3 @@ NEW
 FIXES
     - Adjust quest view position for a number of Shadowlands NPCs
     - Possible fix for "ZoneabilityContainer"
-]=])

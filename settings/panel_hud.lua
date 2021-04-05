@@ -9,30 +9,63 @@ local GetSetting = GW.GetSetting
 local InitPanel = GW.InitPanel
 
 local function LoadHudPanel(sWindow)
-    local p = CreateFrame("Frame", nil, sWindow.panels, "GwSettingsPanelScrollTmpl")
-    p.scroll.scrollchild.header:SetFont(DAMAGE_TEXT_FONT, 20)
-    p.scroll.scrollchild.header:SetTextColor(255 / 255, 241 / 255, 209 / 255)
-    p.scroll.scrollchild.header:SetText(UIOPTIONS_MENU)
-    p.scroll.scrollchild.sub:SetFont(UNIT_NAME_FONT, 12)
-    p.scroll.scrollchild.sub:SetTextColor(181 / 255, 160 / 255, 128 / 255)
-    p.scroll.scrollchild.sub:SetText(L["Edit the modules in the Heads-Up Display for more customization."])
+    local p = CreateFrame("Frame", nil, sWindow.panels, "GwSettingsPanelTmpl")
+    p.header:Hide()
+    p.sub:Hide()
 
-    createCat(UIOPTIONS_MENU, L["Edit the HUD modules."], p, 3, nil, {p})
+    local p_hub = CreateFrame("Frame", nil, p, "GwSettingsPanelScrollTmpl")
+    p_hub:SetHeight(370)
+    p_hub:SetWidth(512)
+    p_hub:ClearAllPoints()
+    p_hub:SetPoint("TOPLEFT", p, "TOPLEFT", 0, 0)
+    p_hub.scroll.scrollchild.header:SetFont(DAMAGE_TEXT_FONT, 20)
+    p_hub.scroll.scrollchild.header:SetTextColor(255 / 255, 241 / 255, 209 / 255)
+    p_hub.scroll.scrollchild.header:SetText(UIOPTIONS_MENU)
+    p_hub.scroll.scrollchild.sub:SetFont(UNIT_NAME_FONT, 12)
+    p_hub.scroll.scrollchild.sub:SetTextColor(181 / 255, 160 / 255, 128 / 255)
+    p_hub.scroll.scrollchild.sub:SetText(L["Edit the modules in the Heads-Up Display for more customization."])
 
-    addOption(p.scroll.scrollchild, L["Show HUD background"], L["The HUD background changes color in the following situations: In Combat, Not In Combat, In Water, Low HP, Ghost"], "HUD_BACKGROUND")
-    addOption(p.scroll.scrollchild, L["Dynamic HUD"], L["Enable or disable the dynamically changing HUD background."], "HUD_SPELL_SWAP", nil, nil, {["HUD_BACKGROUND"] = true})
-    addOption(p.scroll.scrollchild, L["Fade Chat"], L["Allow the chat to fade when not in use."], "CHATFRAME_FADE", nil, nil, {["CHATFRAME_ENABLED"] = true})
-    addOption(p.scroll.scrollchild, L["Toggle Compass"], L["Enable or disable the quest tracker compass."], "SHOW_QUESTTRACKER_COMPASS", nil, nil, {["QUESTTRACKER_ENABLED"] = true})
-    addOption(p.scroll.scrollchild, L["Advanced Casting Bar"], L["Enable or disable the advanced casting bar."], "CASTINGBAR_DATA", nil, nil, {["CASTINGBAR_ENABLED"] = true})
-    addOption(p.scroll.scrollchild, L["Fade Menu Bar"], L["The main menu icons will fade when you move your cursor away."], "FADE_MICROMENU")
-    addOption(p.scroll.scrollchild, DISPLAY_BORDERS, nil, "BORDER_ENABLED")
-    addOption(p.scroll.scrollchild, WORLD_MARKER:format(0):gsub("%d", ""), L["Show menu for placing world markers when in raids."], "WORLD_MARKER_FRAME")
-    addOption(p.scroll.scrollchild, L["Show Coordinates on World Map"], L["Show Coordinates on World Map"], "WORLDMAP_COORDS_TOGGLE", nil, nil)
-    addOption(p.scroll.scrollchild, L["Show FPS on minimap"], L["Show FPS on minimap"], "MINIMAP_FPS", nil, nil, {["MINIMAP_ENABLED"] = true})
-    addOption(p.scroll.scrollchild, L["Show Coordinates on Minimap"], L["Show Coordinates on Minimap"], "MINIMAP_COORDS_TOGGLE", nil, nil, {["MINIMAP_ENABLED"] = true})
-    addOption(p.scroll.scrollchild, L["Fade Group Manage Button"], L["The Group Manage Button will fade when you move the cursor away."], "FADE_GROUP_MANAGE_FRAME", nil, nil, {["PARTY_FRAMES"] = true})
+    local p_immersive = CreateFrame("Frame", nil, p, "GwSettingsPanelScrollTmpl")
+    p_immersive:SetHeight(250)
+    p_immersive:SetWidth(512)
+    p_immersive:ClearAllPoints()
+    p_immersive:SetPoint("TOPLEFT", p_hub, "BOTTOMLEFT", 0, 0)
+    p_immersive.scroll.scrollchild.header:SetFont(DAMAGE_TEXT_FONT, 20)
+    p_immersive.scroll.scrollchild.header:SetTextColor(255 / 255, 241 / 255, 209 / 255)
+    p_immersive.scroll.scrollchild.header:SetText(UIOPTIONS_MENU)
+    p_immersive.scroll.scrollchild.sub:SetFont(UNIT_NAME_FONT, 12)
+    p_immersive.scroll.scrollchild.sub:SetTextColor(181 / 255, 160 / 255, 128 / 255)
+    p_immersive.scroll.scrollchild.sub:SetText(L["Edit the modules in the Heads-Up Display for more customization."])
+
+    createCat(UIOPTIONS_MENU, L["Edit the HUD modules."], p, 3, nil, {p_hub, p_immersive})
+
+    addOption(p_hub.scroll.scrollchild, L["Show HUD background"], L["The HUD background changes color in the following situations: In Combat, Not In Combat, In Water, Low HP, Ghost"], "HUD_BACKGROUND")
+    addOption(p_hub.scroll.scrollchild, L["Dynamic HUD"], L["Enable or disable the dynamically changing HUD background."], "HUD_SPELL_SWAP", nil, nil, {["HUD_BACKGROUND"] = true})
+    addOption(p_hub.scroll.scrollchild, L["AFK Mode"], L["When you go AFK, display the AFK screen."], "AFK_MODE")
+    addOption(p_hub.scroll.scrollchild, L["Fade Chat"], L["Allow the chat to fade when not in use."], "CHATFRAME_FADE", nil, nil, {["CHATFRAME_ENABLED"] = true})
+    addOptionSlider(
+        p_hub.scroll.scrollchild,
+        L["Maximum lines of 'Copy Chat Frame'"],
+        L["Set the maximum number of lines displayed in the Copy Chat Frame"],
+        "CHAT_MAX_COPY_CHAT_LINES",
+        nil,
+        50,
+        500,
+        nil,
+        0,
+        {["CHATFRAME_ENABLED"] = true},
+        1
+    )
+    addOption(p_hub.scroll.scrollchild, L["Toggle Compass"], L["Enable or disable the quest tracker compass."], "SHOW_QUESTTRACKER_COMPASS", nil, nil, {["QUESTTRACKER_ENABLED"] = true})
+    addOption(p_hub.scroll.scrollchild, L["Advanced Casting Bar"], L["Enable or disable the advanced casting bar."], "CASTINGBAR_DATA", nil, nil, {["CASTINGBAR_ENABLED"] = true})
+    addOption(p_hub.scroll.scrollchild, L["Fade Menu Bar"], L["The main menu icons will fade when you move your cursor away."], "FADE_MICROMENU")
+    addOption(p_hub.scroll.scrollchild, DISPLAY_BORDERS, nil, "BORDER_ENABLED")
+    addOption(p_hub.scroll.scrollchild, L["Show Coordinates on World Map"], L["Show Coordinates on World Map"], "WORLDMAP_COORDS_TOGGLE", nil, nil)
+    addOption(p_hub.scroll.scrollchild, L["Show FPS on minimap"], L["Show FPS on minimap"], "MINIMAP_FPS", nil, nil, {["MINIMAP_ENABLED"] = true})
+    addOption(p_hub.scroll.scrollchild, L["Show Coordinates on Minimap"], L["Show Coordinates on Minimap"], "MINIMAP_COORDS_TOGGLE", nil, nil, {["MINIMAP_ENABLED"] = true})
+    addOption(p_hub.scroll.scrollchild, L["Fade Group Manage Button"], L["The Group Manage Button will fade when you move the cursor away."], "FADE_GROUP_MANAGE_FRAME", nil, nil, {["PARTY_FRAMES"] = true})
     addOption(
-        p.scroll.scrollchild,
+        p_hub.scroll.scrollchild,
         L["Pixel Perfect Mode"],
         L["Scales the UI into a Pixel Perfect Mode. This is dependent on screen resolution."],
         "PIXEL_PERFECTION",
@@ -41,9 +74,8 @@ local function LoadHudPanel(sWindow)
             GW.PixelPerfection()
         end
     )
-    addOption(p.scroll.scrollchild, L["AFK Mode"], L["When you go AFK, display the AFK screen."], "AFK_MODE")
     addOptionDropdown(
-        p.scroll.scrollchild,
+        p_hub.scroll.scrollchild,
         COMBAT_TEXT_LABEL,
         COMBAT_SUBTEXT,
         "GW_COMBAT_TEXT_MODE",
@@ -51,10 +83,10 @@ local function LoadHudPanel(sWindow)
         {"GW2", "BLIZZARD", "OFF"},
         {GW.addonName, "Blizzard", OFF .. " / " .. OTHER .. " " .. ADDONS}
     )
-    addOption(p.scroll.scrollchild, COMBAT_TEXT_LABEL .. L[": Use Blizzard colors"], nil, "GW_COMBAT_TEXT_BLIZZARD_COLOR", nil, nil, {["GW_COMBAT_TEXT_MODE"] = "GW2"})
-    addOption(p.scroll.scrollchild, COMBAT_TEXT_LABEL .. L[": Show numbers with commas"], nil, "GW_COMBAT_TEXT_COMMA_FORMAT", nil, nil, {["GW_COMBAT_TEXT_MODE"] = "GW2"})
+    addOption(p_hub.scroll.scrollchild, COMBAT_TEXT_LABEL .. L[": Use Blizzard colors"], nil, "GW_COMBAT_TEXT_BLIZZARD_COLOR", nil, nil, {["GW_COMBAT_TEXT_MODE"] = "GW2"})
+    addOption(p_hub.scroll.scrollchild, COMBAT_TEXT_LABEL .. L[": Show numbers with commas"], nil, "GW_COMBAT_TEXT_COMMA_FORMAT", nil, nil, {["GW_COMBAT_TEXT_MODE"] = "GW2"})
     addOptionSlider(
-        p.scroll.scrollchild,
+        p_hub.scroll.scrollchild,
         L["HUD Scale"],
         L["Change the HUD size."],
         "HUD_SCALE",
@@ -64,7 +96,7 @@ local function LoadHudPanel(sWindow)
         nil,
         2
     )
-    addOptionButton(p.scroll.scrollchild, L["Apply UI scale to all scaleable frames"], L["Applies the UI scale to all frames, which can be scaled in 'Move HUD' mode."], nil, function()
+    addOptionButton(p_hub.scroll.scrollchild, L["Apply UI scale to all scaleable frames"], L["Applies the UI scale to all frames, which can be scaled in 'Move HUD' mode."], nil, function()
         local scale = GetSetting("HUD_SCALE")
         for _, mf in pairs(GW.scaleableFrames) do
             mf.gw_frame:SetScale(scale)
@@ -73,7 +105,7 @@ local function LoadHudPanel(sWindow)
         end
     end)
     addOptionDropdown(
-        p.scroll.scrollchild,
+        p_hub.scroll.scrollchild,
         L["Minimap details"],
         L["Always show Minimap details."],
         "MINIMAP_HOVER",
@@ -93,7 +125,7 @@ local function LoadHudPanel(sWindow)
         {["MINIMAP_ENABLED"] = true}
     )
     addOptionDropdown(
-        p.scroll.scrollchild,
+        p_hub.scroll.scrollchild,
         L["Minimap Scale"],
         L["Change the Minimap size."],
         "MINIMAP_SCALE",
@@ -112,7 +144,7 @@ local function LoadHudPanel(sWindow)
         {["MINIMAP_ENABLED"] = true}
     )
     addOptionDropdown(
-        p.scroll.scrollchild,
+        p_hub.scroll.scrollchild,
         L["Auto Repair"],
         L["Automatically repair using the following method when visiting a merchant."],
         "AUTO_REPAIR",
@@ -125,26 +157,13 @@ local function LoadHudPanel(sWindow)
         }
     )
 
-    addOption(p.scroll.scrollchild, L["ADVANCED_MODE"], L["ADVANCED_MODE"], "ADVANCED_MODE")
-    addOption(p.scroll.scrollchild, L["FULL_SCREEN"], L["FULL_SCREEN"], "FULL_SCREEN")
-    addOptionDropdown(
-        p.scroll.scrollchild,
-        L["STYLE"],
-        L["STYLE"],
-        "STYLE",
-        nil,
-        {"SHADOWLANDS", "GW2"},
-        {
-            "SHADOWLANDS", 
-            "GW2",
-        }
-    )
-    addOption(p.scroll.scrollchild, L["DINAMIC_ART"], L["DINAMIC_ART"], "DINAMIC_ART")
-    addOption(p.scroll.scrollchild, L["MOUSE_DIALOG"], L["MOUSE_DIALOG"], "MOUSE_DIALOG")
-    addOption(p.scroll.scrollchild, L["FORCE_GOSSIP"], L["FORCE_GOSSIP"], "FORCE_GOSSIP")
-    addOption(p.scroll.scrollchild, L["AUTO_NEXT"], L["AUTO_NEXT"], "AUTO_NEXT")
+    addOption(p_immersive.scroll.scrollchild, L["FULL_SCREEN"], L["FULL_SCREEN"], "FULL_SCREEN", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, L["DINAMIC_ART"], L["DINAMIC_ART"], "DINAMIC_ART", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, L["MOUSE_DIALOG"], L["MOUSE_DIALOG"], "MOUSE_DIALOG", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, L["FORCE_GOSSIP"], L["FORCE_GOSSIP"], "FORCE_GOSSIP")
+    addOption(p_immersive.scroll.scrollchild, L["AUTO_NEXT"], L["AUTO_NEXT"], "AUTO_NEXT", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOptionSlider(
-        p.scroll.scrollchild,
+        p_immersive.scroll.scrollchild,
         L["AUTO_NEXT_TIME"],
         L["AUTO_NEXT_TIME"],
         "AUTO_NEXT_TIME",
@@ -152,10 +171,11 @@ local function LoadHudPanel(sWindow)
         0.25,
         5,
         nil,
-        2
+        2, 
+        {["QUESTVIEW_ENABLED"] = true}
     )
     addOptionSlider(
-        p.scroll.scrollchild,
+        p_immersive.scroll.scrollchild,
         L["ANIMATION_TEXT_SPEED"],
         L["ANIMATION_TEXT_SPEED"],
         "ANIMATION_TEXT_SPEED",
@@ -163,11 +183,13 @@ local function LoadHudPanel(sWindow)
         0.05,
         2,
         nil,
-        2
+        2, 
+        {["QUESTVIEW_ENABLED"] = true}
     )
-    addOption(p.scroll.scrollchild, L["SUMMON_MOUNT"], L["SUMMON_MOUNT"], "SUMMON_MOUNT")
-    addOption(p.scroll.scrollchild, L["SUMMON_PET"], L["SUMMON_PET"], "SUMMON_PET")
+    addOption(p_immersive.scroll.scrollchild, L["SUMMON_MOUNT"], L["SUMMON_MOUNT"], "SUMMON_MOUNT")
+    addOption(p_immersive.scroll.scrollchild, L["SUMMON_PET"], L["SUMMON_PET"], "SUMMON_PET")
 
-    InitPanel(p, true)
+    InitPanel(p_hub, true)
+    InitPanel(p_immersive, true)
 end
 GW.LoadHudPanel = LoadHudPanel

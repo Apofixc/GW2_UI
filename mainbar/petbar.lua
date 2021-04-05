@@ -85,13 +85,13 @@ local function setActionButtonStyle(buttonName, noBackDrop, hideUnused)
 
     if hideUnused == true then
         btn.gwBackdrop:Hide()
-        btn:HookScript("OnHide", hideBackdrop)
-        btn:HookScript("OnShow", showBackdrop)
+        btn:HookScript("OnHide", GW.hideBackdrop)
+        btn:HookScript("OnShow", GW.showBackdrop)
     end
 end
 GW.AddForProfiling("petbar", "setActionButtonStyle", setActionButtonStyle)
 
-local function updateHotkey(self, actionButtonType)
+local function updateHotkey(self)
     local hotkey = self.HotKey
     local text = hotkey:GetText()
 
@@ -266,11 +266,7 @@ local function LoadPetFrame(lm)
     playerPetFrame:SetAttribute("unit", "pet")
     playerPetFrame:EnableMouse(true)
     playerPetFrame:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-    RegisterStateDriver(
-        playerPetFrame,
-        "visibility",
-        "[overridebar] hide; [vehicleui] hide; [petbattle] hide; [target=pet,exists] show; hide"
-    )
+    RegisterStateDriver(playerPetFrame, "visibility", "[overridebar] hide; [vehicleui] hide; [petbattle] hide; [target=pet,exists] show; hide")
     -- TODO: When in override/vehicleui, we should show the pet auras/buffs as this can be important info
 
     playerPetFrame.health:SetStatusBarColor(COLOR_FRIENDLY[2].r, COLOR_FRIENDLY[2].g, COLOR_FRIENDLY[2].b)

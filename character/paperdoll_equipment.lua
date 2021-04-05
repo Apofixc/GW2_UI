@@ -1,12 +1,11 @@
 local _, GW = ...
-local L = GW.L
 GW.char_equipset_SavedItems = {}
 local SavedItemSlots = GW.char_equipset_SavedItems
 local GWGetClassColor = GW.GWGetClassColor
 local SetClassIcon = GW.SetClassIcon
 local AddToAnimation = GW.AddToAnimation
 local IsIn = GW.IsIn
-local getContainerItemLinkByName = GW.getContainerItemLinkByName
+local getContainerItemLinkByNameOrId = GW.getContainerItemLinkByNameOrId
 local setItemLevel = GW.setItemLevel
 
 local PlayerSlots = {
@@ -118,7 +117,7 @@ local function CorruptionIcon(self)
     self.IconOverlay:SetShown(itemLink and IsCorruptedItem(itemLink))
 end
 
-local function setItemButtonQuality(button, quality, itemIDOrLink)
+local function setItemButtonQuality(button, quality)
     if quality then
         if quality >= Enum.ItemQuality.Common and GetItemQualityColor(quality) then
             local r, g, b = GetItemQualityColor(quality)
@@ -131,7 +130,6 @@ local function setItemButtonQuality(button, quality, itemIDOrLink)
         button.IconBorder:Hide()
     end
 end
-GW.setItemButtonQuality = setItemButtonQuality
 GW.AddForProfiling("paperdoll_equipment", "setItemButtonQuality", setItemButtonQuality)
 
 local function updateBagItemButton(button)
@@ -143,12 +141,12 @@ local function updateBagItemButton(button)
     local broken = (maxDurability and durability == 0)
 
     button.ItemId = id
-    button.ItemLink = getContainerItemLinkByName(name)
-    if button.ItemLink == nil then 
+    button.ItemLink = getContainerItemLinkByNameOrId(name, id)
+    if button.ItemLink == nil then
         button.ItemLink = GW.getInventoryItemLinkByNameAndId(name, id)
     end
     button:ResetAzeriteItem()
-    
+
     if textureName then
         SetItemButtonTexture(button, textureName)
         SetItemButtonCount(button, count)
@@ -175,8 +173,8 @@ local function updateBagItemButton(button)
         end
 
         setItemLevel(button, quality, button.ItemLink)
-        setItemButtonQuality(button, quality, id)
-    
+        setItemButtonQuality(button, quality)
+
         button.IconOverlay:SetShown(button.ItemLink and IsCorruptedItem(button.ItemLink))
     end
 end
@@ -184,7 +182,7 @@ GW.AddForProfiling("paperdoll_equipment", "updateBagItemButton", updateBagItemBu
 
 local function updateBagItemList(itemButton)
     local id = itemButton.id or itemButton:GetID()
-    if selectedInventorySlot ~= id then
+    if selectedInventorySlot ~= id or InCombatLockdown() then
         return
     end
 
@@ -197,7 +195,7 @@ local function updateBagItemList(itemButton)
     local x = 10
     local y = 15
 
-    for location, itemID in next, bagItemList do
+    for location, _ in next, bagItemList do
         if not (location - id == ITEM_INVENTORY_LOCATION_PLAYER) then -- Remove the currently equipped item from the list
             local itemFrame = getBagSlotFrame(itemIndex)
             itemFrame.location = location
@@ -205,8 +203,9 @@ local function updateBagItemList(itemButton)
 
             updateBagItemButton(itemFrame)
 
+            itemFrame:ClearAllPoints()
             itemFrame:SetPoint("TOPLEFT", x, -y)
-            itemFrame:Show()            
+            itemFrame:Show()
             gridIndex = gridIndex + 1
 
             x = x + 49 + 3
@@ -224,7 +223,7 @@ local function updateBagItemList(itemButton)
         end
     end
     for i = itemIndex, numBagSlotFrames do
-        if _G["gwPaperDollBagSlotButton" .. i] ~= nil then
+        if _G["gwPaperDollBagSlotButton" .. i] then
             _G["gwPaperDollBagSlotButton" .. i]:Hide()
         end
     end
@@ -287,7 +286,7 @@ local function bagSlot_OnClick(self)
 end
 GW.AddForProfiling("paperdoll_equipment", "bagSlot_OnClick", bagSlot_OnClick)
 
-local function DurabilityTooltip(self)
+local function DurabilityTooltip()
     local duravaltotal, duramaxtotal, durapercent = 0, 0, 0
     local valcol, id, duraval, duramax
     local validItems = false
@@ -386,7 +385,7 @@ local function updateItemSlot(self)
             SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
         end
 
-        local cu    rrent, maximum = GetInventoryItemDurability(slot)
+        local current, maximum = GetInventoryItemDurability(slot)
         if current ~= nil and (current / maximum) < 0.5 then
             self.repairIcon:Show()
             if (current / maximum) == 0 then
@@ -405,7 +404,7 @@ local function updateItemSlot(self)
     end
 
     local quality = GetInventoryItemQuality("player", slot)
-    setItemButtonQuality(self, quality, GetInventoryItemID("player", slot))
+    setItemButtonQuality(self, quality)
     setItemLevel(self, quality, nil, slot)
 end
 GW.AddForProfiling("paperdoll_equipment", "updateItemSlot", updateItemSlot)
@@ -448,7 +447,7 @@ end
 GW.AddForProfiling("paperdoll_equipment", "stat_OnEnter", stat_OnEnter)
 
 getBagSlotFrame = function(i)
-    if _G["gwPaperDollBagSlotButton" .. i] ~= nil then
+    if _G["gwPaperDollBagSlotButton" .. i] then
         return _G["gwPaperDollBagSlotButton" .. i]
     end
 
@@ -466,7 +465,7 @@ end
 GW.AddForProfiling("paperdoll_equipment", "getBagSlotFrame", getBagSlotFrame)
 
 local function updateBagItemListAll()
-    if selectedInventorySlot ~= nil then
+    if selectedInventorySlot ~= nil or InCombatLockdown() then
         return
     end
 
@@ -475,14 +474,14 @@ local function updateBagItemListAll()
     local x = 10
     local y = 15
 
-    for k, v in pairs(EquipSlotList) do
+    for _, v in pairs(EquipSlotList) do
         local id = v
 
         wipe(bagItemList)
 
         GetInventoryItemsForSlot(id, bagItemList)
 
-        for location, itemID in next, bagItemList do
+        for location, _ in next, bagItemList do
             if not (location - id == ITEM_INVENTORY_LOCATION_PLAYER) then -- Remove the currently equipped item from the list
                 local itemFrame = getBagSlotFrame(itemIndex)
                 itemFrame.location = location
@@ -490,6 +489,7 @@ local function updateBagItemListAll()
 
                 updateBagItemButton(itemFrame)
 
+                itemFrame:ClearAllPoints()
                 itemFrame:SetPoint("TOPLEFT", x, -y)
                 itemFrame:Show()
                 gridIndex = gridIndex + 1
@@ -510,7 +510,7 @@ local function updateBagItemListAll()
         end
     end
     for i = itemIndex, numBagSlotFrames do
-        if _G["gwPaperDollBagSlotButton" .. i] ~= nil then
+        if _G["gwPaperDollBagSlotButton" .. i] then
             _G["gwPaperDollBagSlotButton" .. i]:Hide()
         end
     end
@@ -625,7 +625,7 @@ local function updateStats()
                 end
                 showStat = foundRole
             end
-            statFrame = getStatListFrame(GwPaperDollStats, numShownStats)    
+            statFrame = getStatListFrame(GwDressingRoom.stats, numShownStats)
             statFrame.onEnterFunc = nil
             statFrame.UpdateTooltip = nil
             PAPERDOLL_STATINFO[stat.stat].updateFunc(statFrame, "player")
@@ -651,7 +651,7 @@ local function updateStats()
         end
     end
     -- Add Durability Icon
-    statFrame = getDurabilityListFrame(GwPaperDollStats)
+    statFrame = getDurabilityListFrame(GwDressingRoom.stats)
     statFrame:ClearAllPoints()
     statFrame:SetPoint("TOPLEFT", 5 + x, -35 + -y)
     durabilityFrame = statFrame
@@ -716,7 +716,7 @@ local function resetBagInventory()
     GwPaperDollSelectedIndicator:Hide()
     selectedInventorySlot = nil
     updateBagItemListAll()
-    for k, slot in pairs(slotButtons) do
+    for _, slot in pairs(slotButtons) do
         slot.overlayButton:Hide()
     end
 end
@@ -837,18 +837,17 @@ local function grabDefaultSlots(slot, anchor, parent, size)
     slot.IsGW2Hooked = true
 end
 
-local function GwPaperDollBagItemList_OnShow(self)
+local function GwPaperDollBagItemList_OnShow()
     updateBagItemListAll()
-    for k, slot in pairs(slotButtons) do
+    for _, slot in pairs(slotButtons) do
         slot.overlayButton:Show()
     end
 end
 
 local function LoadPDBagList(fmMenu)
     local fmGDR = CreateFrame("Button", "GwDressingRoom", GwPaperDoll, "GwDressingRoom")
-    local fmGDRG = GwDressingRoomGear
-    local fmPD3M = PaperDoll3dModel
-    local fmGPDS = GwPaperDollStats
+    local fmPD3M = GwDressingRoom.model
+    local fmGPDS = GwDressingRoom.stats
 
     grabDefaultSlots(CharacterHeadSlot, {"TOPLEFT", fmGDR.gear, "TOPLEFT", 0, 0}, fmGDR, 50)
     grabDefaultSlots(CharacterShoulderSlot, {"TOPLEFT", CharacterHeadSlot, "BOTTOMLEFT", 0, -5}, fmGDR, 50)
@@ -887,8 +886,6 @@ local function LoadPDBagList(fmMenu)
     EquipmentFlyoutFrame:SetScript("OnUpdate", nil)
     EquipmentFlyoutFrame:SetScript("OnShow", nil)
     EquipmentFlyoutFrame:SetScript("OnLoad", nil)
-    EquipmentFlyout_OnUpdate = GW.NoOp
-    EquipmentFlyout_Show = GW.NoOp
 
     fmPD3M:SetUnit("player")
     fmPD3M:SetPosition(0.8, 0, 0)
@@ -965,7 +962,7 @@ local function LoadPDBagList(fmMenu)
     fmGDR.characterData:SetFont(UNIT_NAME_FONT, 12)
     fmGDR.itemLevel:SetFont(UNIT_NAME_FONT, 24)
     local color = GWGetClassColor(GW.myclass, true)
-    
+
     SetClassIcon(fmGDR.classIcon, GW.myClassID)
 
     fmGDR.classIcon:SetVertexColor(color.r, color.g, color.b, color.a)

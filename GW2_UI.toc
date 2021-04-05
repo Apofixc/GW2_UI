@@ -73,6 +73,7 @@ dataInfo/guild.lua
 dataInfo/bags.lua
 dataInfo/time.lua
 dataInfo/spec.lua
+dataInfo/conduits.lua
 
 core/auras.lua
 
@@ -132,21 +133,18 @@ inventory/lootframe.xml
 inventory/lootframe.lua
 
 immersive/skins/skins.xml
-immersive/questview.xml
+immersive/immersiveview.xml
 immersive/toast.xml
 immersive/alertPosition.lua
 immersive/alerts.lua
 immersive/afk.lua
-immersive/questview.lua
+immersive/immersiveviewcustome.lua
+immersive/immersiveview.lua
 immersive/chatframe.lua
 immersive/chatbubbles.lua
 immersive/tooltips.lua
 immersive/damagetext.xml
 immersive/damagetext.lua
-immersive/immersiveview.xml
-immersive/immersiveviewcustome.lua
-immersive/immersiveview.lua
-
 
 objectives/scenarioWidgets/heroicVisions.lua
 objectives/scenarioWidgets/jailersTower.lua
@@ -189,7 +187,7 @@ character/professions.lua
 battlegrounds/battlegrounds.xml
 battlegrounds/battlegrounds.lua
 
-collection/summon.lua
-
 tests/mocks.lua
 tests/alert_tests.lua
+
+collection/summon.lua

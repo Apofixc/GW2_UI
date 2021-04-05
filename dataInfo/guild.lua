@@ -1,5 +1,4 @@
 local _, GW = ...
-local L = GW.L
 local CommaValue = GW.CommaValue
 
 local guildTable = {}
@@ -102,7 +101,7 @@ local function Guild_OnEnter(self)
             GameTooltip:AddLine(disabledTooltipText, RED_FONT_COLOR.r, RED_FONT_COLOR.g, RED_FONT_COLOR.b, true)
         end
     end
-    GameTooltip_AddBlankLineToTooltip(GameTooltip)
+    GameTooltip:AddLine(" ")
 
     local shiftDown = IsShiftKeyDown()
     local total, _, online = GetNumGuildMembers()
@@ -119,7 +118,7 @@ local function Guild_OnEnter(self)
     end
 
     if GetGuildRosterMOTD() ~= "" then
-        GameTooltip_AddBlankLineToTooltip(GameTooltip)
+        GameTooltip:AddLine(" ")
         GameTooltip:AddLine(GUILD_MOTD .. " |cffaaaaaa- |cffffffff" .. GetGuildRosterMOTD(), ttsubh.r, ttsubh.g, ttsubh.b, 1)
     end
 
@@ -133,7 +132,7 @@ local function Guild_OnEnter(self)
 
     local zonec
 
-    GameTooltip_AddBlankLineToTooltip(GameTooltip)
+    GameTooltip:AddLine(" ")
     for i, info in ipairs(guildTable) do
         if i > 20 then
             GameTooltip:AddLine("+ " .. (online - 20) .. " " .. BINDING_HEADER_OTHER, ttsubh.r, ttsubh.g, ttsubh.b)
@@ -166,7 +165,7 @@ local function Guild_OnEnter(self)
 end
 GW.Guild_OnEnter = Guild_OnEnter
 
-local function inviteClick(self, name, guid)
+local function inviteClick(_, name, guid)
     GW.EasyMenu:Hide()
 
     if not (name and name ~= "") then return end
@@ -181,7 +180,7 @@ local function inviteClick(self, name, guid)
     end
 end
 
-local function whisperClick(self, playerName)
+local function whisperClick(_, playerName)
     GW.EasyMenu:Hide()
     SetItemRef("player:" .. playerName, format("|Hplayer:%1$s|h[%1$s]|h", playerName), "LeftButton")
 end

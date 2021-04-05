@@ -22,6 +22,14 @@ local InstanceNameByID = {
     [749] = C_Map.GetAreaInfo(3845) -- "The Eye" vs. "Tempest Keep"
 }
 
+if GW.mylocal == "deDE" then
+    InstanceNameByID[741] = "Geschmolzener Kern"        -- "Der Geschmolzene Kern"
+    InstanceNameByID[1023] = "Belagerung von Boralus"   -- "Die Belagerung von Boralus"
+    InstanceNameByID[1041] = "Königsruh"                -- "Die Königsruh"
+    InstanceNameByID[1021] = "Kronsteiganwesen"	        -- "Das Kronsteiganwesen"
+    InstanceNameByID[1186] = "Spitzen des Aufstiegs"    -- "Die Spitzen des Aufstiegs"
+end
+
 local instanceIconByName = {}
 local function GetInstanceImages(raid)
     local index = 1
@@ -76,7 +84,7 @@ local function Time_OnEnter(self)
         elseif not startTime then
             startTime = QUEUE_TIME_UNAVAILABLE
         elseif startTime ~= 0 then
-            startTime = SecondsToTime(startTime, false, nil, 3)
+            startTime = SecondsToTime(startTime, true, nil, 3)
         end
 
         if canEnter and startTime ~= 0 then
@@ -107,7 +115,7 @@ local function Time_OnEnter(self)
 
     if next(lockedInstances.raids) then
         if GameTooltip:NumLines() > 0 then
-            GameTooltip_AddBlankLineToTooltip(GameTooltip)
+            GameTooltip:AddLine(" ")
         end
         GameTooltip:AddLine(L["Saved Raid(s)"])
 
@@ -120,16 +128,16 @@ local function Time_OnEnter(self)
 
             local lockoutColor = extended and lockoutColorExtended or lockoutColorNormal
             if numEncounters and numEncounters > 0 and (encounterKilled and encounterKilled > 0) then
-                GameTooltip:AddDoubleLine(format("%s%s |cffaaaaaa(%s, %s/%s)", buttonImg, name, difficulty, encounterKilled, numEncounters), SecondsToTime(reset, false, nil, 3), 1, 1, 1, lockoutColor.r, lockoutColor.g, lockoutColor.b)
+                GameTooltip:AddDoubleLine(format("%s%s |cffaaaaaa(%s, %s/%s)", buttonImg, name, difficulty, encounterKilled, numEncounters), SecondsToTime(reset, true, nil, 3), 1, 1, 1, lockoutColor.r, lockoutColor.g, lockoutColor.b)
             else
-                GameTooltip:AddDoubleLine(format("%s%s |cffaaaaaa(%s)", buttonImg, name, difficulty), SecondsToTime(reset, false, nil, 3), 1, 1, 1, lockoutColor.r, lockoutColor.g, lockoutColor.b)
+                GameTooltip:AddDoubleLine(format("%s%s |cffaaaaaa(%s)", buttonImg, name, difficulty), SecondsToTime(reset, true, nil, 3), 1, 1, 1, lockoutColor.r, lockoutColor.g, lockoutColor.b)
             end
         end
     end
 
     if next(lockedInstances.dungeons) then
         if GameTooltip:NumLines() > 0 then
-            GameTooltip_AddBlankLineToTooltip(GameTooltip)
+            GameTooltip:AddLine(" ")
         end
         GameTooltip:AddLine(L["Saved Dungeon(s)"])
 
@@ -142,9 +150,9 @@ local function Time_OnEnter(self)
 
             local lockoutColor = extended and lockoutColorExtended or lockoutColorNormal
             if numEncounters and numEncounters > 0 and (encounterKilled and encounterKilled > 0) then
-                GameTooltip:AddDoubleLine(format("%s%s |cffaaaaaa(%s, %s/%s)", buttonImg, name, difficulty, encounterKilled, numEncounters), SecondsToTime(reset, false, nil, 3), 1, 1, 1, lockoutColor.r, lockoutColor.g, lockoutColor.b)
+                GameTooltip:AddDoubleLine(format("%s%s |cffaaaaaa(%s, %s/%s)", buttonImg, name, difficulty, encounterKilled, numEncounters), SecondsToTime(reset, true, nil, 3), 1, 1, 1, lockoutColor.r, lockoutColor.g, lockoutColor.b)
             else
-                GameTooltip:AddDoubleLine(format("%s%s |cffaaaaaa(%s)", buttonImg, name, difficulty), SecondsToTime(reset, false, nil, 3), 1, 1, 1, lockoutColor.r, lockoutColor.g, lockoutColor.b)
+                GameTooltip:AddDoubleLine(format("%s%s |cffaaaaaa(%s)", buttonImg, name, difficulty), SecondsToTime(reset, true, nil, 3), 1, 1, 1, lockoutColor.r, lockoutColor.g, lockoutColor.b)
             end
         end
     end
@@ -161,7 +169,7 @@ local function Time_OnEnter(self)
         if reset then
             if not addedLine then
                 if GameTooltip:NumLines() > 0 then
-                    GameTooltip_AddBlankLineToTooltip(GameTooltip)
+                    GameTooltip:AddLine(" ")
                 end
                 GameTooltip:AddLine(WORLD_BOSSES_TEXT)
                 addedLine = true
@@ -182,7 +190,7 @@ local function Time_OnEnter(self)
             if nameInfo and nameInfo.shownState == 1 then
                 if not torghastHeader then
                     if GameTooltip:NumLines() > 0 then
-                        GameTooltip_AddBlankLineToTooltip(GameTooltip)
+                        GameTooltip:AddLine(" ")
                     end
                     GameTooltip:AddLine(TorghastInfo.name)
                     torghastHeader = true
@@ -197,25 +205,26 @@ local function Time_OnEnter(self)
     end
 
     if GameTooltip:NumLines() > 0 then
-        GameTooltip_AddBlankLineToTooltip(GameTooltip)
+        GameTooltip:AddLine(" ")
     end
 
     GameTooltip:AddDoubleLine(L["Daily Reset"], SecondsToTime(C_DateAndTime.GetSecondsUntilDailyReset()), 1, 1, 1, lockoutColorNormal.r, lockoutColorNormal.g, lockoutColorNormal.b)
+    GameTooltip:AddDoubleLine(L["Weekly Reset"], SecondsToTime(C_DateAndTime.GetSecondsUntilWeeklyReset(), true, nil, 3), 1, 1, 1, lockoutColorNormal.r, lockoutColorNormal.g, lockoutColorNormal.b)
 
     if GameTooltip:NumLines() > 0 then
-        GameTooltip_AddBlankLineToTooltip(GameTooltip)
+        GameTooltip:AddLine(" ")
     end
 
     GameTooltip:AddDoubleLine(TIMEMANAGER_TOOLTIP_REALMTIME, GameTime_GetGameTime(true), nil, nil, nil, 1, 1, 1)
     GameTooltip:AddDoubleLine(TIMEMANAGER_TOOLTIP_LOCALTIME, GameTime_GetLocalTime(true), nil, nil, nil, 1, 1, 1)
-    GameTooltip_AddBlankLineToTooltip(GameTooltip)
+    GameTooltip:AddLine(" ")
     GameTooltip:AddLine(format("%s%s%s", "|cffaaaaaa", GAMETIME_TOOLTIP_TOGGLE_CLOCK, "|r"))
 
     GameTooltip:Show()
 end
 GW.Time_OnEnter = Time_OnEnter
 
-local function Time_OnLeave(self)
+local function Time_OnLeave()
     GameTooltip_Hide()
     mouseOver = false
 end
@@ -228,7 +237,7 @@ local function Time_OnEvent(self, event)
 end
 GW.Time_OnEvent = Time_OnEvent
 
-local function Time_OnClick(self, button)
+local function Time_OnClick(_, button)
     if button == "LeftButton" then
         PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
         ToggleTimeManager()
