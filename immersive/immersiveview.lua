@@ -239,18 +239,7 @@ end
 local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)	
 	immersiveFrame:Show()
 	AnimationFade(immersiveFrame, "IN", 0.2, immersiveFrame:GetAlpha(), 1)
-	-- AddToAnimation(
-	-- 	immersiveFrame:GetName(),
-	-- 	immersiveFrame:GetAlpha(),
-	-- 	1,
-	-- 	GetTime(),
-	-- 	0.2,
-	-- 	function(step)
-	-- 		immersiveFrame:SetAlpha(step)
-	-- 	end,
-	-- 	nil, nil, true
-	-- )
-		
+
 	immersiveFrame.ReputationBar:Show()
 	SetImmersiveUnitModel(immersiveFrame.Models.Player, "player")
 	SetImmersiveUnitModel(immersiveFrame.Models.Giver, UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none")
@@ -298,27 +287,6 @@ local function ImmersiveFrameHandleHide(self)
 				wipe(Cache)
 			end
 		)
-		-- local frame = self.GossipFrame
-		-- AddToAnimation(
-		-- 	frame:GetName(),
-		-- 	frame:GetAlpha(),
-		-- 	0,
-		-- 	GetTime(),
-		-- 	0.5,
-		-- 	function(step)
-		-- 		frame:SetAlpha(step)	
-		-- 	end,
-		-- 	nil,
-		-- 	function()
-		-- 		frame:Hide()
-		-- 		frame.Scroll.Icon:Hide()
-		-- 		frame.Scroll.Text:Hide()
-		-- 		frame.Scroll.ScrollChildFrame:Hide()
-
-		-- 		wipe(Cache)
-		-- 	end,
-		-- 	true
-		-- )
 	end
 end
 
@@ -733,7 +701,7 @@ local function LoadImmersiveView()
 	GwImmersiveFrame:SetScript("OnEvent", 
 		function (self, event, ...)
 			if IsIn(event, "QUEST_ITEM_UPDATE", "QUEST_LOG_UPDATE", "LEARNED_SPELL_IN_TAB", "UNIT_MODEL_CHANGED") and not self.GossipFrame:IsShown() then return end
-			print(event)
+
 			if not IsIn(event, "QUEST_ITEM_UPDATE", "QUEST_LOG_UPDATE", "LEARNED_SPELL_IN_TAB", "UNIT_MODEL_CHANGED") then
 				if LastEvent == "GOSSIP_SHOW" and event:match('^QUEST') then C_GossipInfo.CloseGossip() end
 
