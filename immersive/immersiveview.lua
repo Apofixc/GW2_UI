@@ -15,18 +15,18 @@ local ImmersiveDebugModel = GW.ImmersiveDebugModel
 
 C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end
 
-local Cache = {}
-
 local LastEvent
+local Cache = {}
+local ACTIVE_FRAME
+
 
 local TitleButtonPool
 local hasActiveQuest = false
 local SHOW_TITLE_BUTTON
 
 local AutoNext
-local CurrentPartDialogue
-local StartAnimationDialog
-local SPLIT_DIALOGUE_STRINGS
+local DIALOG_STRINGS_CURRENT
+local DIALOG_STRINGS
 
 local function QuestInfo_StyleDetail(template)
 	local totalHeight = 0
@@ -153,20 +153,18 @@ local function StopAnimationDialog(immersiveFrame)
 end
 
 local function Split(text, maxSizeText, mode)
-	SPLIT_DIALOGUE_STRINGS = {}
-	CurrentPartDialogue = 0
+	DIALOG_STRINGS = {}
+	DIALOG_STRINGS_CURRENT = 0
 	AutoNext = GetSetting("AUTO_NEXT")
 
-	local unitName = mode == "FULL_SCREEN" and UnitName("npc") or ""
-	StartAnimationDialog = strlenutf8(unitName)
-	if StartAnimationDialog > 0 then unitName = "|cFFFF5A00"..unitName..":|r " end
+	local unitName = format("|cFFFF5A00%s|r ", (mode == "FULL_SCREEN") and UnitName("npc")..": " or "")
 
 	for _, value in ipairs({ strsplit('\n', text)}) do
 		if strtrim(value) ~= "" then
 			local strLen = strlenutf8(value)
 
 			if strLen < maxSizeText then
-				table.insert(SPLIT_DIALOGUE_STRINGS, unitName..value)
+				table.insert(DIALOG_STRINGS, unitName..value)
 			else
 				local SizePart = math.ceil(strLen/math.ceil(strLen/maxSizeText))
 				local forceInsert = false
@@ -180,33 +178,35 @@ local function Split(text, maxSizeText, mode)
 							new = new.." "..newValue
 							if size >= SizePart then forceInsert = true	end
 						else
-							table.insert(SPLIT_DIALOGUE_STRINGS, unitName..new)
+							table.insert(DIALOG_STRINGS, unitName..new)
 							forceInsert = false
 							new = newValue
 						end
 					end
 				end
 
-				if new ~= "" then table.insert(SPLIT_DIALOGUE_STRINGS, unitName..new) end
+				if new ~= "" then table.insert(DIALOG_STRINGS, unitName..new) end
 			end
 		end
 	end
 end
 
 local function Dialog(immersiveFrame, operation)
-	if CurrentPartDialogue and FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") and tonumber(operation) then
-		CurrentPartDialogue = CurrentPartDialogue + operation
+	if DIALOG_STRINGS_CURRENT and FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") and tonumber(operation) then
+		DIALOG_STRINGS_CURRENT = DIALOG_STRINGS_CURRENT + operation
 
-		if not SPLIT_DIALOGUE_STRINGS[CurrentPartDialogue] then 
-			CurrentPartDialogue = CurrentPartDialogue - operation
+		if not DIALOG_STRINGS[DIALOG_STRINGS_CURRENT] then 
+			DIALOG_STRINGS_CURRENT = DIALOG_STRINGS_CURRENT - operation
 			return 
 		end
 
-		immersiveFrame.Dialog.Text:SetText(SPLIT_DIALOGUE_STRINGS[CurrentPartDialogue])
-			
-		local lenghtAnimationDialog = strlenutf8(immersiveFrame.Dialog.Text:GetText()) - StartAnimationDialog;
+		immersiveFrame.Dialog.Text:SetText(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT])
+
+		local name, text = string.match(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT], "%x+(.*)%p%a%s(.*)")
+		local StartAnimation= strlenutf8(name)
+		local lenghtAnimation = strlenutf8(text)
 		local funcFinish = function()
-			if AutoNext and CurrentPartDialogue < #SPLIT_DIALOGUE_STRINGS then
+			if AutoNext and DIALOG_STRINGS_CURRENT < #DIALOG_STRINGS then
 				C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
 					function() 
 						if AutoNext then Dialog(immersiveFrame, 1) end	
@@ -216,9 +216,9 @@ local function Dialog(immersiveFrame, operation)
 				StopAnimationDialog(immersiveFrame)
 			end
 		end
-		DialogAnimation(immersiveFrame.Dialog.Text, "IMMERSIVE_DIALOG_ANIMATION", StartAnimationDialog, lenghtAnimationDialog, GetSetting("ANIMATION_TEXT_SPEED") * lenghtAnimationDialog, funcFinish)
+		DialogAnimation(immersiveFrame.Dialog.Text, "IMMERSIVE_DIALOG_ANIMATION", StartAnimation, lenghtAnimation, GetSetting("ANIMATION_TEXT_SPEED") * lenghtAnimation, funcFinish)
 
-		TitleButtonShow(immersiveFrame, LastEvent, 1, #SPLIT_DIALOGUE_STRINGS, CurrentPartDialogue);
+		TitleButtonShow(immersiveFrame, LastEvent, 1, #DIALOG_STRINGS, DIALOG_STRINGS_CURRENT);
 	end
 end
 
@@ -278,48 +278,48 @@ local function LoadTitleButtons()
 	AdvanceGossipTitleButtonMixin = {}
 
 	function AdvanceGossipTitleButtonMixin:SetAction(titleText, icon)
-		self.type = "Action";
+		self.type = "Action"
 
-		self:SetFormattedText(ACTION_DISPLAY, titleText);
-		self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/gossipview/icon-gossip");
+		self:SetFormattedText(ACTION_DISPLAY, titleText)
+		self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/gossipview/icon-gossip")
 		self.Icon:SetTexCoord(0.25 * floor(icon / 4), 0.25 * (floor(icon / 4) + 1), 0.25 * (icon % 4), 0.25 * ((icon % 4) + 1))
-		self.Icon:SetVertexColor(1, 1, 1, 1);
+		self.Icon:SetVertexColor(1, 1, 1, 1)
 	
-		self:Resize();
+		self:Resize()
 	end
 	
 	function AdvanceGossipTitleButtonMixin:AddCallbackForClick(id, func, arg, playSound)
-		self:SetID(id);
+		self:SetID(id)
 
-		self.func = func;
-		self.arg = arg;
-		self.playSound = playSound;
+		self.func = func
+		self.arg = arg
+		self.playSound = playSound
 	end
 
 	function AdvanceGossipTitleButtonMixin:Resize()
-		self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()));
-		self:SetWidth(self:GetParent():GetWidth());
+		self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()))
+		self:SetWidth(self:GetParent():GetWidth())
 	end
 
 	function AdvanceGossipTitleButtonMixin:OnClick()
 		if FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") and self.func and not self.ShowIn:IsPlaying() then
-			self.frameAnimationText = self:GetParent():GetParent():GetParent().Scroll
-			self.frameAnimationText.ScrollBar:SetAlpha(0)
-			self.frameAnimationText.ScrollChildFrame:Hide();
+			local scroll = self:GetParent():GetParent()
+			scroll.ScrollBar:SetAlpha(0)
+			scroll.ScrollChildFrame:Hide()
 			
-			self.frameAnimationText.Icon:Show();
-			if self.frameAnimationText.Icon.SetText then
-				self.frameAnimationText.Icon:SetText("|cFFFF5A00"..UnitName("player")..": ");
-			end
-			self.frameAnimationText.Text:Show();
-			self.frameAnimationText.Text:SetText(self:GetText():gsub("^.*%d+%p%s", ""));
+			if scroll.Icon.SetText then scroll.Icon:SetText("|cFFFF5A00"..UnitName("player")..": ") end			
+			scroll.Icon:Show()
 
+			scroll.Text:SetText(self:GetText():gsub("^.*%d+%p%s", ""))
+			scroll.Text:Show()
+
+			local lenghtText = strlenutf8(scroll.Text:GetText())
 			local funcFinish = function()
 				self.func(self.arg)
 				PlaySound(self.playSound)
 			end
 
-			DialogAnimation(self.frameAnimationText.Text, "IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON", 0, strlenutf8(self.frameAnimationText.Text:GetText()), GetSetting("ANIMATION_TEXT_SPEED") * strlenutf8(self.frameAnimationText.Text:GetText()), funcFinish)
+			DialogAnimation(scroll.Text, "IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON", 0, lenghtText, GetSetting("ANIMATION_TEXT_SPEED") * lenghtText, funcFinish)
 		end
 	end 
 
@@ -389,7 +389,7 @@ local function LoadTitleButtons()
 	local function Next() Dialog(GwImmersiveFrame.GossipFrame, 1) end
 	local function Back() Dialog(GwImmersiveFrame.GossipFrame, -1) end
 	local function Repeat() 
-		CurrentPartDialogue = 0
+		DIALOG_STRINGS_CURRENT = 0
 		AutoNext = GetSetting("AUTO_NEXT")
 		Dialog(GwImmersiveFrame.GossipFrame, 1) 
 	end
@@ -825,7 +825,7 @@ local function LoadImmersiveView()
 		end
 	end
 
-	if GetSetting("DINAMIC_ART") then ImmersiveDinamicArt(GwFullScreenGossipViewFrame) end
+	if GetSetting("DYNAMIC_BACKGROUND") then ImmersiveDinamicArt(GwFullScreenGossipViewFrame) end
 	RegisterMovableFrame(GwNormalScreenGossipViewFrame, L["Gossip View Frame"], "GwGossipViewFramePos", "VerticalActionBarDummy", nil, nil, {"scaleable"} )
 	GwNormalScreenGossipViewFrame:ClearAllPoints()
 	GwNormalScreenGossipViewFrame:SetPoint("TOPLEFT", GwNormalScreenGossipViewFrame.gwMover)

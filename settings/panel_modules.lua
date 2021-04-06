@@ -80,7 +80,7 @@ local function LoadModulesPanel(sWindow)
     addOption(p.scroll.scrollchild, BINDING_NAME_TOGGLECHARACTER0, L["Replace the default character window."], "USE_CHARACTER_WINDOW")
     addOption(p.scroll.scrollchild, TALENTS_BUTTON, L["Enable the talents, specialization, and spellbook replacement."], "USE_TALENT_WINDOW")
     addOption(p.scroll.scrollchild, BATTLEGROUND, nil, "USE_BATTLEGROUND_HUD")
-    addOption(p.scroll.scrollchild, CAMERA_FOLLOWING_STYLE .. ": " .. DYNAMIC, nil, "DYNAMIC_CAM")
+    if not IsAddOnLoaded("DynamicCam") then addOption(p.scroll.scrollchild, CAMERA_FOLLOWING_STYLE .. ": " .. DYNAMIC, nil, "DYNAMIC_CAM") end
     addOption(p.scroll.scrollchild, CHAT_BUBBLES_TEXT, L["Replace the default UI chat bubbles. (Only in not protected areas)"], "CHATBUBBLES_ENABLED")
     addOption(p.scroll.scrollchild, L["Alert Frames"], nil, "ALERTFRAME_ENABLED")
 

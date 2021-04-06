@@ -620,7 +620,7 @@ local function loadAddon(self)
         GW.LoadPlayerAuras(lm)
     end
 
-    if  not IsAddOnLoaded("DynamicCam") then
+    if not IsAddOnLoaded("DynamicCam") then
         if GetSetting("DYNAMIC_CAM") then
             SetCVar("test_cameraDynamicPitch", true)
             SetCVar("cameraKeepCharacterCentered", false)

@@ -525,7 +525,7 @@ GW_DEFAULT["player_pos"]["yOfs"] = -100
 GW_DEFAULT["player_pos_scale"] = 1
 
 GW_DEFAULT["FULL_SCREEN"] = true
-GW_DEFAULT["DINAMIC_ART"] = true
+GW_DEFAULT["DYNAMIC_BACKGROUND"] = true
 GW_DEFAULT["MOUSE_DIALOG"] = true
 GW_DEFAULT["FORCE_GOSSIP"] = true
 GW_DEFAULT["AUTO_NEXT"] = true

@@ -158,7 +158,7 @@ local function LoadHudPanel(sWindow)
     )
 
     addOption(p_immersive.scroll.scrollchild, L["FULL_SCREEN"], L["FULL_SCREEN"], "FULL_SCREEN", nil, nil, {["QUESTVIEW_ENABLED"] = true})
-    addOption(p_immersive.scroll.scrollchild, L["DINAMIC_ART"], L["DINAMIC_ART"], "DINAMIC_ART", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, DYNAMIC.." ".. BACKGROUND, nil, " DYNAMIC_BACKGROUND", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOption(p_immersive.scroll.scrollchild, L["MOUSE_DIALOG"], L["MOUSE_DIALOG"], "MOUSE_DIALOG", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOption(p_immersive.scroll.scrollchild, L["FORCE_GOSSIP"], L["FORCE_GOSSIP"], "FORCE_GOSSIP")
     addOption(p_immersive.scroll.scrollchild, L["AUTO_NEXT"], L["AUTO_NEXT"], "AUTO_NEXT", nil, nil, {["QUESTVIEW_ENABLED"] = true})
