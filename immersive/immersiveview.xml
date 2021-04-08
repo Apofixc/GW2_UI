@@ -290,10 +290,10 @@
 						</Texture>			
 					</Layer>
 					<Layer frameStrata="ARTWORK">
-						<FontString parentKey="Title" inherits="QuestTitleFont" text="QUEST_DETAIL" justifyH="CENTER" JustifyV="CENTER">
+						<FontString parentKey="Title" inherits="QuestTitleFont" justifyH="CENTER" JustifyV="CENTER">
 							<Size x="300" y="8"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-16"/>
+								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-12"/>
 							</Anchors>
 						</FontString>
 					</Layer>

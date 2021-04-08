@@ -87,7 +87,7 @@ local function QuestInfo_StyleDetail(template)
 	return totalHeight
 end
 
-local function ShownDetail(event, parentFrame, Format)
+local function ShownDetail(event, title, parentFrame, Format)
 	for _, frame in ipairs({QuestInfoObjectivesText, QuestInfoSpecialObjectivesFrame, QuestInfoGroupSize, QuestInfoSpecialObjectivesFrame, QuestInfoRewardsFrame, GwQuestInfoProgress}) do
 		frame:ClearAllPoints()
 		frame:Hide()
@@ -95,6 +95,7 @@ local function ShownDetail(event, parentFrame, Format)
 
 	local template = _G["GW2_"..event.."_TEMPLATE"]
 	template.contentWidth = parentFrame:GetWidth()
+	title:SetText(template.title)
 	QuestInfo_Display(template, parentFrame)
 
 	return Format(template)
@@ -136,7 +137,7 @@ local function TitleButtonShow(self, event, start, finish, current)
 	if IsIn(event, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") and lastElement then
 		if not self.Detail:IsVisible() then
 			self.Detail.Scroll.ScrollBar:SetValue(0)
-			local height = ShownDetail(event, self.Detail.Scroll.ScrollChildFrame, QuestInfo_StyleDetail)
+			local height = ShownDetail(event, self.Detail.Title, self.Detail.Scroll.ScrollChildFrame, QuestInfo_StyleDetail)
 			self.Detail.Scroll.ScrollChildFrame:SetHeight(height)
 			self.Detail:SetShown(height > 0)
 		end
@@ -598,7 +599,7 @@ local function LoadDetalies()
 	end
 	
 	GW2_QUEST_DETAIL_TEMPLATE = {
-		chooseItems = nil, canHaveSealMaterial = false, 
+		chooseItems = nil, canHaveSealMaterial = false, title = QUEST_DETAILS,
 		elements = {		
 			QuestInfo_ShowHookObjectivesText, 0, 0,
 			QuestInfo_ShowSpecialObjectives, 0, -10,
@@ -614,7 +615,7 @@ local function LoadDetalies()
 	}
 
 	GW2_QUEST_PROGRESS_TEMPLATE = {
-		chooseItems = nil, canHaveSealMaterial = false,
+		chooseItems = nil, canHaveSealMaterial = false, title = QUEST_OBJECTIVES,
 		elements = {
 			QuestInfo_ShowProgressRequired, 0, 0
 		},
@@ -624,7 +625,7 @@ local function LoadDetalies()
 	}
 
 	GW2_QUEST_COMPLETE_TEMPLATE = {
-		chooseItems = true, canHaveSealMaterial = false,
+		chooseItems = true, canHaveSealMaterial = false, title = QUEST_REWARDS,
 		elements = {
 			QuestInfo_ShowRewards, 0, 0,
 		},
