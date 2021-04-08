@@ -55,16 +55,15 @@ GW.DialogAnimation = DialogAnimation
 
 do
 	local INTERACTIVE_TEXT = {
-		ACCEPT = {"Принять"},
-		DECLINE = {"Отказаться"},
-		NEXT = {"Далее", "Продолжить"},
-		BACK = {"Назад"},
-		RESET = {"Повторить"},
-		CANCEL = {"Выход", "Отмена"},
-		EXIT = {"Выход"},
-		COMPLETE = {"Завершить"},
-		FINISH = {"Завершить"},
-		REPEAT = {"Повторить"}
+		ACCEPT = {ACCEPT},
+		DECLINE = {DECLINE},
+		NEXT = {NEXT, CONTINUE},
+		BACK = {BACK},
+		CANCEL = {EXIT, CANCEL},
+		EXIT = {EXIT},
+		COMPLETE = {COMPLETE, COMPLETE_QUEST},
+		FINISH = {FINISH},
+		RESET = {RESET}
 	}
 
 	local function GetImmersiveInteractiveText(buttonType)

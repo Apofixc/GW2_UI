@@ -157,10 +157,10 @@ local function LoadHudPanel(sWindow)
         }
     )
 
-    addOption(p_immersive.scroll.scrollchild, L["FULL_SCREEN"], L["FULL_SCREEN"], "FULL_SCREEN", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, VIDEO_OPTIONS_FULLSCREEN, VIDEO_OPTIONS_FULLSCREEN, "FULL_SCREEN", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOption(p_immersive.scroll.scrollchild, DYNAMIC.." ".. BACKGROUND, nil, " DYNAMIC_BACKGROUND", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOption(p_immersive.scroll.scrollchild, L["MOUSE_DIALOG"], L["MOUSE_DIALOG"], "MOUSE_DIALOG", nil, nil, {["QUESTVIEW_ENABLED"] = true})
-    addOption(p_immersive.scroll.scrollchild, L["FORCE_GOSSIP"], L["FORCE_GOSSIP"], "FORCE_GOSSIP")
+    addOption(p_immersive.scroll.scrollchild, L["Force gossip"], L["Force gossip"], "FORCE_GOSSIP")
     addOption(p_immersive.scroll.scrollchild, L["AUTO_NEXT"], L["AUTO_NEXT"], "AUTO_NEXT", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOptionSlider(
         p_immersive.scroll.scrollchild,
@@ -187,7 +187,7 @@ local function LoadHudPanel(sWindow)
         {["QUESTVIEW_ENABLED"] = true}
     )
     addOption(p_immersive.scroll.scrollchild, L["SUMMON_MOUNT"], L["SUMMON_MOUNT"], "SUMMON_MOUNT")
-    addOption(p_immersive.scroll.scrollchild, L["SUMMON_PET"], L["SUMMON_PET"], "SUMMON_PET")
+    addOption(p_immersive.scroll.scrollchild, CLASS_HUNTER_SPELLNAME2, CLASS_HUNTER_SPELLNAME2, "SUMMON_PET")
 
     InitPanel(p_hub, true)
     InitPanel(p_immersive, true)
