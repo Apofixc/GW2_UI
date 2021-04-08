@@ -335,7 +335,13 @@ local function LoadTitleButtons()
 		end
 	end 
 
-	TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate")
+	local function FramePool_HideAndClear(framePool, frame)
+		frame:Hide()
+		frame:ClearAllPoints()
+		frame.Icon:SetTexCoord(0, 1, 0, 1)
+	end
+
+	TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate", FramePool_HideAndClear)
 
 	local function GetAvailableQuests() return C_GossipInfo.GetAvailableQuests() end
 	local function GetOptions() return C_GossipInfo.GetOptions() end		

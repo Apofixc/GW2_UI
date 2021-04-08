@@ -62,13 +62,10 @@
 			<OnShow>
 				self.ShowIn:Play();
 			</OnShow>
-
 			<OnHide>				
 				if self.ShowIn:IsPlaying() then 
 					self.ShowIn:Stop();
 				end
-
-				self.Icon:SetTexCoord(0, 1, 0, 1);
 			</OnHide>
 			<OnEnter>
 				self.Highlight:Play();
