@@ -477,7 +477,8 @@ local function loadAddon(self)
     GW.LoadTimeManagerSkin()
 
     GW.LoadImmersionAddonSkin()
-
+    GW.LoadStorylineAddonSkin()
+    
     GW.AddCoordsToWorldMap()
     GW.LoadVehicleButton()
     GW.MakeAltPowerBarMovable()
