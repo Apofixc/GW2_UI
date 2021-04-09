@@ -339,3 +339,23 @@ L["Weekly Reset"] = true
 L["Conduits"] = true
 L["Maximum lines of 'Copy Chat Frame'"] = true
 L["Set the maximum number of lines displayed in the Copy Chat Frame"] = true
+
+
+L["Immersion"] = "Погружение"
+L["Setting Immersion elements."] = "Настройка элементов погружения."
+L["Set FullScreen mode as default mode."] = "Установить полноэкранный режим, как режим по умолчанию."
+L["Use backgrounds based on the current zone when possible."] = "По возможности используйте фон, основанный на текущей зоне"
+L["Use mouse"] = "Использовать мышь" 
+L["Controlling dialog text using the mouse."] = "Управление текстом диалога с помощью мыши." 
+L["Extended dialog with NPC"] = "Расширенный диалог с NPC"
+L["Open additional dialog options when communicating with NPC."] = "Открыть дополненые варианты диалога при общений с NPC."
+L["Scrolling text"] = "Прокутка текста"
+L["Automatic scrolling of dialog text."] = "Автоматическая прокрутка текста диалога."
+L["Scrolling delay"] = "Задержка прокрутки"
+L["Set the time after which the automatic scrolling of the dialog will work."] = "Установите время, по истечении которого будет работать автоматическая прокрутка диалога."
+L["Text animation speed"] = "Скорость текстовой анимаций"
+L["Controls the speed of text animations. When value are equal to 0, animation is disabled."] = "Управление скорость анимаций текста. При значений равном 0 анимация отключается."
+L["'Smart' summon mount"] = "'Умный' призыв ездового питомца"
+L["Summons a mount based on location/ class/ race player"] = "Вызывает ездового питомца в зависимоти от местоположения/ класса/ расы игрока"
+L["Summon pets"] = "Призыв питомцев"
+L["Summon Pets depending on the location of the player."] = "Автоматически призывает питомца в замисимости от местоположения игрока."

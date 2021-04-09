@@ -32,10 +32,10 @@ local function LoadHudPanel(sWindow)
     p_immersive:SetPoint("TOPLEFT", p_hub, "BOTTOMLEFT", 0, 0)
     p_immersive.scroll.scrollchild.header:SetFont(DAMAGE_TEXT_FONT, 20)
     p_immersive.scroll.scrollchild.header:SetTextColor(255 / 255, 241 / 255, 209 / 255)
-    p_immersive.scroll.scrollchild.header:SetText(UIOPTIONS_MENU)
+    p_immersive.scroll.scrollchild.header:SetText(L["Immersion"])
     p_immersive.scroll.scrollchild.sub:SetFont(UNIT_NAME_FONT, 12)
     p_immersive.scroll.scrollchild.sub:SetTextColor(181 / 255, 160 / 255, 128 / 255)
-    p_immersive.scroll.scrollchild.sub:SetText(L["Edit the modules in the Heads-Up Display for more customization."])
+    p_immersive.scroll.scrollchild.sub:SetText(L["Setting Immersion elements."])
 
     createCat(UIOPTIONS_MENU, L["Edit the HUD modules."], p, 3, nil, {p_hub, p_immersive})
 
@@ -157,37 +157,37 @@ local function LoadHudPanel(sWindow)
         }
     )
 
-    addOption(p_immersive.scroll.scrollchild, VIDEO_OPTIONS_FULLSCREEN, VIDEO_OPTIONS_FULLSCREEN, "FULL_SCREEN", nil, nil, {["QUESTVIEW_ENABLED"] = true})
-    addOption(p_immersive.scroll.scrollchild, DYNAMIC.." ".. BACKGROUND, nil, " DYNAMIC_BACKGROUND", nil, nil, {["QUESTVIEW_ENABLED"] = true})
-    addOption(p_immersive.scroll.scrollchild, L["MOUSE_DIALOG"], L["MOUSE_DIALOG"], "MOUSE_DIALOG", nil, nil, {["QUESTVIEW_ENABLED"] = true})
-    addOption(p_immersive.scroll.scrollchild, L["Force gossip"], L["Force gossip"], "FORCE_GOSSIP")
-    addOption(p_immersive.scroll.scrollchild, L["AUTO_NEXT"], L["AUTO_NEXT"], "AUTO_NEXT", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, VIDEO_OPTIONS_FULLSCREEN, L["Set FullScreen mode as default mode."], "FULL_SCREEN", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, DYNAMIC.." "..strlower(BACKGROUND), L["Use backgrounds based on the current zone when possible."], "DYNAMIC_BACKGROUND", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, L["Use mouse"], L["Controlling dialog text using the mouse."], "MOUSE_DIALOG", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, L["Extended dialog with NPC"], L["Open additional dialog options when communicating with NPC."], "FORCE_GOSSIP", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild, L["Scrolling text"], L["Automatic scrolling of dialog text."], "AUTO_NEXT", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOptionSlider(
         p_immersive.scroll.scrollchild,
-        L["AUTO_NEXT_TIME"],
-        L["AUTO_NEXT_TIME"],
+        L["Scrolling delay"],
+        L["Set the time after which the automatic scrolling of the dialog will work."],
         "AUTO_NEXT_TIME",
         nil,
         0.25,
         5,
         nil,
         2, 
-        {["QUESTVIEW_ENABLED"] = true}
+        {["QUESTVIEW_ENABLED"] = true, ["AUTO_NEXT"] = true}
     )
     addOptionSlider(
         p_immersive.scroll.scrollchild,
-        L["ANIMATION_TEXT_SPEED"],
-        L["ANIMATION_TEXT_SPEED"],
+        L["Text animation speed"],
+        L["Controls the speed of text animations. When value are equal to 0, animation is disabled."],
         "ANIMATION_TEXT_SPEED",
         nil,
-        0.05,
+        0,
         2,
         nil,
         2, 
         {["QUESTVIEW_ENABLED"] = true}
     )
-    addOption(p_immersive.scroll.scrollchild, L["SUMMON_MOUNT"], L["SUMMON_MOUNT"], "SUMMON_MOUNT")
-    addOption(p_immersive.scroll.scrollchild, CLASS_HUNTER_SPELLNAME2, CLASS_HUNTER_SPELLNAME2, "SUMMON_PET")
+    addOption(p_immersive.scroll.scrollchild, L["'Smart' summon mount"], L["Summons a mount based on location/ class/ race player"], "SUMMON_MOUNT")
+    addOption(p_immersive.scroll.scrollchild, L["Summon pets"], L["Summon Pets depending on the location of the player."], "SUMMON_PET")
 
     InitPanel(p_hub, true)
     InitPanel(p_immersive, true)

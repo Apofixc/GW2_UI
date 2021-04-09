@@ -16,7 +16,6 @@ local ImmersiveDebugModel = GW.ImmersiveDebugModel
 C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end
 
 local LastEvent
-local Cache = {}
 
 local TitleButtonPool
 local hasActiveQuest = false
@@ -260,27 +259,24 @@ local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)
 end
 
 local function ImmersiveFrameHandleHide(self)
-		if (self.customFrame) then
-			self.customFrame:Hide()
-			self.customFrame = nil	
-		elseif self.ActiveFrame:IsShown() then
-			if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION") end
-			if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
-			if not FinishedAnimation("IMMERSIVE_TITLE_ANIMATION") then FreeAnimation("IMMERSIVE_TITLE_ANIMATION") end
+	if (self.customFrame) then
+		self.customFrame:Hide()
+		self.customFrame = nil	
+	elseif self.ActiveFrame:IsShown() then
+		if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION") end
+		if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then FreeAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
+		if not FinishedAnimation("IMMERSIVE_TITLE_ANIMATION") then FreeAnimation("IMMERSIVE_TITLE_ANIMATION") end
 
-			local frame = self.ActiveFrame
-			local funcFinish = function()
-				frame:Hide()
-				frame.Scroll.Icon:Hide()
-				frame.Scroll.Text:Hide()
-				frame.Scroll.ScrollChildFrame:Hide()
-				frame.Detail:Hide()
-
-				wipe(Cache)
-			end
-
-			FadeAnimation(self.ActiveFrame, self.ActiveFrame:GetName(), self.ActiveFrame:GetAlpha(), 0, 0.5, funcFinish)
+		local funcFinish = function()
+			self.ActiveFrame:Hide()
+			self.ActiveFrame.Scroll.Icon:Hide()
+			self.ActiveFrame.Scroll.Text:Hide()
+			self.ActiveFrame.Scroll.ScrollChildFrame:Hide()
+			self.ActiveFrame.Detail:Hide()
 		end
+
+		FadeAnimation(self.ActiveFrame, self.ActiveFrame:GetName(), self.ActiveFrame:GetAlpha(), 0, 0.5, funcFinish)
+	end
 end
 
 ---------------------------------------------------------------------------------------------------------------------
@@ -786,11 +782,15 @@ local function LoadImmersiveView()
 							StopAnimationDialog(self)
 						end
 					elseif button == "F1" then
-						ImmersiveFrameHandleHide(GwImmersiveFrame)				
-						GwImmersiveFrame.ActiveFrame = self.mode == "NORMAL" and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
-						GwImmersiveFrame.ActiveFrame.FontColor()
+						ImmersiveFrameHandleHide(GwImmersiveFrame)			
+						C_Timer.After(1,
+							function()
+								GwImmersiveFrame.ActiveFrame = self.mode == "NORMAL" and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
+								GwImmersiveFrame.ActiveFrame.FontColor()
 
-						pcall(GwImmersiveFrame:GetScript("OnEvent"), GwImmersiveFrame, LastEvent)
+								pcall(GwImmersiveFrame:GetScript("OnEvent"), GwImmersiveFrame, LastEvent)
+							end
+						)
 					elseif button == "F2" then
 						if self.Dialog:GetScript("OnClick") then self.Dialog:SetMouseClickEnabled(not self.Dialog:IsMouseEnabled()) end
 					else 
