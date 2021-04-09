@@ -176,9 +176,21 @@ local function LoadHudPanel(sWindow)
     )
     addOptionSlider(
         p_immersive.scroll.scrollchild,
-        L["Text animation speed"],
+        L["Text animation speed (Player)"],
         L["Controls the speed of text animations. When value are equal to 0, animation is disabled."],
-        "ANIMATION_TEXT_SPEED",
+        "ANIMATION_TEXT_SPEED_P",
+        nil,
+        0,
+        2,
+        nil,
+        2, 
+        {["QUESTVIEW_ENABLED"] = true}
+    )
+    addOptionSlider(
+        p_immersive.scroll.scrollchild,
+        L["Text animation speed (NPC)"],
+        L["Controls the speed of text animations. When value are equal to 0, animation is disabled."],
+        "ANIMATION_TEXT_SPEED_N",
         nil,
         0,
         2,

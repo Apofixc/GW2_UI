@@ -337,3 +337,24 @@ L["Weekly Reset"] = true
 L["Conduits"] = true
 L["Maximum lines of 'Copy Chat Frame'"] = true
 L["Set the maximum number of lines displayed in the Copy Chat Frame"] = true
+
+
+L["Immersion"] = true
+L["Setting Immersion elements."] = true
+L["Set FullScreen mode as default mode."] = true
+L["Use backgrounds based on the current zone when possible."] = true
+L["Use mouse"] = true
+L["Controlling dialog text using the mouse."] = true
+L["Extended dialog with NPC"] = true
+L["Open additional dialog options when communicating with NPC."] = true
+L["Scrolling text"] = true
+L["Automatic scrolling of dialog text."] = true
+L["Scrolling delay"] = true
+L["Set the time after which the automatic scrolling of the dialog will work."] = true
+L["Text animation speed (Player)"] = true
+L["Text animation speed (NPC)"] = true
+L["Controls the speed of text animations. When value are equal to 0, animation is disabled."] = true
+L["'Smart' summon mount"] = true
+L["Summons a mount based on location/ class/ race player"] = true
+L["Summon pets"] = true
+L["Summon Pets depending on the location of the player."] = true

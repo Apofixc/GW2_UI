@@ -227,7 +227,7 @@ local function Dialog(immersiveFrame, operation)
 				StopAnimationDialog(immersiveFrame)
 			end
 		end
-		DialogAnimation(immersiveFrame.Dialog.Text, "IMMERSIVE_DIALOG_ANIMATION", StartAnimation, lenghtAnimation, GetSetting("ANIMATION_TEXT_SPEED") * lenghtAnimation, funcFinish)
+		DialogAnimation(immersiveFrame.Dialog.Text, "IMMERSIVE_DIALOG_ANIMATION", StartAnimation, lenghtAnimation, GetSetting("ANIMATION_TEXT_SPEED_N") * lenghtAnimation, funcFinish)
 
 		TitleButtonShow(immersiveFrame, LastEvent, 1, #DIALOG_STRINGS, DIALOG_STRINGS_CURRENT);
 	end
@@ -328,7 +328,7 @@ local function LoadTitleButtons()
 				PlaySound(self.playSound)
 			end
 
-			DialogAnimation(scroll.Text, "IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON", 0, lenghtText, GetSetting("ANIMATION_TEXT_SPEED") * lenghtText, funcFinish)
+			DialogAnimation(scroll.Text, "IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON", 0, lenghtText, GetSetting("ANIMATION_TEXT_SPEED_P") * lenghtText, funcFinish)
 		end
 	end 
 
@@ -783,11 +783,11 @@ local function LoadImmersiveView()
 						end
 					elseif button == "F1" then
 						ImmersiveFrameHandleHide(GwImmersiveFrame)			
+						
 						C_Timer.After(1,
 							function()
 								GwImmersiveFrame.ActiveFrame = self.mode == "NORMAL" and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
 								GwImmersiveFrame.ActiveFrame.FontColor()
-
 								pcall(GwImmersiveFrame:GetScript("OnEvent"), GwImmersiveFrame, LastEvent)
 							end
 						)
