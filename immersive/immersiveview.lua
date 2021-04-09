@@ -16,6 +16,7 @@ local ImmersiveDebugModel = GW.ImmersiveDebugModel
 C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end
 
 local LastEvent
+local ACTIVE_TEMPLATE
 
 local TitleButtonPool
 local hasActiveQuest = false
@@ -86,18 +87,16 @@ local function QuestInfo_StyleDetail(template)
 	return totalHeight
 end
 
-local function ShownDetail(event, title, parentFrame, Format)
+local function ShownDetail(parentFrame, formatShow)
 	for _, frame in ipairs({QuestInfoObjectivesText, QuestInfoSpecialObjectivesFrame, QuestInfoGroupSize, QuestInfoSpecialObjectivesFrame, QuestInfoRewardsFrame, GwQuestInfoProgress}) do
 		frame:ClearAllPoints()
 		frame:Hide()
 	end
 
-	local template = _G["GW2_"..event.."_TEMPLATE"]
-	template.contentWidth = parentFrame:GetWidth()
-	title:SetText(template.title)
-	QuestInfo_Display(template, parentFrame)
+	ACTIVE_TEMPLATE.contentWidth = parentFrame:GetWidth()
+	QuestInfo_Display(ACTIVE_TEMPLATE, parentFrame)
 
-	return Format(template)
+	return formatShow(template)
 end
 
 local function TitleButtonShow(self, event, start, finish, current)
@@ -135,8 +134,10 @@ local function TitleButtonShow(self, event, start, finish, current)
 
 	if IsIn(event, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") and lastElement then
 		if not self.Detail:IsVisible() then
+			ACTIVE_TEMPLATE = _G["GW2_"..event.."_TEMPLATE"]
 			self.Detail.Scroll.ScrollBar:SetValue(0)
-			local height = ShownDetail(event, self.Detail.Title, self.Detail.Scroll.ScrollChildFrame, QuestInfo_StyleDetail)
+			self.Detail.Title:SetText(ACTIVE_TEMPLATE.title)
+			local height = ShownDetail(self.Detail.Scroll.ScrollChildFrame, QuestInfo_StyleDetail)
 			self.Detail.Scroll.ScrollChildFrame:SetHeight(height)
 			self.Detail:SetShown(height > 0)
 		end
@@ -488,7 +489,6 @@ local function LoadDetalies()
 	QuestInfoRewardsFrame.spellHeaderPool = CreatePool("FontString", QuestInfoRewardsFrame, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate")
 
 	CreateFrame("Frame", "GwQuestInfoProgress", QuestInfoFrame)
-	GwQuestInfoProgress:SetWidth(285)
 	GwQuestInfoProgress.collectionObjectFromPolls = {}
 	GwQuestInfoProgress.progressHeaderPool = CreatePool("FontString", GwQuestInfoProgress, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate")
 	GwQuestInfoProgress.progressButtonPool = CreatePool("Button", GwQuestInfoProgress, "QuestItemTemplate")
@@ -501,6 +501,7 @@ local function LoadDetalies()
 	end
 	
 	local function QuestInfo_ShowProgressRequired()
+		GwQuestInfoProgress:SetWidth(ACTIVE_TEMPLATE.contentWidth)
 		GwQuestInfoProgress.progressButtonPool:ReleaseAll()
 		GwQuestInfoProgress.progressHeaderPool:ReleaseAll()
 
