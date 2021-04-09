@@ -177,7 +177,7 @@ local function Split(text, maxSizeText, mode)
 			if strLen < maxSizeText then
 				table.insert(DIALOG_STRINGS, unitName..value)
 			else
-				local SizePart = math.ceil(strLen/math.ceil(strLen/maxSizeText))
+				local sizePart = math.ceil(strLen/math.ceil(strLen/maxSizeText))
 				local forceInsert = false
 				local new = ""
 
@@ -187,7 +187,7 @@ local function Split(text, maxSizeText, mode)
 
 						if size < maxSizeText and not forceInsert then
 							new = new.." "..newValue
-							if size >= SizePart then forceInsert = true	end
+							if size >= sizePart then forceInsert = true	end
 						else
 							table.insert(DIALOG_STRINGS, unitName..new)
 							forceInsert = false
@@ -213,14 +213,14 @@ local function Dialog(immersiveFrame, operation)
 
 		immersiveFrame.Dialog.Text:SetText(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT])
 
-		local name, text = string.match(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT], "%x+(.*)%p%a%s(.*)")
-		local StartAnimation= strlenutf8(name)
-		local lenghtAnimation = strlenutf8(text)
+		local sColor, name, fColor = string.match(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT], "^(%p%x+)(.*)(%p%a)")
+		local StartAnimation = strlenutf8(name)
+		local lenghtAnimation = strlenutf8(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT]) - strlenutf8(sColor) - strlenutf8(fColor)
 		local funcFinish = function()
 			if AutoNext and DIALOG_STRINGS_CURRENT < #DIALOG_STRINGS then
 				C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
 					function() 
-						if AutoNext then Dialog(immersiveFrame, 1) end	
+						if AutoNext and immersiveFrame:IsVisible() then Dialog(immersiveFrame, 1) end	
 					end
 				)
 			else
