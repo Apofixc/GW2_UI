@@ -49,28 +49,9 @@ local function DialogAnimation(frame, name, start, finish, duration, funcFinish)
 end
 GW.DialogAnimation = DialogAnimation
 
----------------------------------------------------------------------------------------------------------------------
------------------------------------------------ INTERACTIVE ---------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------
 
 do
-	local INTERACTIVE_TEXT = {
-		ACCEPT = {ACCEPT},
-		DECLINE = {DECLINE},
-		NEXT = {NEXT, CONTINUE},
-		BACK = {BACK},
-		CANCEL = {EXIT, CANCEL},
-		EXIT = {EXIT, GOODBYE},
-		COMPLETE = {COMPLETE, COMPLETE_QUEST},
-		FINISH = {FINISH},
-		RESET = {RESET}
-	}
 
-	local function GetImmersiveInteractiveText(buttonType)
-		return INTERACTIVE_TEXT[buttonType][math.random(1, #INTERACTIVE_TEXT[buttonType])]
-	end
-
-	GW.GetImmersiveInteractiveText = GetImmersiveInteractiveText
 end
 
 ---------------------------------------------------------------------------------------------------------------------
@@ -212,7 +193,6 @@ do
 		self:SetHeightFactor(defaults.HeightFactor + (fixModel and fixModel.HeightFactor or 0))
 		self:SetRotation(defaults.Facing + (fixModel and fixModel.Facing or 0))
 
-		self:SetLight(unpack(defaults.Light))
 	end
 
 	GW.SetImmersiveUnitModel = SetImmersiveUnitModel

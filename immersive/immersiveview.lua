@@ -8,12 +8,31 @@ local DialogAnimation =  GW.DialogAnimation
 local FreeAnimation = GW.FreeAnimation
 local FinishedAnimation = GW.FinishedAnimation
 local ImmersiveDinamicArt = GW.ImmersiveDinamicArt
-local GetImmersiveInteractiveText = GW.GetImmersiveInteractiveText
 local LoadImmersiveModelInfo = GW.LoadImmersiveModelInfo
 local SetImmersiveUnitModel = GW.SetImmersiveUnitModel
 local ImmersiveDebugModel = GW.ImmersiveDebugModel
 
 C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end
+
+---------------------------------------------------------------------------------------------------------------------
+----------------------------------------------- INTERACTIVE ---------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------
+
+local INTERACTIVE_TEXT = {
+	ACCEPT = {ACCEPT},
+	DECLINE = {DECLINE},
+	NEXT = {NEXT, CONTINUE},
+	BACK = {BACK},
+	CANCEL = {EXIT, CANCEL},
+	EXIT = {EXIT, GOODBYE},
+	COMPLETE = {COMPLETE, COMPLETE_QUEST},
+	FINISH = {FINISH},
+	RESET = {RESET}
+}
+
+local function GetImmersiveInteractiveText(buttonType)
+	return INTERACTIVE_TEXT[buttonType][math.random(1, #INTERACTIVE_TEXT[buttonType])]
+end
 
 local LastEvent
 local ACTIVE_TEMPLATE
