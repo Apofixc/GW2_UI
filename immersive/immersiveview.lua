@@ -240,7 +240,6 @@ end
 
 local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)	
 	immersiveFrame:Show()
-
 	FadeAnimation(immersiveFrame, immersiveFrame:GetName(), immersiveFrame:GetAlpha(), 1, 0.2)
 		
 	immersiveFrame.ReputationBar:Show()
