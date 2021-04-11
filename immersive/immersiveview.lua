@@ -861,8 +861,8 @@ local function LoadImmersiveView()
 	LoadTitleButtons()
 	LoadDetalies()
 
-	ModelScaling:RegisterModel(GwFullScreenGossipViewFrame.Models.Player, "FULLMODEL", "RIGHT", ModelScaling.SetPlayer, ModelScaling.ApplyScalingToFullModel)
-	ModelScaling:RegisterModel(GwFullScreenGossipViewFrame.Models.Giver, "FULLMODEL", "LEFT", ModelScaling.SetNPC, ModelScaling.ApplyScalingToFullModel)
+	ModelScaling:RegisterModel("FULLMODEL", "RIGHT", GwFullScreenGossipViewFrame.Models.Player, ModelScaling.SetPlayer, ModelScaling.ApplyScalingToFullModel)
+	ModelScaling:RegisterModel("FULLMODEL", "LEFT", GwFullScreenGossipViewFrame.Models.Giver, ModelScaling.SetNPC, ModelScaling.ApplyScalingToFullModel)
 end
 
 GW.LoadImmersiveView = LoadImmersiveView

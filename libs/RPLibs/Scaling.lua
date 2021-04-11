@@ -126,7 +126,9 @@ function LibScaling:UpdateControl(typeModel, control)
         error(MAJOR..":UpdateControl(typeModel, control) - control must be table, got "..type(control)) 
     end
 
-    if not CONTROL_MODEL_TYPE[typeModel] then return false end
+    if not CONTROL_MODEL_TYPE[typeModel] then 
+        return false 
+    end
 
     MergeTable(CONTROL_MODEL_TYPE[typeModel], control)
 
@@ -142,7 +144,9 @@ function LibScaling:UpdateDefault(typeModel, default)
         error(MAJOR..":UpdateDefault(typeModel, default) - control must be table, got "..type(default)) 
     end
 
-    if not DEFAULT_PROPERTIES[typeModel] then return false end
+    if not DEFAULT_PROPERTIES[typeModel] then 
+        return false 
+    end
 
     MergeTable(DEFAULT_PROPERTIES[typeModel], default)
 
@@ -158,7 +162,10 @@ function LibScaling:UpdateAdjusment(typeModel, adjustment)
         error(MAJOR..":UpdateAdjusment(typeModel, adjustment) - control must be table, got "..type(adjustment)) 
     end
 
-    if not DEFAULT_PROPERTIES[typeModel] then return false end
+    if not DEFAULT_PROPERTIES[typeModel] then 
+        return false 
+    end
+
     if not ADJUSTMENT_PROPERTIES[typeModel] then ADJUSTMENT_PROPERTIES[typeModel] = {} end
 
     MergeTable(ADJUSTMENT_PROPERTIES[typeModel], adjustment)
@@ -170,7 +177,7 @@ function LibScaling:RegisterNewModelType(typeModel, control, default, adjustment
     if type(typeModel) ~= "string" then 
         error(MAJOR..":RegisterControl(typeModel, control, update) - typeModel must be string, got "..type(typeModel)) 
     end
-
+    
     if type(control) ~= "table" then 
         error(MAJOR..":RegisterControl(typeModel, control, update) - control must be table, got "..type(control)) 
     end
@@ -183,12 +190,13 @@ function LibScaling:RegisterNewModelType(typeModel, control, default, adjustment
         error(MAJOR..":RegisterAdjusment(typeModel, adjustment, update) - control must be table, got "..type(adjustment)) 
     end
 
-    if CONTROL_MODEL_TYPE[typeModel] and DEFAULT_PROPERTIES[typeModel] then return false end
-    if adjustment and ADJUSTMENT_PROPERTIES[typeModel] then return false end
+    if CONTROL_MODEL_TYPE[typeModel] or DEFAULT_PROPERTIES[typeModel] or ADJUSTMENT_PROPERTIES[typeModel] then 
+        return false 
+    end
 
-    if control["SubTypes"] and type(control["SubTypes"]) ~= "table" then return false end
-    if not control["Limit"] or control["Limit"] and type(control["Limit"]) ~= "table" then return false end
-    if not control["SetScaling"] or control["SetScaling"] and type(control["SetScaling"]) ~= "table" then return false end
+    if control["SubTypes"] and type(control["SubTypes"]) ~= "table" or not control["Limit"] or control["Limit"] and type(control["Limit"]) ~= "table" or not control["SetScaling"] or control["SetScaling"] and type(control["SetScaling"]) ~= "table" then 
+        return false 
+    end
 
     for _, SubType in pairs(control["SubTypes"]) do
         if not default[SubType] or adjustment and not adjustment[SubType] then return false end
@@ -271,36 +279,48 @@ LibScaling.SetNPC = function(model)
     return model:GetModelFileID() 
 end
 
-function LibScaling:RegisterModel(frameModel, typeModel, subTypeModel, unit)
-    if type(frameModel) ~= "table" then 
-        error(MAJOR..":RegisterModel(frameModel, typeModel, subTypeModel, unit) - frameModel must be object, got "..type(frameModel)) 
+function LibScaling:RegisterModel(typeModel, subTypeModel, frameModel, unit)
+    if type(typeModel) ~= "string" then 
+        error(MAJOR..":RegisterModel(typeModel, subTypeModel, frameModel, unit) - typeModel must be string, got "..type(typeModel)) 
     end
 
-    if type(typeModel) ~= "string" then 
-        error(MAJOR..":RegisterModel(frameModel, typeModel, subTypeModel, unit) - typeModel must be string, got "..type(typeModel)) 
+    if subTypeModel and type(subTypeModel) ~= "string" then 
+        error(MAJOR..":RegisterModel(typeModel, subTypeModel, frameModel, unit) - subTypeModel must be string, got "..type(subTypeModel)) 
+    end
+
+    if type(frameModel) ~= "table" then 
+        error(MAJOR..":RegisterModel(typeModel, subTypeModel, frameModel, unit) - frameModel must be object, got "..type(frameModel)) 
     end
    
-    if subTypeModel and type(subTypeModel) ~= "string" then 
-        error(MAJOR..":RegisterModel(frameModel, typeModel, subTypeModel, unit) - subTypeModel must be string, got "..type(subTypeModel)) 
-    end
-
     if type(unit) ~= "function" and type(unit) ~= "number" then 
-        error(MAJOR..":RegisterModel(frameModel, typeModel, subTypeModel, unit) - unit must be function/ number, got "..type(unit)) 
+        error(MAJOR..":RegisterModel(typeModel, subTypeModel, frameModel, unit) - unit must be function/ number, got "..type(unit)) 
     end
 
     typeModel = typeModel:upper() 
-    if not CONTROL_MODEL_TYPE[typeModel] and not DEFAULT_PROPERTIES[typeModel] then return false end
-    if not CONTROL_MODEL_TYPE[typeModel]["SubTypes"] and not subTypeModel then return false end
+    if not CONTROL_MODEL_TYPE[typeModel] or not DEFAULT_PROPERTIES[typeModel] then 
+        return false 
+    end
 
-    local findSubType = false
-    subTypeModel = subTypeModel:upper()
-    for _, subType in ipairs(CONTROL_MODEL_TYPE[typeModel]["SubTypes"]) do
-        if subType == subTypeModel then
-            findSubType = true
+    if CONTROL_MODEL_TYPE[typeModel]["SubTypes"] then
+        subTypeModel = subTypeModel:upper()
+        
+        local findSubType = false
+        for _, subType in ipairs(CONTROL_MODEL_TYPE[typeModel]["SubTypes"]) do
+            if subType == subTypeModel then
+                findSubType = true
+            end
+        end
+
+        if not findSubType then 
+            return false 
         end
     end
-    if not findSubType then return false end
 
+    local typeObject = frameModel:GetObjectType()
+    if not CONTROL_MODEL_TYPE[typeModel]["Limit"][typeObject] then
+        return false
+    end
+    
     if not MODEL_LIST[frameModel] then MODEL_LIST[frameModel] = {} end
     MODEL_LIST[frameModel].TypeModel = typeModel
     MODEL_LIST[frameModel].SubTypeModel = subTypeModel
