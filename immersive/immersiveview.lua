@@ -1,6 +1,6 @@
 local _, GW = ...
 local L = GW.L
-local ModelScaling = GW.Libs.Scaling
+local ModelScaling = GW.Libs.ModelScaling
 local GetSetting = GW.GetSetting
 local RegisterMovableFrame = GW.RegisterMovableFrame
 local IsIn = GW.IsIn
