@@ -1,5 +1,6 @@
 local _, GW = ...
 local L = GW.L
+local ModelScaling = GW.Libs.Scaling
 local GetSetting = GW.GetSetting
 local RegisterMovableFrame = GW.RegisterMovableFrame
 local IsIn = GW.IsIn
@@ -8,9 +9,6 @@ local DialogAnimation =  GW.DialogAnimation
 local FreeAnimation = GW.FreeAnimation
 local FinishedAnimation = GW.FinishedAnimation
 local ImmersiveDinamicArt = GW.ImmersiveDinamicArt
-local LoadImmersiveModelInfo = GW.LoadImmersiveModelInfo
-local SetImmersiveUnitModel = GW.SetImmersiveUnitModel
-local ImmersiveDebugModel = GW.ImmersiveDebugModel
 
 C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end
 
@@ -115,7 +113,7 @@ local function ShownDetail(parentFrame, formatShow)
 	ACTIVE_TEMPLATE.contentWidth = parentFrame:GetWidth()
 	QuestInfo_Display(ACTIVE_TEMPLATE, parentFrame)
 
-	return formatShow(template)
+	return formatShow(ACTIVE_TEMPLATE)
 end
 
 local function TitleButtonShow(self, event, start, finish, current)
@@ -262,8 +260,12 @@ local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)
 	FadeAnimation(immersiveFrame, immersiveFrame:GetName(), immersiveFrame:GetAlpha(), 1, 0.2)
 		
 	immersiveFrame.ReputationBar:Show()
-	SetImmersiveUnitModel(immersiveFrame.Models.Player, "player")
-	SetImmersiveUnitModel(immersiveFrame.Models.Giver, UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none")
+	print(GetTime())
+	ModelScaling:SetModels(immersiveFrame.Models.Player, immersiveFrame.Models.Giver)
+	print(GetTime())
+	-- if self.Name then
+	-- 	self.Name.Text:SetText(unit == "none" and "UNKNOWN" or UnitName(unit))
+	-- end
 
 	if title then
 		immersiveFrame.Title.Text:SetText(title)
@@ -776,9 +778,9 @@ local function LoadImmersiveView()
 			elseif event == "UNIT_MODEL_CHANGED" then
 				local unit = ...
 				if unit == "player" then
-					SetUnitModel(self.ActiveFrame.Models.Player, unit)
+					ModelScaling:SetModel(self.ActiveFrame.Models.Player)
 				else
-					SetUnitModel(self.ActiveFrame.Models.Giver, unit)
+					ModelScaling:SetModel(self.ActiveFrame.Models.Giver)
 				end
 			end
 		end 
@@ -858,9 +860,9 @@ local function LoadImmersiveView()
 
 	LoadTitleButtons()
 	LoadDetalies()
-	LoadImmersiveModelInfo(GwNormalScreenGossipViewFrame.Models, GwFullScreenGossipViewFrame.Models)
 
-	ImmersiveDebugModel(GwNormalScreenGossipViewFrame.Models, GwFullScreenGossipViewFrame.Models)
+	ModelScaling:RegisterModel(GwFullScreenGossipViewFrame.Models.Player, "FULLMODEL", "RIGHT", ModelScaling.SetPlayer, ModelScaling.ApplyScalingToFullModel)
+	ModelScaling:RegisterModel(GwFullScreenGossipViewFrame.Models.Giver, "FULLMODEL", "LEFT", ModelScaling.SetNPC, ModelScaling.ApplyScalingToFullModel)
 end
 
 GW.LoadImmersiveView = LoadImmersiveView

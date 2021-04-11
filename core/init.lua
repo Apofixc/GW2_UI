@@ -86,6 +86,7 @@ do
     AddLib("Serializer", "AceSerializer-3.0", true)
     AddLib("LibBase64", "LibBase64-1.0_GW2", true)
     AddLib("AceLocale", "AceLocale-3.0", true)
+    AddLib("ModelScaling", "ModelScaling", true)
 end
 
 -- Locale doesn't exist yet, make it exist
