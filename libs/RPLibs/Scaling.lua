@@ -2,25 +2,44 @@ local MAJOR, MINOR = "ModelScaling", 1 -- 9.2.0 v2 / increase manually on change
 local LibScaling = LibStub:NewLibrary(MAJOR, MINOR)
 if not LibScaling then return end
 
-local MODEL_LIST = {}
-local SupportModel = {["Model"] = true, ["PlayerModel"] = true, ["CinematicModel"] = true, ["DressUpModel"] = true, ["TabardModel"] = true,}
-
-LibScaling.TypeDataBase            = LibScaling.TypeDataBase       or {}
+LibScaling.SupportModel            = LibScaling.SupportModel       or {}
 LibScaling.ModelSetByTypeMode      = LibScaling.ModelSetByTypeMode or {}
 
-LibScaling.TypeDataBase.DEFAULT_PROPERTIES    = "DEFAULT_PROPERTIES" 
-LibScaling.TypeDataBase.ADJUSTMENT_PROPERTIES = "ADJUSTMENTN_PROPERTIES" 
+LibScaling.SupportModel.Model          = true
+LibScaling.SupportModel.PlayerModel    = true
+LibScaling.SupportModel.CinematicModel = true
+LibScaling.SupportModel.DressUpModel   = true
+LibScaling.SupportModel.TabardModel    = true
 
-LibScaling.ModelSetByTypeMode.ALL = "ALL"
-LibScaling.ModelSetByTypeMode.SHOW = "SHOW"
-LibScaling.ModelSetByTypeMode.NOTSHOW = "NOTSHOW"
-LibScaling.ModelSetByTypeMode.VISIBLE = "VISIBLE"
-LibScaling.ModelSetByTypeMode.NOTVISIBLE  = "NOTVISIBLE"
+LibScaling.ModelSetByTypeMode.ALL          = "ALL"
+LibScaling.ModelSetByTypeMode.SHOW         = "SHOW"
+LibScaling.ModelSetByTypeMode.NOT_SHOW     = "NOT_SHOW"
+LibScaling.ModelSetByTypeMode.VISIBLE      = "VISIBLE"
+LibScaling.ModelSetByTypeMode.NOT_VISIBLE  = "NOT_VISIBLE"
+
+local MODEL_LIST = {}
 
 local CONTROL_MODEL_TYPE = {
     ["FULLMODEL"] = {
-        ["SubTypes"] = {"LEFT", "RIGHT"},
-        ["Limit"] = {["CinematicModel"] = true},
+        ["SubTypes"] = {
+            "LEFT", 
+            "RIGHT"
+        },
+        ["Limit"] = {
+            ["CinematicModel"] = true
+        },
+        ["Models"] = {
+            ["LEFT"] = function()
+                return UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none"
+            end, 
+            ["RIGHT"] = function()      
+                return "player"          
+            end
+        },
+        ["SetModel"] = function (model, unit)
+            model:ClearModel()
+            model:SetUnit(unit) 
+        end,
         ["SetScaling"] = {
             ["SetFacingLeft"] = {arg1 = "FacingLeft"}, 
             ["InitializeCamera"] = {arg1 = "Camera"}, 
@@ -30,14 +49,28 @@ local CONTROL_MODEL_TYPE = {
         }
     },
     ["PORTRAIT"] = {
-        ["SubTypes"] = {["LEFT"] = true, ["RIGHT"] = true },
-        ["Limit"] = {["CinematicModel"] = true, ["PlayerModel"] = true},
+        ["SubTypes"] = {
+            "LEFT", 
+            "RIGHT"
+        },
+        ["Limit"] = {
+            ["CinematicModel"] = true, 
+            ["PlayerModel"] = true
+        },
+        ["Model"] = {
+            ["LEFT"] = function()
+                return UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none"
+            end, 
+            ["RIGHT"] = function()      
+                return "player"          
+            end
+        },
+        ["SetModel"] = function (model, unit)
+            model:ClearModel()
+            model:SetUnit(unit) 
+        end,
         ["SetScaling"] = {
-            ["SetFacingLeft"] = {arg1 = "FacingLeft"}, 
-            ["InitializeCamera"] = {arg1 = "Camera"}, 
-            ["SetTargetDistance"] = {arg1 = "TargetDistance"}, 
-            ["SetHeightFactor"] = {arg1 = "HeightFactor"}, 
-            ["SetFacing"] = {arg1 = "Facing"}
+
         }
     }
 }
@@ -53,7 +86,7 @@ local DEFAULT_PROPERTIES = {
         },
         ["LEFT"] = {
             FacingLeft = true,
-            Camera = 1.55, 
+            Camera = 1.8, 
             Facing = -.92, 
             TargetDistance = .27, 
             HeightFactor = .34, 
@@ -92,15 +125,7 @@ local ADJUSTMENT_PROPERTIES = {
     },
 }
 
-local function MergeTable(t1, t2)
-    for key1, value1 in pairs(t2) do
-        for key2, value2 in pairs(value1) do
-            t1[key1][key2] = value2
-        end
-    end
-
-	return t1
-end
+--[----------------------------------------------------------------------------------------------------------------------------------]
 
 local function GetModelProperties(default, adjustment, id)
     local properties = {}
@@ -117,169 +142,184 @@ local function GetModelProperties(default, adjustment, id)
     return properties
 end
 
-function LibScaling:UpdateControl(typeModel, control)
-    if type(typeModel) ~= "string" then 
-        error(MAJOR..":UpdateControl(typeModel, control) - typeModel must be string, got "..type(typeModel)) 
+local function CheckStructureTable(control)
+    if type(control["SubTypes"]) ~= "table" or #control["SubTypes"] == 0 or type(control["Limit"]) ~= "table" or type(control["Models"]) ~= "table" or type(control["SetModel"]) ~= "function" or type(control["SetScaling"]) ~= "table" then
+        return false
     end
 
-    if type(control) ~= "table" then 
-        error(MAJOR..":UpdateControl(typeModel, control) - control must be table, got "..type(control)) 
-    end
+    local num = 0
+    for typeObject, value in pairs(control["Limit"]) do
+        if not LibScaling.SupportModel[typeObject] or  LibScaling.SupportModel[typeObject] ~= value then
+            return false
+        end
 
-    if not CONTROL_MODEL_TYPE[typeModel] then 
-        return false 
+        num = num + 1
     end
+    if num == 0 then return false  end
 
-    MergeTable(CONTROL_MODEL_TYPE[typeModel], control)
+    num = 0
+    for subType, func in ipairs(control["Models"]) do
+        if not tContains(control["SubTypes"], subType) or type(func) ~= "function" then
+            return false
+        end
+
+        num = num + 1
+    end
+    if num ~= #control["SubTypes"] then return false  end
+
+    num = 0
+    for name, args in pairs(control["SetScaling"]) do
+        if type(name) ~= "string" or type(args) ~= "table" then
+            return false
+        end
+
+        num = num + 1
+    end
+    if num == 0 then return false  end
 
     return true
 end
 
-function LibScaling:UpdateDefault(typeModel, default)
+function LibScaling:RegisterModelType(typeModel, control, default, adjustment)
     if type(typeModel) ~= "string" then 
-        error(MAJOR.."UpdateDefault(typeModel, default) - typeModel must be string, got "..type(typeModel)) 
-    end
-
-    if type(default) ~= "table" then 
-        error(MAJOR..":UpdateDefault(typeModel, default) - control must be table, got "..type(default)) 
-    end
-
-    if not DEFAULT_PROPERTIES[typeModel] then 
-        return false 
-    end
-
-    MergeTable(DEFAULT_PROPERTIES[typeModel], default)
-
-    return true
-end
-
-function LibScaling:UpdateAdjusment(typeModel, adjustment)
-    if type(typeModel) ~= "string" then 
-        error(MAJOR..":UpdateAdjusment(typeModel, adjustment) - typeModel must be string, got "..type(typeModel)) 
-    end
-
-    if type(adjustment) ~= "table" then 
-        error(MAJOR..":UpdateAdjusment(typeModel, adjustment) - control must be table, got "..type(adjustment)) 
-    end
-
-    if not DEFAULT_PROPERTIES[typeModel] then 
-        return false 
-    end
-
-    if not ADJUSTMENT_PROPERTIES[typeModel] then ADJUSTMENT_PROPERTIES[typeModel] = {} end
-
-    MergeTable(ADJUSTMENT_PROPERTIES[typeModel], adjustment)
-
-    return true
-end
-
-function LibScaling:RegisterNewModelType(typeModel, control, default, adjustment)
-    if type(typeModel) ~= "string" then 
-        error(MAJOR..":RegisterControl(typeModel, control, update) - typeModel must be string, got "..type(typeModel)) 
+        error(MAJOR..":RegisterNewModelType(typeModel, control, default, adjustment) - typeModel must be string, got "..type(typeModel)) 
     end
     
     if type(control) ~= "table" then 
-        error(MAJOR..":RegisterControl(typeModel, control, update) - control must be table, got "..type(control)) 
+        error(MAJOR..":RegisterNewModelType(typeModel, control, default, adjustment) - control must be table, got "..type(control)) 
     end
 
     if type(default) ~= "table" then 
-        error(MAJOR..":RegisterDefault(typeModel, default, update) - control must be table, got "..type(default)) 
+        error(MAJOR..":RegisterNewModelType(typeModel, control, default, adjustment) - default must be table, got "..type(default)) 
     end
 
     if type(adjustment) ~= "table" then 
-        error(MAJOR..":RegisterAdjusment(typeModel, adjustment, update) - control must be table, got "..type(adjustment)) 
+        error(MAJOR..":RegisterNewModelType(typeModel, control, default, adjustment) - adjustment must be table, got "..type(adjustment)) 
     end
 
     if CONTROL_MODEL_TYPE[typeModel] or DEFAULT_PROPERTIES[typeModel] or ADJUSTMENT_PROPERTIES[typeModel] then 
         return false 
     end
 
-    if control["SubTypes"] and type(control["SubTypes"]) ~= "table" or not control["Limit"] or control["Limit"] and type(control["Limit"]) ~= "table" or not control["SetScaling"] or control["SetScaling"] and type(control["SetScaling"]) ~= "table" then 
+    if not CheckStructureTable(control) then 
         return false 
     end
 
     for _, SubType in pairs(control["SubTypes"]) do
-        if not default[SubType] or adjustment and not adjustment[SubType] then return false end
+        if not default[SubType] or adjustment and not adjustment[SubType] then 
+            return false 
+        end
     end
 
     for _, args in pairs(control["SetScaling"]) do
         for _, arg in pairs(args) do
-            if control["SubTypes"] and #control["SubTypes"] > 0 then
-                for _, SubType in pairs(control["SubTypes"]) do
-                    if not default[SubType][arg] then return false end
-                end      
-            else
-                if default[arg] then return false end
-            end
+            for _, SubType in pairs(control["SubTypes"]) do
+                if not default[SubType][arg] then 
+                    return false 
+                end
+            end  
         end
     end
 
     CONTROL_MODEL_TYPE[typeModel] = control
     DEFAULT_PROPERTIES[typeModel] = default
-    ADJUSTMENT_PROPERTIES[typeModel] = adjustment
+    ADJUSTMENT_PROPERTIES[typeModel] = adjustment or {}
 
     return true
 end
 
-function LibScaling:RemoveModelType(typeModel)
+function LibScaling:AddSybType(typeModel, subTypeModel, unit, default, adjustment)
     if type(typeModel) ~= "string" then 
-        error(MAJOR.."RemoveModelType(typeModel) - typeModel must be string, got "..type(typeModel)) 
+        error(MAJOR..":AddSybType(typeModel, subTypeModel, unit, default, adjustment) - typeModel must be string, got "..type(typeModel)) 
     end
 
-    for key, value in pairs(MODEL_LIST) do
-        if  value.typeModel == typeModel then
-            MODEL_LIST[key] = nil
+    if type(subTypeModel) ~= "string" then 
+        error(MAJOR..":AddSybType(typeModel, subTypeModel, unit, default, adjustment) - subTypeModel must be string, got "..type(typeModel)) 
+    end
+
+    if type(unit) ~= "function" then 
+        error(MAJOR..":AddSybType(typeModel, subTypeModel, unit, default, adjustment) - unit must be function, got "..type(unit)) 
+    end
+
+    if type(default) ~= "table" then 
+        error(MAJOR..":AddSybType(typeModel, subTypeModel, unit, default, adjustment) - default must be table, got "..type(default)) 
+    end
+
+    if type(adjustment) ~= "table" then 
+        error(MAJOR..":AddSybType(typeModel, subTypeModel, unit, default, adjustment) - adjustment must be table, got "..type(adjustment)) 
+    end
+
+    if not CONTROL_MODEL_TYPE[typeModel] or not DEFAULT_PROPERTIES[typeModel] or not ADJUSTMENT_PROPERTIES[typeModel] then 
+        return false 
+    end
+
+    if CONTROL_MODEL_TYPE[typeModel] and not tContains(CONTROL_MODEL_TYPE[typeModel]["SubTypes"], subTypeModel) or DEFAULT_PROPERTIES[typeModel] and not DEFAULT_PROPERTIES[typeModel][subTypeModel] or ADJUSTMENT_PROPERTIES[typeModel] and not ADJUSTMENT_PROPERTIES[typeModel][subTypeModel] then 
+        return false 
+    end
+
+    for _, args in pairs(CONTROL_MODEL_TYPE[typeModel]["SetScaling"]) do
+        for _, arg in pairs(args) do
+            for _, SubType in pairs(CONTROL_MODEL_TYPE[typeModel]["SubTypes"]) do
+                if not default[SubType][arg] then 
+                    return false 
+                end
+            end  
         end
     end
 
-    CONTROL_MODEL_TYPE[typeModel] = nil
-    DEFAULT_PROPERTIES[typeModel] = nil
-    ADJUSTMENT_PROPERTIES[typeModel] = nil
+    tinsert(CONTROL_MODEL_TYPE[typeModel]["SubTypes"], subTypeModel)
+    CONTROL_MODEL_TYPE[typeModel]["SetModel"][subTypeModel] = unit
+    DEFAULT_PROPERTIES[typeModel][subTypeModel] = default
+    ADJUSTMENT_PROPERTIES[typeModel][subTypeModel] = adjustment
 
     return true
 end
 
-function LibScaling:ClealAll()
-    MODEL_LIST = {}
-    CONTROL_MODEL_TYPE = {}
-    DEFAULT_PROPERTIES = {}
-    ADJUSTMENT_PROPERTIES = {}
-end
-
-LibScaling.SetPlayer = function(model)
-    model:ClearModel()
-    model:SetUnit("player") 
-    
-    return model:GetModelFileID()
-end
-
-LibScaling.SetTarget = function(model)
-    model:ClearModel()
-
-    if UnitExists("target") and not UnitIsUnit("player", "npc") then
-        model:SetUnit("target") 
-    else
-        model:SetUnit("none") 
+function LibScaling:RemoveModelType(typeModel, subTypeModel)
+    if type(typeModel) ~= "string" then 
+        error(MAJOR.."RemoveModelType(typeModel, subTypeModel) - typeModel must be string, got "..type(typeModel)) 
     end
 
-    return model:GetModelFileID()
-end
-
-LibScaling.SetNPC = function(model)
-    model:ClearModel()
-
-    if UnitExists("questnpc") then
-        model:SetUnit("questnpc") 
-    elseif UnitExists("npc") then 
-        model:SetUnit("npc") 
-    else
-        model:SetUnit("none") 
+    if subTypeModel and type(subTypeModel) ~= "string" then 
+        error(MAJOR.."RemoveModelType(typeModel, subTypeModel) - subTypeModel must be string, got "..type(subTypeModel)) 
     end
 
-    return model:GetModelFileID() 
+    if subTypeModel then
+        for key, value in pairs(MODEL_LIST) do
+            if value.typeModel == typeModel and value.SubTypeModel == subTypeModel then
+                key["LibScalingSetModel"] = nil
+                MODEL_LIST[key] = nil   
+            end
+        end
+
+        CONTROL_MODEL_TYPE[typeModel][subTypeModel] = nil
+        DEFAULT_PROPERTIES[typeModel][subTypeModel] = nil
+        ADJUSTMENT_PROPERTIES[typeModel][subTypeModel] = nil
+    else
+        for key, value in pairs(MODEL_LIST) do
+            if  value.typeModel == typeModel then
+                key["LibScalingSetModel"] = nil
+                MODEL_LIST[key] = nil   
+            end
+        end
+
+        CONTROL_MODEL_TYPE[typeModel] = nil
+        DEFAULT_PROPERTIES[typeModel] = nil
+        ADJUSTMENT_PROPERTIES[typeModel] = nil   
+    end
+
+    return true
 end
 
-function LibScaling:RegisterModel(typeModel, subTypeModel, frameModel, unit)
+function LibScaling:ClearAll()
+    for key, _ in pairs(CONTROL_MODEL_TYPE) do
+        self:RemoveModelType(key)
+    end
+end
+
+--[----------------------------------------------------------------------------------------------------------------------------------]
+
+function LibScaling:RegisterModel(typeModel, subTypeModel, frameModel)
     if type(typeModel) ~= "string" then 
         error(MAJOR..":RegisterModel(typeModel, subTypeModel, frameModel, unit) - typeModel must be string, got "..type(typeModel)) 
     end
@@ -291,13 +331,9 @@ function LibScaling:RegisterModel(typeModel, subTypeModel, frameModel, unit)
     if type(frameModel) ~= "table" then 
         error(MAJOR..":RegisterModel(typeModel, subTypeModel, frameModel, unit) - frameModel must be object, got "..type(frameModel)) 
     end
-   
-    if type(unit) ~= "function" and type(unit) ~= "number" then 
-        error(MAJOR..":RegisterModel(typeModel, subTypeModel, frameModel, unit) - unit must be function/ number, got "..type(unit)) 
-    end
 
     typeModel = typeModel:upper() 
-    if not CONTROL_MODEL_TYPE[typeModel] or not DEFAULT_PROPERTIES[typeModel] then 
+    if not CONTROL_MODEL_TYPE[typeModel] or not DEFAULT_PROPERTIES[typeModel] or  not CONTROL_MODEL_TYPE[typeModel][subTypeModel] or not DEFAULT_PROPERTIES[typeModel][subTypeModel] then 
         return false 
     end
 
@@ -317,24 +353,28 @@ function LibScaling:RegisterModel(typeModel, subTypeModel, frameModel, unit)
     end
 
     local typeObject = frameModel:GetObjectType()
-    if not CONTROL_MODEL_TYPE[typeModel]["Limit"][typeObject] then
-        return false
-    end
-    
-    if not MODEL_LIST[frameModel] then MODEL_LIST[frameModel] = {} end
-    MODEL_LIST[frameModel].TypeModel = typeModel
-    MODEL_LIST[frameModel].SubTypeModel = subTypeModel
-    MODEL_LIST[frameModel].SetUnit = unit
-    MODEL_LIST[frameModel].Default = DEFAULT_PROPERTIES[typeModel][subTypeModel] or DEFAULT_PROPERTIES[typeModel]
-    MODEL_LIST[frameModel].Adjustment = ADJUSTMENT_PROPERTIES[typeModel] and ADJUSTMENT_PROPERTIES[typeModel][subTypeModel] or ADJUSTMENT_PROPERTIES[typeModel]
-    MODEL_LIST[frameModel].ApplyScaling = CONTROL_MODEL_TYPE[typeModel]["SetScaling"]
+    if CONTROL_MODEL_TYPE[typeModel]["Limit"][typeObject] then
+        if not MODEL_LIST[frameModel] then MODEL_LIST[frameModel] = {} end
 
-    return true
+        MODEL_LIST[frameModel].TypeModel = typeModel
+        MODEL_LIST[frameModel].SubTypeModel = subTypeModel
+        MODEL_LIST[frameModel].Default = DEFAULT_PROPERTIES[typeModel][subTypeModel] 
+        MODEL_LIST[frameModel].Adjustment = ADJUSTMENT_PROPERTIES[typeModel][subTypeModel]
+        
+        frameModel["LibScalingGetModel"] = CONTROL_MODEL_TYPE[typeModel]["Models"][subTypeModel]
+        frameModel["LibScalingSetModel"] = CONTROL_MODEL_TYPE[typeModel]["SetModel"]
+
+        MODEL_LIST[frameModel].ApplyScaling = CONTROL_MODEL_TYPE[typeModel]["SetScaling"]
+        return true
+    end
+
+    return false
 end
 
 function LibScaling:DeleteModel(frameModel)
     if MODEL_LIST[frameModel] then 
         MODEL_LIST[frameModel] = nil
+        frameModel["LibScalingSetModel"] = nil
 
         return true 
     end
@@ -345,7 +385,9 @@ end
 function LibScaling:SetModel(model)
     local info = MODEL_LIST[model]
     if info then
-        local id = info.SetUnit(model)
+        model:LibScalingSetModel(model)
+
+        local id = model:GetModelFileID()
         if id then
             local properties = GetModelProperties(info.Default, info.Adjustment, id)
 
@@ -379,10 +421,12 @@ local function CheckStateModel(model, mode)
     end
 end
 
-function LibScaling:SetModelsByType(typeModel, mode)
+function LibScaling:SetModelsByType(typeModel, subTypeModel, mode)
     for model, info in pairs(MODEL_LIST) do
-        if info.TypeModel == typeModel and CheckStateModel(model, mode) then
-            self:SetModel(model)
+        if info.TypeModel == typeModel and (subTypeModel and info.SubTypeModel == subTypeModel or not subTypeModel) then
+            if CheckStateModel(model, mode) then
+                self:SetModel(model)
+            end
         end
     end
 end
