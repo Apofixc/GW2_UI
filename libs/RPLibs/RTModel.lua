@@ -30,65 +30,89 @@ ModelsManagementLib.Animation.Drowned = 132
 ModelsManagementLib.Animation.Yes = 185
 ModelsManagementLib.Animation.No = 186
 
--- local CLASS_MODEL = {
---     [ClassName1] = {
---         ["SubClass"] = {
---             SubClassName1 = true, 
---             SubClassName2 = true
---         },
---         ["Limit"] = {
---             "TypeObject1", 
---             "TypeObject2"
---         },
---         ["Models"] = {
---             SubClassName1 = function()
---                 return "npc" or "none"
---             end, 
---             SubClassName2 = function()      
---                 return "player"          
---             end
---         },
---         ["Default"] = {
---              SubClassName1 = {
---                arg1 = "...",
---                arg2 = "...",
---                arg3 = "...",
---               },
---              SubClassName2 = {
---                arg1 = "...",
---                arg2 = "...",
---                arg3 = "...",
---               },
---         },
---         ["Offset"] = {
---              SubClassName1 = {
---                  ModelId1 = {
---                    arg1 = "...",
---                    arg2 = "...",
---                    arg3 = "...",
---                  }
---               },
---              SubClassName2 = {
---                  ModelId1 = {
---                    arg1 = "...",
---                    arg2 = "...",
---                    arg3 = "...",
---                  }
---              },
---         },
---         ["SetModel"] = function (model, unit)
---             model:ClearModel()
---             model:SetUnit(unit) 
---         end,
---         ["SetScaling"] = {
---             NameFunc1 = {arg1 = "..."[, arg2 = "...", arg3 = "...", ....]}, 
---             NameFunc2 = {arg1 = "..."[, arg2 = "...", arg3 = "...", ....]}, 
---             NameFunc3  = {arg1 = "..."[, arg2 = "...", arg3 = "...", ....]}, 
---             NameFunc4  = {arg1 = "..."[, arg2 = "...", arg3 = "...", ....]}, 
---         }
---     }
--- }
-------------------------------------------------------------------------------------------------------------------------
+ModelsManagementLib.defGetPlayer = function()
+    return {"player"} 
+end
+
+ModelsManagementLib.defGetNPC = function()
+    return {UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none"}
+end
+
+ModelsManagementLib.defGetTarget = function()
+    return {UnitExists("target") and not UnitIsUnit("player", "npc") or "none"}
+end
+
+ModelsManagementLib.defSetUnit = function(model, unit)
+    model:ClearModel()
+    model:SetUnit(unit)     
+end
+
+ModelsManagementLib.defSetCreature = function(model, CreatureId)
+    model:ClearModel()
+    model:SetCreature(CreatureId)     
+end
+
+ModelsManagementLib.defSetItem = function(model, itemID, appearanceModID, itemVisualID)
+    model:ClearModel()
+    model:SetItem(itemID, appearanceModID, itemVisualID)
+end
+
+ModelsManagementLib.defSetCustomRace = function(model, raceId, sexId)
+    model:ClearModel()
+    model:SetCustomRace(raceId, sexId)     
+end
+
+ModelsManagementLib.defSetModel = function(model, file)
+    model:ClearModel()
+    model:SetModel(file)    
+end
+
+ModelsManagementLib.defFullModel = {
+    SetFacingLeft = { arg1 = "FacingLeft"}, 
+    InitializeCamera = {arg1 = "Camera"}, 
+    SetTargetDistance = {arg1 = "TargetDistance"}, 
+    SetHeightFactor = {arg1 = "HeightFactor"}, 
+    SetFacing = {arg1 = "Facing"},
+}
+
+ModelsManagementLib.defPortrait = {
+    SetCamDistanceScale = {arg1 = "DistanceScale"},
+    SetPortraitZoom = {arg1 = "PortraitZoom"},
+    SetPosition = {arg1 = "PositionX", arg2 = "PositionY", arg3 = "PositionZ"},
+    RefreshUnit = {}
+}
+
+ModelsManagementLib.defFullModelRight = {
+    FacingLeft = false,
+    Camera = 1.55, 
+    Facing = 2.3, 
+    TargetDistance = .27, 
+    HeightFactor = .4,    
+}
+
+ModelsManagementLib.defFullModelLeft = {
+    FacingLeft = true,
+    Camera = 1.8, 
+    Facing = -.92, 
+    TargetDistance = .27, 
+    HeightFactor = .34,   
+}
+
+ModelsManagementLib.defPortraitRight = {
+    DistanceScale = 1.1,
+    PortraitZoom = .7,
+    PositionX = 0,
+    PositionY = 0,
+    PositionZ = -.05,
+}
+
+ModelsManagementLib.defPortraitLeft = {
+    DistanceScale = 1.1,
+    PortraitZoom = .7,
+    PositionX = 0,
+    PositionY = 0,
+    PositionZ = -.05,
+}
 
 local MODEL_LIST = {}
 local CLASS_MODEL = {}
@@ -303,8 +327,8 @@ end
 function ModelsManagementLib:SetModel(Model)
     local info = MODEL_LIST[Model]
     if info then
-        local unit = Model:LibScalingGetModelInfo(Model)
-        Model:LibScalingSetModel(unit)
+        local infoModel = Model:LibScalingGetModelInfo(Model)
+        Model:LibScalingSetModel(unpack(infoModel))
 
         local id = Model:GetModelFileID()
         if id then
@@ -351,7 +375,7 @@ function ModelsManagementLib:SetModelsByType(ClassName, SubClassName, Mode)
 end
 
 function ModelsManagementLib:GetModelName(Model)
-    local unit = Model:LibScalingGetModelInfo(Model)
+    local unit = unpack(Model:LibScalingGetModelInfo(Model))
     if type(unit) == "string" and unit ~= "none" then
         return select(1, UnitName(unit))
     else

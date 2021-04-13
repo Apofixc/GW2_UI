@@ -253,6 +253,11 @@ local function StopAnimation(name)
 end
 GW.StopAnimation = StopAnimation
 
+local function CompletedAnimation(name)
+	return animations[name] == nil or animations[name]["completed"] == true
+end
+GW.CompletedAnimation = CompletedAnimation
+
 local function swimAnim()
     local r, g, b = hudArtFrame.actionBarHud.RightSwim:GetVertexColor()
     hudArtFrame.actionBarHud.RightSwim:SetVertexColor(r, g, b, animations.swimAnimation.progress)

@@ -4,17 +4,15 @@ local ModelScaling = GW.Libs.Model
 local GetSetting = GW.GetSetting
 local RegisterMovableFrame = GW.RegisterMovableFrame
 local IsIn = GW.IsIn
-
+local CompletedAnimation =  GW.CompletedAnimation
+local StopAnimationDialog = GW.StopAnimationDialog
 local ImmersiveFrameHandleShow = GW.ImmersiveFrameHandleShow
 local ImmersiveFrameHandleHide = GW.ImmersiveFrameHandleHide
-local GetTitleButtonPoolEnumerateActive = GW.GetTitleButtonPoolEnumerateActive
-local StopAnimationDialog = GW.StopAnimationDialog
+local GetCustomZoneBackground = GW.GetCustomZoneBackground
+
+local Dialog = GW.Dialog
 local LoadTitleButtons = GW.LoadTitleButtons
 local LoadDetalies = GW.LoadDetalies
-local LoadModel = GW.LoadModel
-local StopAnimation = GW.StopAnimation
-local FinishedAnimation = GW.FinishedAnimation
-local GetCustomZoneBackground = GW.GetCustomZoneBackground
 
 C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end
 
@@ -150,9 +148,8 @@ local function GwImmersiveFrames_OnKeyDown(self, button)
 				PlaySound(SOUNDKIT.IG_QUEST_LIST_CLOSE)
 			end
 		elseif button == "SPACE" then
-			if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") then
-				StopAnimation("IMMERSIVE_DIALOG_ANIMATION")	
-				StopAnimationDialog(self)
+			if not CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") then
+				StopAnimationDialog(self, "IMMERSIVE_DIALOG_ANIMATION")
 			end
 		elseif button == "F1" then
 			ImmersiveFrameHandleHide(GwImmersiveFrame)			
@@ -169,7 +166,7 @@ local function GwImmersiveFrames_OnKeyDown(self, button)
 		else 
 			if self.Scroll.ScrollChildFrame:IsVisible() then
 				local num = tonumber(button) 
-				for obj in GetTitleButtonPoolEnumerateActive() do
+				for obj in GwImmersiveFrame.TitleButtonPool:EnumerateActive() do
 					if obj:GetID() == num then 
 						obj:Click() 
 						break
@@ -185,12 +182,139 @@ local function GwImmersiveFrames_OnKeyDown(self, button)
 end
 
 local function GwNormalScreenGossipViewFrame_OnClick(self, button)
-	if FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") then
+	if CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") then
 		Dialog(GwImmersiveFrame.ActiveFrame, button == "LeftButton" and 1 or -1)
 	else
-		StopAnimation("IMMERSIVE_DIALOG_ANIMATION")		
-		StopAnimationDialog(GwImmersiveFrame.ActiveFrame)
+		StopAnimationDialog(GwImmersiveFrame.ActiveFrame, "IMMERSIVE_DIALOG_ANIMATION")
 	end
+end
+
+local function SetStyleWoWFullScreen()
+	-- <Layer level="ARTWORK">	
+	-- 			<Texture parentKey="BottomLeft" hidden="true">
+	-- 				<Anchors>
+	-- 					<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
+	-- 				</Anchors>
+	-- 			</Texture>
+	-- 			<Texture parentKey="BottomRight" hidden="true">
+	-- 				<Anchors>
+	-- 					<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+	-- 				</Anchors>
+	-- 			</Texture>
+	-- 			<Texture parentKey="TopRight" hidden="true">
+	-- 				<Anchors>
+	-- 					<Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
+	-- 				</Anchors>
+	-- 			</Texture>
+	-- 			<Texture parentKey="TopLeft" hidden="true">
+	-- 				<Anchors>
+	-- 					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
+	-- 				</Anchors>
+	-- 			</Texture>		
+	-- 			<Texture parentKey="Left" hidden="true">
+	-- 				<Anchors>
+	-- 					<Anchor point="LEFT" relativeKey="$parent" relativePoint="LEFT" x="0" y="0"/>
+	-- 					<Anchor point="BOTTOM" relativeKey="$parent.BottomLeft" relativePoint="TOP" x="0" y="0"/>
+	-- 					<Anchor point="TOP" relativeKey="$parent.TopLeft" relativePoint="BOTTOM" x="0" y="0"/>
+	-- 				</Anchors>
+	-- 			</Texture>
+	-- 			<Texture parentKey="Right" hidden="true">
+	-- 				<Anchors>
+	-- 					<Anchor point="RIGHT" relativeKey="$parent" relativePoint="RIGHT" x="0" y="0"/>
+	-- 					<Anchor point="BOTTOM" relativeKey="$parent.BottomRight" relativePoint="TOP" x="0" y="0"/>
+	-- 					<Anchor point="TOP" relativeKey="$parent.TopRight" relativePoint="BOTTOM" x="0" y="0"/>
+	-- 				</Anchors>
+	-- 			</Texture>
+	-- 			<Texture parentKey="Bottom" hidden="true">
+	-- 				<Anchors>
+	-- 					<Anchor point="BOTTOM" relativeKey="$parent" relativePoint="BOTTOM" x="0" y="0"/>
+	-- 					<Anchor point="LEFT" relativeKey="$parent.BottomLeft" relativePoint="RIGHT" x="0" y="0"/>
+	-- 					<Anchor point="RIGHT" relativeKey="$parent.BottomRight" relativePoint="LEFT" x="0" y="0"/>
+	-- 				</Anchors>
+	-- 			</Texture>
+	-- 			<Texture parentKey="Top" hidden="true">
+	-- 				<Anchors>
+	-- 					<Anchor point="TOP" relativeKey="$parent" relativePoint="TOP" x="0" y="0"/>
+	-- 					<Anchor point="LEFT" relativeKey="$parent.TopLeft" relativePoint="RIGHT" x="0" y="0"/>
+	-- 					<Anchor point="RIGHT" relativeKey="$parent.TopRight" relativePoint="LEFT" x="0" y="0"/>
+	-- 				</Anchors>
+	-- 			</Texture>
+	-- 		</Layer>  
+	-- t = {
+	-- 	SHADOWLANDS = {	
+	-- 		maxSizeText = 400,
+	-- 		TitleHighlightTexture = "Interface/QuestFrame/UI-QuestTitleHighlight",
+	-- 		Parent = {
+	-- 			Border = {format = true, atlas = "UI-Frame-%s-CardParchmentWider", useAtlasSize = true},
+	-- 			--MaskBorder = {atlas = "covenantchoice-celebration-background", useAtlasSize = true},
+	-- 			Middleground = {points = {{"TOPLEFT", 0, -205}, {"BOTTOMRIGHT", 0, 170}}},
+	-- 			Background = {points = {{"TOPLEFT", 0, -205}, {"BOTTOMRIGHT", 0, 170}}},
+	-- 			Foreground = {points = {{"TOPLEFT", 0, -205}, {"BOTTOMRIGHT", 0, 170}}},
+	-- 			BottomLeft = {format = true, atlas = "%s-NineSlice-CornerBottomLeft", useAtlasSize = true},	
+	-- 			BottomRight = {format = true, atlas = "%s-NineSlice-CornerBottomRight", useAtlasSize = true},	
+	-- 			TopRight = {format = true, atlas = "%s-NineSlice-CornerTopRight", useAtlasSize = true},
+	-- 			TopLeft = {format = true, atlas = "%s-NineSlice-CornerTopLeft", useAtlasSize = true},
+	-- 			Bottom = {format = true, atlas = "_%s-NineSlice-EdgeBottom", useAtlasSize = true},
+	-- 			Right = {format = true, atlas = "!%s-NineSlice-EdgeRight", useAtlasSize = true},
+	-- 			Left = {format = true, atlas = "!%s-NineSlice-EdgeLeft", useAtlasSize = true},
+	-- 			Top = {format = true, atlas = "_%s-NineSlice-EdgeTop", useAtlasSize = true},
+	-- 		},
+	-- 		Title = {
+	-- 			TitleLeft = {format = true, atlas = "UI-Frame-%s-TitleLeft", useAtlasSize = true},
+	-- 			TitleRight = {format = true, atlas = "UI-Frame-%s-TitleRight", useAtlasSize = true},
+	-- 			TitleMiddle = {format = true, atlas = "_UI-Frame-%s-TitleMiddle", useAtlasSize = true}
+	-- 		},
+	-- 		Dialog = {
+	-- 			Background = {format = true, atlas = "UI-Frame-%s-PortraitWiderDisable", useAtlasSize = false}
+	-- 		},
+	-- 		Scroll = {
+	-- 			Background = {format = true, atlas = "UI-Frame-%s-PortraitWiderDisable", useAtlasSize = false}
+	-- 		},
+	-- 		ReputationBar = {
+	-- 			Background = {format = true, atlas = "covenantsanctum-level-border-%s", useAtlasSize = false, texCoord = {1, 0, 0, 0, 1, 1, 0, 1}, points = {{"TOPLEFT", -42, 59}, {"BOTTOMRIGHT", 42, -57}}},
+	-- 			--Background = {atlas = "Garr_Mission_MaterialFrame", useAtlasSize = false, points = {{"TOPLEFT", -33, 15}, {"BOTTOMRIGHT", 33, -15}}},
+	-- 		},
+	-- 		Detail = {
+	-- 			Background = {format = true, atlas = "covenantchoice-offering-parchment-%s", useAtlasSize = true},
+	-- 			Title1 = {format = true, atlas = "UI-Frame-%s-Ribbon", useAtlasSize = true},
+	-- 		},
+	-- 	},
+	-- 	CLASSIC = {
+	-- 		maxSizeText = 400,
+	-- 		TitleHighlightTexture = "Interface/QuestFrame/UI-QuestTitleHighlight",
+	-- 		Parent = {
+	-- 			Border = {format = true, atlas = "UI-Frame-%s-CardParchmentWider", useAtlasSize = true},
+	-- 			MaskBorder = {atlas = "covenantchoice-celebration-background", useAtlasSize = true},
+	-- 			BottomLeft = {format = true, atlas = "%s-NineSlice-CornerBottomLeft", useAtlasSize = true},	
+	-- 			BottomRight = {format = true, atlas = "%s-NineSlice-CornerBottomRight", useAtlasSize = true},	
+	-- 			TopRight = {format = true, atlas = "%s-NineSlice-CornerTopRight", useAtlasSize = true},
+	-- 			TopLeft = {format = true, atlas = "%s-NineSlice-CornerTopLeft", useAtlasSize = true},
+	-- 			Bottom = {format = true, atlas = "_%s-NineSlice-EdgeBottom", useAtlasSize = true},
+	-- 			Right = {format = true, atlas = "!%s-NineSlice-EdgeRight", useAtlasSize = true},
+	-- 			Left = {format = true, atlas = "!%s-NineSlice-EdgeLeft", useAtlasSize = true},
+	-- 			Top = {format = true, atlas = "_%s-NineSlice-EdgeTop", useAtlasSize = true},
+	-- 		},
+	-- 		Title = {
+	-- 			TitleLeft = {format = true, atlas = "UI-Frame-%s-TitleLeft", useAtlasSize = true},
+	-- 			TitleRight = {format = true, atlas = "UI-Frame-%s-TitleRight", useAtlasSize = true},
+	-- 			TitleMiddle = {format = true, atlas = "_UI-Frame-%s-TitleMiddle", useAtlasSize = true}
+	-- 		},
+	-- 		Dialog = {
+	-- 			Background = {format = true, atlas = "UI-Frame-%s-PortraitWiderDisable", useAtlasSize = false}
+	-- 		},
+	-- 		Scroll = {
+	-- 			Background = {format = true, atlas = "UI-Frame-%s-PortraitWiderDisable", useAtlasSize = false}
+	-- 		},
+	-- 		ReputationBar = {
+	-- 			Border = {format = true, atlas = "Garr_Mission_MaterialFrame", useAtlasSize = true--[[ , points = {{"TOPLEFT", -35, 30}, {"BOTTOMRIGHT", 7, -10}} ]]},
+	-- 			--MaskBorder = {path = "Interface/ChatFrame/UI-ChatIcon-HotS"},
+	-- 		},
+	-- 		Detail = {
+	-- 			Background = {format = true, atlas = "covenantchoice-offering-parchment-%s", useAtlasSize = true},
+	-- 			Title1 = {format = true, atlas = "UI-Frame-%s-Ribbon", useAtlasSize = true},
+	-- 		},			
+	-- 	}
+	-- }
 end
 
 local function LoadImmersiveView()
@@ -237,7 +361,18 @@ local function LoadImmersiveView()
 
 	LoadTitleButtons()
 	LoadDetalies()
-	LoadModel()
+
+	ModelScaling:CreateClassModel("FULLMODEL", {"CinematicModel"}, ModelScaling.defSetUnit, ModelScaling.defFullModel)
+    ModelScaling:CreateSubClassModel("FULLMODEL", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defFullModelRight)
+    ModelScaling:CreateSubClassModel("FULLMODEL", "LEFT", ModelScaling.defGetNPC, ModelScaling.defFullModelLeft)
+	ModelScaling:RegisterModel("FULLMODEL", "RIGHT", GwFullScreenGossipViewFrame.Models.Player)
+	ModelScaling:RegisterModel("FULLMODEL", "LEFT", GwFullScreenGossipViewFrame.Models.Giver)
+
+    ModelScaling:CreateClassModel("PORTRAIT", {"CinematicModel", "PlayerModel"}, ModelScaling.defSetUnit, ModelScaling.defPortrait)
+    ModelScaling:CreateSubClassModel("PORTRAIT", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defPortraitRight)
+    ModelScaling:CreateSubClassModel("PORTRAIT", "LEFT", ModelScaling.defGetNPC, ModelScaling.defPortraitLeft)
+	ModelScaling:RegisterModel("PORTRAIT", "RIGHT", GwNormalScreenGossipViewFrame.Models.Player, GwNormalScreenGossipViewFrame.Models.Player.Name.Text)
+	ModelScaling:RegisterModel("PORTRAIT", "LEFT", GwNormalScreenGossipViewFrame.Models.Giver, GwNormalScreenGossipViewFrame.Models.Giver.Name.Text)
 end
 
 GW.LoadImmersiveView = LoadImmersiveView

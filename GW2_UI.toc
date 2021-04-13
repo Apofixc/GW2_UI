@@ -139,7 +139,7 @@ immersive/toast.xml
 immersive/alertPosition.lua
 immersive/alerts.lua
 immersive/afk.lua
-immersive/immersiveviewcustome.lua
+immersive/immersiveviewlogic.lua
 immersive/immersiveview.lua
 immersive/chatframe.lua
 immersive/chatbubbles.lua

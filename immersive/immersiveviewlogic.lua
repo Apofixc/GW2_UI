@@ -1,9 +1,9 @@
 local _, GW = ...
 local L = GW.L
 local GetSetting = GW.GetSetting
-local animations = GW.animations
 local AddToAnimation = GW.AddToAnimation
 local StopAnimation = GW.StopAnimation
+local CompletedAnimation =  GW.CompletedAnimation
 local IsIn = GW.IsIn
 local ModelScaling = GW.Libs.Model
 
@@ -22,11 +22,6 @@ local INTERACTIVE_TEXT = {
 local function GetImmersiveInteractiveText(buttonType)
 	return INTERACTIVE_TEXT[buttonType][math.random(1, #INTERACTIVE_TEXT[buttonType])]
 end
-
-local function FinishedAnimation(name)
-	return animations[name] == nil or animations[name]["completed"] == true
-end
-GW.FinishedAnimation = FinishedAnimation
 
 local function FadeAnimation(frame, name, fadeStart, fadeFinish, duration, funcFinish)
 	AddToAnimation(
@@ -131,15 +126,58 @@ do
 end
 
 do
-	local TitleButtonPool
-	local function GetTitleButtonPoolEnumerateActive()
-		return TitleButtonPool and TitleButtonPool:EnumerateActive()
-	end
-	GW.GetTitleButtonPoolEnumerateActive = GetTitleButtonPoolEnumerateActive
+	AdvanceGossipTitleButtonMixin = {}
+	
+	function AdvanceGossipTitleButtonMixin:SetAction(titleText, icon)
+		self.type = "Action"
 
+		self:SetFormattedText(ACTION_DISPLAY, titleText)
+		self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/gossipview/icon-gossip")
+		self.Icon:SetTexCoord(0.25 * floor(icon / 4), 0.25 * (floor(icon / 4) + 1), 0.25 * (icon % 4), 0.25 * ((icon % 4) + 1))
+		self.Icon:SetVertexColor(1, 1, 1, 1)
+	
+		self:Resize()
+	end
+	
+	function AdvanceGossipTitleButtonMixin:AddCallbackForClick(id, func, arg, playSound)
+		self:SetID(id)
+
+		self.func = func
+		self.arg = arg
+		self.playSound = playSound
+	end
+
+	function AdvanceGossipTitleButtonMixin:Resize()
+		self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()))
+		self:SetWidth(self:GetParent():GetWidth())
+	end
+
+	function AdvanceGossipTitleButtonMixin:OnClick()
+		if CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") and self.func and not self.ShowIn:IsPlaying() then
+			local scroll = self:GetParent():GetParent()
+			scroll.ScrollBar:SetAlpha(0)
+			scroll.ScrollChildFrame:Hide()
+			
+			if scroll.Icon.SetText then scroll.Icon:SetText("|cFFFF5A00"..UnitName("player")..": ") end			
+			scroll.Icon:Show()
+
+			scroll.Text:SetText(self:GetText():gsub("^.*%d+%p%s", ""))
+			scroll.Text:Show()
+
+			local lenghtText = strlenutf8(scroll.Text:GetText())
+			local funcFinish = function()
+				self.func(self.arg)
+				PlaySound(self.playSound)
+			end
+
+			DialogAnimation(scroll.Text, "IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON", 0, lenghtText, GetSetting("ANIMATION_TEXT_SPEED_P") * lenghtText, funcFinish)
+		end
+	end 
+end
+
+do
 	local ACTIVE_TEMPLATE
 	local SHOW_TITLE_BUTTON
-	local AutoNext
 	local DIALOG_STRINGS_CURRENT
 	local DIALOG_STRINGS
 
@@ -160,13 +198,13 @@ do
 		local lastElement = current == finish
 		local totalHeight = 0
 	
-		TitleButtonPool:ReleaseAll()
+		GwImmersiveFrame.TitleButtonPool:ReleaseAll()
 	
 		for id, value in ipairs(SHOW_TITLE_BUTTON) do
 			if value.show(event, firstElement, lastElement) then
 				for titleIndex, info in pairs(value.getInfo()) do
-					local button = TitleButtonPool:Acquire() 
-					local numActiveButton = TitleButtonPool:GetNumActive()
+					local button = GwImmersiveFrame.TitleButtonPool:Acquire() 
+					local numActiveButton = GwImmersiveFrame.TitleButtonPool:GetNumActive()
 					button:SetParent(self.Scroll.ScrollChildFrame)
 					button:SetHighlightTexture(self.titleHighlightTexture)
 					button:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'TOPLEFT', 0, -totalHeight)
@@ -208,19 +246,22 @@ do
 		self.Scroll.ScrollChildFrame:SetHeight(totalHeight)
 	end
 
-	local function StopAnimationDialog(immersiveFrame)
-		AutoNext = false;
+	local function StopAnimationDialog(immersiveFrame, animationName)
+		if animationName then
+			StopAnimation(animationName)	
+		end
 
-		immersiveFrame.Dialog.Text:SetAlphaGradient(immersiveFrame.maxSizeText, 1);
-		immersiveFrame.Scroll.ScrollChildFrame:Show();	
-		immersiveFrame.Scroll.ScrollBar:SetAlpha(1);	
+		GwImmersiveFrame.AutoNext = false
+		immersiveFrame.Dialog.Text:SetAlphaGradient(immersiveFrame.maxSizeText, 1)
+		immersiveFrame.Scroll.ScrollChildFrame:Show()
+		immersiveFrame.Scroll.ScrollBar:SetAlpha(1)
 	end
 	GW.StopAnimationDialog = StopAnimationDialog
 
 	local function Split(text, maxSizeText, mode)
 		DIALOG_STRINGS = {}
 		DIALOG_STRINGS_CURRENT = 0
-		AutoNext = GetSetting("AUTO_NEXT")
+		GwImmersiveFrame.AutoNext = GetSetting("AUTO_NEXT")
 
 		local unitName = format("|cFFFF5A00%s|r ", (mode == "FULL_SCREEN") and UnitName("npc")..": " or "")
 
@@ -257,7 +298,7 @@ do
 	end
 
 	local function Dialog(immersiveFrame, operation)
-		if DIALOG_STRINGS_CURRENT and FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") and tonumber(operation) then
+		if DIALOG_STRINGS_CURRENT and CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") and tonumber(operation) then
 			DIALOG_STRINGS_CURRENT = DIALOG_STRINGS_CURRENT + operation
 
 			if not DIALOG_STRINGS[DIALOG_STRINGS_CURRENT] then 
@@ -271,10 +312,10 @@ do
 			local StartAnimation = strlenutf8(name)
 			local lenghtAnimation = strlenutf8(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT]) - strlenutf8(sColor) - strlenutf8(fColor)
 			local funcFinish = function()
-				if AutoNext and DIALOG_STRINGS_CURRENT < #DIALOG_STRINGS then
+				if GwImmersiveFrame.AutoNext and DIALOG_STRINGS_CURRENT < #DIALOG_STRINGS then
 					C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
 						function() 
-							if AutoNext and immersiveFrame:IsVisible() then Dialog(immersiveFrame, 1) end	
+							if GwImmersiveFrame.AutoNext and immersiveFrame:IsVisible() then Dialog(immersiveFrame, 1) end	
 						end
 					)
 				else
@@ -286,6 +327,7 @@ do
 			TitleButtonShow(immersiveFrame, GwImmersiveFrame.LastEvent, 1, #DIALOG_STRINGS, DIALOG_STRINGS_CURRENT);
 		end
 	end
+	GW.Dialog = Dialog
 
 	local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)	
 		immersiveFrame:Show()
@@ -300,7 +342,7 @@ do
 			immersiveFrame.Title.Text:SetText(title)
 			FadeAnimation(immersiveFrame.Title, "IMMERSIVE_TITLE_ANIMATION", immersiveFrame.Title:GetAlpha(), 1, 0.3)
 		else
-			if not FinishedAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
+			if not CompletedAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
 			immersiveFrame.Title:SetAlpha(0)
 		end
 
@@ -314,9 +356,9 @@ do
 			self.customFrame:Hide()
 			self.customFrame = nil	
 		elseif self.ActiveFrame:IsShown() then
-			if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION") end
-			if not FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
-			if not FinishedAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
+			if not CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION") end
+			if not CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
+			if not CompletedAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
 
 			local funcFinish = function()
 				self.ActiveFrame:Hide()
@@ -332,61 +374,13 @@ do
 	GW.ImmersiveFrameHandleHide = ImmersiveFrameHandleHide
 
 	local function LoadTitleButtons()
-		AdvanceGossipTitleButtonMixin = {}
-	
-		function AdvanceGossipTitleButtonMixin:SetAction(titleText, icon)
-			self.type = "Action"
-	
-			self:SetFormattedText(ACTION_DISPLAY, titleText)
-			self.Icon:SetTexture("Interface/AddOns/GW2_UI/textures/gossipview/icon-gossip")
-			self.Icon:SetTexCoord(0.25 * floor(icon / 4), 0.25 * (floor(icon / 4) + 1), 0.25 * (icon % 4), 0.25 * ((icon % 4) + 1))
-			self.Icon:SetVertexColor(1, 1, 1, 1)
-		
-			self:Resize()
-		end
-		
-		function AdvanceGossipTitleButtonMixin:AddCallbackForClick(id, func, arg, playSound)
-			self:SetID(id)
-	
-			self.func = func
-			self.arg = arg
-			self.playSound = playSound
-		end
-	
-		function AdvanceGossipTitleButtonMixin:Resize()
-			self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()))
-			self:SetWidth(self:GetParent():GetWidth())
-		end
-	
-		function AdvanceGossipTitleButtonMixin:OnClick()
-			if FinishedAnimation("IMMERSIVE_DIALOG_ANIMATION") and self.func and not self.ShowIn:IsPlaying() then
-				local scroll = self:GetParent():GetParent()
-				scroll.ScrollBar:SetAlpha(0)
-				scroll.ScrollChildFrame:Hide()
-				
-				if scroll.Icon.SetText then scroll.Icon:SetText("|cFFFF5A00"..UnitName("player")..": ") end			
-				scroll.Icon:Show()
-	
-				scroll.Text:SetText(self:GetText():gsub("^.*%d+%p%s", ""))
-				scroll.Text:Show()
-	
-				local lenghtText = strlenutf8(scroll.Text:GetText())
-				local funcFinish = function()
-					self.func(self.arg)
-					PlaySound(self.playSound)
-				end
-	
-				DialogAnimation(scroll.Text, "IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON", 0, lenghtText, GetSetting("ANIMATION_TEXT_SPEED_P") * lenghtText, funcFinish)
-			end
-		end 
-	
 		local function FramePool_HideAndClear(framePool, frame)
 			frame:Hide()
 			frame:ClearAllPoints()
 			frame.Icon:SetTexCoord(0, 1, 0, 1)
 		end
 	
-		TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate", FramePool_HideAndClear)
+		GwImmersiveFrame.TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate", FramePool_HideAndClear)
 	
 		local function GetAvailableQuests() return C_GossipInfo.GetAvailableQuests() end
 		local function GetOptions() return C_GossipInfo.GetOptions() end		
@@ -453,7 +447,7 @@ do
 		local function Back() Dialog(GwImmersiveFrame.ActiveFrame, -1) end
 		local function Repeat() 
 			DIALOG_STRINGS_CURRENT = 0
-			AutoNext = GetSetting("AUTO_NEXT")
+			GwImmersiveFrame.AutoNext = GetSetting("AUTO_NEXT")
 			Dialog(GwImmersiveFrame.ActiveFrame, 1) 
 		end
 	
@@ -693,79 +687,4 @@ do
 		
 	end
 	GW.LoadDetalies = LoadDetalies
-
-	local function LoadModel()
-		local defFullModelRight = {
-			FacingLeft = false,
-			Camera = 1.55, 
-			Facing = 2.3, 
-			TargetDistance = .27, 
-			HeightFactor = .4,    
-		}
-		
-		local defFullModelLeft = {
-			FacingLeft = true,
-			Camera = 1.8, 
-			Facing = -.92, 
-			TargetDistance = .27, 
-			HeightFactor = .34,   
-		}
-		
-		local defPortraitRight = {
-			DistanceScale = 1.1,
-			PortraitZoom = .7,
-			PositionX = 0,
-			PositionY = 0,
-			PositionZ = -.05,
-		}
-		
-		local defPortraitLeft = {
-			DistanceScale = 1.1,
-			PortraitZoom = .7,
-			PositionX = 0,
-			PositionY = 0,
-			PositionZ = -.05,
-		}
-		
-		local function defSetUnit(model, unit)
-			model:ClearModel()
-			model:SetUnit(unit) 
-		end
-		
-		local defFullModel = {
-			SetFacingLeft = { arg1 = "FacingLeft"}, 
-			InitializeCamera = {arg1 = "Camera"}, 
-			SetTargetDistance = {arg1 = "TargetDistance"}, 
-			SetHeightFactor = {arg1 = "HeightFactor"}, 
-			SetFacing = {arg1 = "Facing"},
-		}
-		
-		local defPortrait = {
-			SetCamDistanceScale = {arg1 = "DistanceScale"},
-			SetPortraitZoom = {arg1 = "PortraitZoom"},
-			SetPosition = {arg1 = "PositionX", arg2 = "PositionY", arg3 = "PositionZ"},
-			RefreshUnit = {}
-		}
-		
-		local function defGetPlayer()
-			return "player" 
-		end
-		
-		local function defGetNPC()
-			return UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none" 
-		end
-	
-		ModelScaling:CreateClassModel("FULLMODEL", {"CinematicModel"}, defSetUnit, defFullModel)
-		ModelScaling:CreateSubClassModel("FULLMODEL", "RIGHT", defGetPlayer, defFullModelRight)
-		ModelScaling:CreateSubClassModel("FULLMODEL", "LEFT", defGetNPC, defFullModelLeft)
-		ModelScaling:CreateClassModel("PORTRAIT", {"CinematicModel", "PlayerModel"}, defSetUnit, defPortrait)
-		ModelScaling:CreateSubClassModel("PORTRAIT", "RIGHT", defGetPlayer, defPortraitRight)
-		ModelScaling:CreateSubClassModel("PORTRAIT", "LEFT", defGetNPC, defPortraitLeft)
-	
-		ModelScaling:RegisterModel("FULLMODEL", "RIGHT", GwFullScreenGossipViewFrame.Models.Player)
-		ModelScaling:RegisterModel("FULLMODEL", "LEFT", GwFullScreenGossipViewFrame.Models.Giver)
-		ModelScaling:RegisterModel("PORTRAIT", "RIGHT", GwNormalScreenGossipViewFrame.Models.Player, GwNormalScreenGossipViewFrame.Models.Player.Name.Text)
-		ModelScaling:RegisterModel("PORTRAIT", "LEFT", GwNormalScreenGossipViewFrame.Models.Giver, GwNormalScreenGossipViewFrame.Models.Giver.Name.Text)
-	end
-	GW.LoadModel = LoadModel
 end
