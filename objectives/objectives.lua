@@ -25,7 +25,7 @@ local function wiggleAnim(self)
         GetTime(),
         2,
         function()
-            local prog = animations[self:GetName()]["progress"]
+            local prog = animations[self:GetName()].progress
 
             self.flare:SetRotation(lerp(0, 1, prog))
 
@@ -267,8 +267,8 @@ local function blockOnLeave(self)
     for _, v in pairs(self.objectiveBlocks) do
         v.StatusBar.progress:Hide()
     end
-    if animations[self:GetName() .. "hover"] ~= nil then
-        animations[self:GetName() .. "hover"]["complete"] = true
+    if animations[self:GetName() .. "hover"] then
+        animations[self:GetName() .. "hover"].complete = true
     end
     GameTooltip_Hide()
 end
@@ -1241,9 +1241,6 @@ end
 GW.AdjustQuestTracker = AdjustQuestTracker
 
 local function LoadQuestTracker()
-    --local qt_enabled = GetSetting("QUESTTRACKER_ENABLED")
-    --local bars_enabled = GetSetting("ACTIONBARS_ENABLED")
-
     -- disable the default tracker
     ObjectiveTrackerFrame:SetMovable(1)
     ObjectiveTrackerFrame:SetUserPlaced(true)

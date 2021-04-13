@@ -6,8 +6,13 @@ local SetSetting = GW.SetSetting
 local bloodSpark = GW.BLOOD_SPARK
 local CLASS_ICONS = GW.CLASS_ICONS
 local IsFrameModified = GW.IsFrameModified
+local CheckForIncompatibleAddons = GW.CheckForIncompatibleAddons
 local Debug = GW.Debug
 local LibSharedMedia = GW.Libs.LSM
+
+local animations = GW.animations
+
+local l = CreateFrame("Frame", nil, UIParent) -- Main event frame
 
 GW.VERSION_STRING = "GW2_UI @project-version@"
 
@@ -19,7 +24,7 @@ if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then
     return
 end
 
-if GW.CheckForPasteAddon() and GetSetting("ACTIONBARS_ENABLED") then
+if GW.CheckForPasteAddon() and GetSetting("ACTIONBARS_ENABLED") and not CheckForIncompatibleAddons("Actionbars") then
     DEFAULT_CHAT_FRAME:AddMessage(("*GW2 UI:|r |cffff0000You have installed the Addon 'Paste'. This can cause, that our actionbars are empty. Deactive 'Paste' to use our actionbars.|r"):gsub("*", GW.Gw2Color))
 end
 
@@ -35,7 +40,7 @@ if Profiler then
 end
 
 local function disableMABags()
-    local bags = GetSetting("BAGS_ENABLED")
+    local bags = GetSetting("BAGS_ENABLED") and not CheckForIncompatibleAddons("Inventory")
     if not bags or not MovAny or not MADB then
         return
     end
@@ -52,44 +57,40 @@ if AchievementMicroButton_Update == nil then
     end
 end
 
-local animations = {}
-GW.animations = animations
 local function AddToAnimation(name, from, to, start, duration, method, easeing, onCompleteCallback, doCompleteOnOverider)
     local newAnimation = true
-    if animations[name] ~= nil then
-        if (animations[name]["start"] + animations[name]["duration"]) > GetTime() then
-            newAnimation = false
-        end
+    if animations[name] then
+        newAnimation = (animations[name].start + animations[name].duration) > GetTime()
     end
-    if doCompleteOnOverider == nil then
+    if not doCompleteOnOverider then
         newAnimation = true
     end
 
-    if newAnimation == false then
-        animations[name]["duration"] = duration
-        animations[name]["to"] = to
-        animations[name]["progress"] = 0
-        animations[name]["method"] = method
-        animations[name]["completed"] = false
-        animations[name]["easeing"] = easeing
-        animations[name]["onCompleteCallback"] = onCompleteCallback
+    if not newAnimation then
+        animations[name].duration = duration
+        animations[name].to = to
+        animations[name].progress = 0
+        animations[name].method = method
+        animations[name].completed = false
+        animations[name].easeing = easeing
+        animations[name].onCompleteCallback = onCompleteCallback
     else
         animations[name] = {}
-        animations[name]["start"] = start
-        animations[name]["duration"] = duration
-        animations[name]["from"] = from
-        animations[name]["to"] = to
-        animations[name]["progress"] = 0
-        animations[name]["method"] = method
-        animations[name]["completed"] = false
-        animations[name]["easeing"] = easeing
-        animations[name]["onCompleteCallback"] = onCompleteCallback
+        animations[name].start = start
+        animations[name].duration = duration
+        animations[name].from = from
+        animations[name].to = to
+        animations[name].progress = 0
+        animations[name].method = method
+        animations[name].completed = false
+        animations[name].easeing = easeing
+        animations[name].onCompleteCallback = onCompleteCallback
     end
 end
 GW.AddToAnimation = AddToAnimation
 
 local function buttonAnim(self, name, w, hover)
-    local prog = animations[name]["progress"]
+    local prog = animations[name].progress
     local l = GW.lerp(0, w, prog)
 
     hover:SetPoint("RIGHT", self, "LEFT", l, 0)
@@ -187,9 +188,8 @@ function GwStandardButton_OnLeave(self)
     )
 end
 
-
 local function barAnimation(self, barWidth, sparkWidth)
-    local snap = (animations[self.animationName]["progress"] * 100) / 5
+    local snap = (animations[self.animationName].progress * 100) / 5
 
     local round_closest = 0.05 * snap
 
@@ -245,19 +245,18 @@ local function SetDeadIcon(self)
 end
 GW.SetDeadIcon = SetDeadIcon
 
-local function StopAnimation(k)
-    if animations[k] ~= nil then
-        animations[k] = nil
+local function StopAnimation(name)
+    if animations[name] then
+        animations[name].completed = true
+        animations[name].duration = 0
     end
 end
 GW.StopAnimation = StopAnimation
 
-local l = CreateFrame("Frame", nil, UIParent)
-
 local function swimAnim()
     local r, g, b = hudArtFrame.actionBarHud.RightSwim:GetVertexColor()
-    hudArtFrame.actionBarHud.RightSwim:SetVertexColor(r, g, b, animations["swimAnimation"]["progress"])
-    hudArtFrame.actionBarHud.LeftSwim:SetVertexColor(r, g, b, animations["swimAnimation"]["progress"])
+    hudArtFrame.actionBarHud.RightSwim:SetVertexColor(r, g, b, animations.swimAnimation.progress)
+    hudArtFrame.actionBarHud.LeftSwim:SetVertexColor(r, g, b, animations.swimAnimation.progress)
 end
 GW.AddForProfiling("index", "swimAnim", swimAnim)
 
@@ -267,13 +266,7 @@ local function AddUpdateCB(func, payload)
         return
     end
 
-    tinsert(
-        updateCB,
-        {
-            ["func"] = func,
-            ["payload"] = payload
-        }
-    )
+    tinsert(updateCB,{func = func, payload = payload})
 end
 GW.AddUpdateCB = AddUpdateCB
 
@@ -282,36 +275,36 @@ local function gw_OnUpdate(_, elapsed)
     local count = 0
     for _, v in pairs(animations) do
         count = count + 1
-        if v["completed"] == false and GetTime() >= (v["start"] + v["duration"]) then
-            if v["easeing"] == nil then
-                v["progress"] = GW.lerp(v["from"], v["to"], math.sin(1 * math.pi * 0.5))
+        if v.completed == false and GetTime() >= (v.start + v.duration) then
+            if v.easeing == nil then
+                v.progress = GW.lerp(v.from, v.to, math.sin(1 * math.pi * 0.5))
             else
-                v["progress"] = GW.lerp(v["from"], v["to"], 1)
+                v.progress = GW.lerp(v.from, v.to, 1)
             end
-            if v["method"] ~= nil then
-                v["method"](v["progress"])
-            end
-
-            if v["onCompleteCallback"] ~= nil then
-                v["onCompleteCallback"]()
+            if v.method ~= nil then
+                v.method(v.progress)
             end
 
-            v["completed"] = true
+            if v.onCompleteCallback ~= nil then
+                v.onCompleteCallback()
+            end
+
+            v.completed = true
             foundAnimation = true
         end
-        if v["completed"] == false then
-            if v["easeing"] == nil then
-                v["progress"] =
-                    GW.lerp(v["from"], v["to"], math.sin((GetTime() - v["start"]) / v["duration"] * math.pi * 0.5))
+        if v.completed == false then
+            if v.easeing == nil then
+                v.progress =
+                    GW.lerp(v.from, v.to, math.sin((GetTime() - v.start) / v.duration * math.pi * 0.5))
             else
-                v["progress"] = GW.lerp(v["from"], v["to"], (GetTime() - v["start"]) / v["duration"])
+                v.progress = GW.lerp(v.from, v.to, (GetTime() - v.start) / v.duration)
             end
-            v["method"](v["progress"])
+            v.method(v.progress)
             foundAnimation = true
         end
     end
 
-    if foundAnimation == false and count ~= 0 then
+    if not foundAnimation and count > 0 then
         table.wipe(animations)
     end
 
@@ -366,7 +359,7 @@ local function UpdateHudScale()
         if not mf.gw_frame.isMoved and mf:GetScale() ~= hudScale then
             mf.gw_frame:SetScale(hudScale)
             mf:SetScale(hudScale)
-            GW.SetSetting(mf.gw_Settings .."_scale", hudScale)
+            GW.SetSetting(mf.gw_Settings .. "_scale", hudScale)
         end
     end
 end
@@ -385,12 +378,6 @@ end
 GW.RegisterScaleFrame = RegisterScaleFrame
 
 local function loadAddon(self)
-    hooksecurefunc("StaticPopup_Show", function(which)
-        if which == "EXPERIMENTAL_CVAR_WARNING" then
-            StaticPopup_Hide("EXPERIMENTAL_CVAR_WARNING")
-        end
-    end)
-
     if GW.inDebug then
         GW.AlertTestsSetup()
     end
@@ -398,7 +385,12 @@ local function loadAddon(self)
     --Create Settings window
     GW.LoadMovers()
     GW.LoadSettings()
-
+   	hooksecurefunc("StaticPopup_Show", function(which)
+    	if which == "EXPERIMENTAL_CVAR_WARNING" then
+        	StaticPopup_Hide("EXPERIMENTAL_CVAR_WARNING")
+    	end
+    end)
+            
     if GetSetting("PIXEL_PERFECTION") and not GetCVarBool("useUiScale") then
         PixelPerfection()
         DEFAULT_CHAT_FRAME:AddMessage(("*GW2 UI:|r Pixel Perfection-Mode enabled. UIScale down to perfect pixel size. Can be deactivated in HUD settings. |cFF00FF00/gw2|r"):gsub("*", GW.Gw2Color))
@@ -434,7 +426,7 @@ local function loadAddon(self)
             "OnClick",
             function()
                 if InCombatLockdown() then
-                    DEFAULT_CHAT_FRAME:AddMessage(("|*GW2 UI:|r "):gsub("*", GW.Gw2Color) .. L["Settings are not available in combat!"])
+                    DEFAULT_CHAT_FRAME:AddMessage(("*GW2 UI:|r " .. L["Settings are not available in combat!"]):gsub("*", GW.Gw2Color))
                     return
                 end
                 ShowUIPanel(GwSettingsWindow)
@@ -477,8 +469,7 @@ local function loadAddon(self)
     GW.LoadTimeManagerSkin()
 
     GW.LoadImmersionAddonSkin()
-    GW.LoadStorylineAddonSkin()
-    
+
     GW.AddCoordsToWorldMap()
     GW.LoadVehicleButton()
     GW.MakeAltPowerBarMovable()
@@ -505,13 +496,15 @@ local function loadAddon(self)
         GW.LoadFonts()
     end
 
-    if GetSetting("GW_COMBAT_TEXT_MODE") == "GW2" then
-        SetCVar("floatingCombatTextCombatDamage", 0)
-        GW.LoadDamageText()
-    elseif GetSetting("GW_COMBAT_TEXT_MODE") == "BLIZZARD" then
-        SetCVar("floatingCombatTextCombatDamage", 1)
-    else
-        SetCVar("floatingCombatTextCombatDamage", 0)
+    if not CheckForIncompatibleAddons("FloatingCombatText") then -- Only touch this setting if no other addon for this is loaded
+        if GetSetting("GW_COMBAT_TEXT_MODE") == "GW2" then
+            SetCVar("floatingCombatTextCombatDamage", 0)
+            GW.LoadDamageText()
+        elseif GetSetting("GW_COMBAT_TEXT_MODE") == "BLIZZARD" then
+            SetCVar("floatingCombatTextCombatDamage", 1)
+        else
+            SetCVar("floatingCombatTextCombatDamage", 0)
+        end
     end
 
     if GetSetting("CASTINGBAR_ENABLED") then
@@ -519,21 +512,21 @@ local function loadAddon(self)
         GW.LoadCastingBar(PetCastingBarFrame, "GwCastingBarPet", "pet", false)
     end
 
-    if GetSetting("MINIMAP_ENABLED") then
+    if GetSetting("MINIMAP_ENABLED") and not CheckForIncompatibleAddons("Minimap") then
         GW.LoadMinimap()
     end
 
-    if GetSetting("QUESTTRACKER_ENABLED") then
+    if GetSetting("QUESTTRACKER_ENABLED") and not CheckForIncompatibleAddons("Objectives") then
         GW.LoadQuestTracker()
     else
-        GW.AdjustQuestTracker(GetSetting("ACTIONBARS_ENABLED"), GetSetting("MINIMAP_ENABLED"))
+        GW.AdjustQuestTracker((GetSetting("ACTIONBARS_ENABLED") and not CheckForIncompatibleAddons("Actionbars")), (GetSetting("MINIMAP_ENABLED") and not CheckForIncompatibleAddons("Minimap")))
     end
 
     if GetSetting("TOOLTIPS_ENABLED") then
         GW.LoadTooltips()
     end
 
-    if GetSetting("QUESTVIEW_ENABLED") then
+    if GetSetting("QUESTVIEW_ENABLED") and not CheckForIncompatibleAddons("ImmersiveQuesting") then
         GW.LoadImmersiveView()
         GW.LoadSummon()
     end
@@ -555,12 +548,14 @@ local function loadAddon(self)
         GW.LoadPowerBar()
     end
 
-    if GetSetting("BAGS_ENABLED") then
-        GW.LoadInventory()
-        GW.SkinLooTFrame()
-    else
-        -- if not our bags, we need to cut the bagbar frame out of the micromenu
-        GW.LoadDefaultBagBar()
+    if not CheckForIncompatibleAddons("Inventory") then -- Only touch this setting if no other addon for this is loaded
+        if GetSetting("BAGS_ENABLED") then
+            GW.LoadInventory()
+            GW.SkinLooTFrame()
+        else
+            -- if not our bags, we need to cut the bagbar frame out of the micromenu
+            GW.LoadDefaultBagBar()
+        end
     end
 
     if GetSetting("USE_BATTLEGROUND_HUD") then
@@ -606,7 +601,7 @@ local function loadAddon(self)
     end
 
     -- create action bars
-    if GetSetting("ACTIONBARS_ENABLED") then
+    if GetSetting("ACTIONBARS_ENABLED") and not CheckForIncompatibleAddons("Actionbars") then
         GW.LoadActionBars(lm)
         GW.ExtraAB_BossAB_Setup()
     end
@@ -621,7 +616,7 @@ local function loadAddon(self)
         GW.LoadPlayerAuras(lm)
     end
 
-    if not IsAddOnLoaded("DynamicCam") then
+    if not CheckForIncompatibleAddons("DynamicCam") then -- Only touch this setting if no other addon for this is loaded
         if GetSetting("DYNAMIC_CAM") then
             SetCVar("test_cameraDynamicPitch", true)
             SetCVar("cameraKeepCharacterCentered", false)
@@ -644,11 +639,11 @@ local function loadAddon(self)
     GW.LoadMicroMenu()
     GW.LoadOrderBar()
 
-    if GetSetting("PARTY_FRAMES") then
+    if GetSetting("PARTY_FRAMES") and not CheckForIncompatibleAddons("Groupframes") then
         GW.LoadPartyFrames()
     end
 
-    if GetSetting("RAID_FRAMES") then
+    if GetSetting("RAID_FRAMES") and not CheckForIncompatibleAddons("Raidframes") then
         GW.LoadRaidFrames()
     end
 

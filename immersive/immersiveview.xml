@@ -352,6 +352,66 @@
 					NORMAL_QUEST_DISPLAY = "|cFFFF5A00%s";
 					ACTION_DISPLAY = "|cFF8C00FF%s";
 				end
+				self.StyleReward = function(template)
+					local totalHeight = 0
+					local elementsTable = template.frames
+
+					for i = 1, #elementsTable, 2 do
+						if _G[elementsTable[i]]:IsShown() then
+							if elementsTable[i] == "QuestInfoRewardsFrame" then
+								local lastFrame = QuestInfoRewardsFrame.Header
+								local height = lastFrame:GetHeight()
+							
+								for _, frame in ipairs({"QuestSessionBonusReward", "ItemReceiveText", "MoneyFrame", "XPFrame", "ArtifactXPFrame", "WarModeBonusFrame", "HonorFrame", "SkillPointFrame", "PlayerTitleText", "TitleFrame", "ItemChooseText"}) do
+									if QuestInfoRewardsFrame[frame] and QuestInfoRewardsFrame[frame]:IsShown() then
+										QuestInfoRewardsFrame[frame]:ClearAllPoints()
+										QuestInfoRewardsFrame[frame]:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+										lastFrame = QuestInfoRewardsFrame[frame]
+										height = height + lastFrame:GetHeight() + 5
+									end
+								end
+								
+								for _, obj in ipairs(QuestInfoRewardsFrame.collectionObjectFromPolls) do
+									obj:ClearAllPoints()
+									obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
+									lastFrame = obj
+									height = height + lastFrame:GetHeight() + 5
+								end
+								
+								for i, questItem in ipairs(QuestInfoRewardsFrame.RewardButtons) do
+									if questItem:IsShown() then
+										questItem:ClearAllPoints()
+										questItem:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", i == 1 and 5 or 0, -5)
+										lastFrame = questItem
+										height = height + lastFrame:GetHeight() + 5
+									end
+								end
+							
+								QuestInfoRewardsFrame:SetHeight(height)
+							end
+
+							if elementsTable[i] == "GwQuestInfoProgress" then
+								local height = 0
+								local lastFrame 
+								if QuestInfoRequiredMoneyFrame:IsShown() then
+									height = height + QuestInfoRequiredMoneyFrame:GetHeight()
+									lastFrame = QuestInfoRequiredMoneyFrame
+								end
+
+								for _, obj in ipairs(GwQuestInfoProgress.collectionObjectFromPolls) do
+									obj:ClearAllPoints()
+									obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
+									lastFrame = obj
+									height = height + lastFrame:GetHeight() + 5
+								end
+							end
+
+							totalHeight = totalHeight + _G[elementsTable[i]]:GetHeight() + elementsTable[i + 1]
+						end
+					end
+
+					return totalHeight
+				end
 			</OnLoad>
 			<OnShow>
 				UIFrameFadeOut(UIParent, 0.5, 1, 0);
@@ -589,6 +649,66 @@
 					TRIVIAL_QUEST_DISPLAY = "|cffffffff%s";
 					NORMAL_QUEST_DISPLAY = "|cFFFF5A00%s";
 					ACTION_DISPLAY = "|cFF8C00FF%s";
+				end
+				self.StyleReward = function(template)
+					local totalHeight = 0
+					local elementsTable = template.frames
+
+					for i = 1, #elementsTable, 2 do
+						if _G[elementsTable[i]]:IsShown() then
+							if elementsTable[i] == "QuestInfoRewardsFrame" then
+								local lastFrame = QuestInfoRewardsFrame.Header
+								local height = lastFrame:GetHeight()
+							
+								for _, frame in ipairs({"QuestSessionBonusReward", "ItemReceiveText", "MoneyFrame", "XPFrame", "ArtifactXPFrame", "WarModeBonusFrame", "HonorFrame", "SkillPointFrame", "PlayerTitleText", "TitleFrame", "ItemChooseText"}) do
+									if QuestInfoRewardsFrame[frame] and QuestInfoRewardsFrame[frame]:IsShown() then
+										QuestInfoRewardsFrame[frame]:ClearAllPoints()
+										QuestInfoRewardsFrame[frame]:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+										lastFrame = QuestInfoRewardsFrame[frame]
+										height = height + lastFrame:GetHeight() + 5
+									end
+								end
+								
+								for _, obj in ipairs(QuestInfoRewardsFrame.collectionObjectFromPolls) do
+									obj:ClearAllPoints()
+									obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
+									lastFrame = obj
+									height = height + lastFrame:GetHeight() + 5
+								end
+								
+								for i, questItem in ipairs(QuestInfoRewardsFrame.RewardButtons) do
+									if questItem:IsShown() then
+										questItem:ClearAllPoints()
+										questItem:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", i == 1 and 5 or 0, -5)
+										lastFrame = questItem
+										height = height + lastFrame:GetHeight() + 5
+									end
+								end
+							
+								QuestInfoRewardsFrame:SetHeight(height)
+							end
+
+							if elementsTable[i] == "GwQuestInfoProgress" then
+								local height = 0
+								local lastFrame 
+								if QuestInfoRequiredMoneyFrame:IsShown() then
+									height = height + QuestInfoRequiredMoneyFrame:GetHeight()
+									lastFrame = QuestInfoRequiredMoneyFrame
+								end
+
+								for _, obj in ipairs(GwQuestInfoProgress.collectionObjectFromPolls) do
+									obj:ClearAllPoints()
+									obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
+									lastFrame = obj
+									height = height + lastFrame:GetHeight() + 5
+								end
+							end
+
+							totalHeight = totalHeight + _G[elementsTable[i]]:GetHeight() + elementsTable[i + 1]
+						end
+					end
+
+					return totalHeight
 				end
 			</OnLoad>
 		</Scripts>

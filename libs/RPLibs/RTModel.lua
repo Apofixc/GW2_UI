@@ -1,9 +1,10 @@
-local MAJOR, MINOR = "ModelScaling", 1 -- 9.2.0 v2 / increase manually on changes
+local MAJOR, MINOR = "ModelsManagement", 0.1
 local ModelsManagementLib = LibStub:NewLibrary(MAJOR, MINOR)
 if not ModelsManagementLib then return end
 
 ModelsManagementLib.SupportModel            = ModelsManagementLib.SupportModel       or {}
 ModelsManagementLib.ModelSetByTypeMode      = ModelsManagementLib.ModelSetByTypeMode or {}
+ModelsManagementLib.Animation               = ModelsManagementLib.Animation          or {}
 
 ModelsManagementLib.SupportModel.Model          = true
 ModelsManagementLib.SupportModel.PlayerModel    = true
@@ -17,109 +18,80 @@ ModelsManagementLib.ModelSetByTypeMode.NOT_SHOW     = "NOT_SHOW"
 ModelsManagementLib.ModelSetByTypeMode.VISIBLE      = "VISIBLE"
 ModelsManagementLib.ModelSetByTypeMode.NOT_VISIBLE  = "NOT_VISIBLE"
 
+ModelsManagementLib.Animation.Idle = 0 
+ModelsManagementLib.Animation.Dead = 6 
+ModelsManagementLib.Animation.Talk = 60 
+ModelsManagementLib.Animation.TalkExclamation = 64
+ModelsManagementLib.Animation.TalkQuestion = 65 
+ModelsManagementLib.Animation.Bow = 66 
+ModelsManagementLib.Animation.Point = 84
+ModelsManagementLib.Animation.Salute = 113
+ModelsManagementLib.Animation.Drowned = 132
+ModelsManagementLib.Animation.Yes = 185
+ModelsManagementLib.Animation.No = 186
+
+-- local CLASS_MODEL = {
+--     [ClassName1] = {
+--         ["SubClass"] = {
+--             SubClassName1 = true, 
+--             SubClassName2 = true
+--         },
+--         ["Limit"] = {
+--             "TypeObject1", 
+--             "TypeObject2"
+--         },
+--         ["Models"] = {
+--             SubClassName1 = function()
+--                 return "npc" or "none"
+--             end, 
+--             SubClassName2 = function()      
+--                 return "player"          
+--             end
+--         },
+--         ["Default"] = {
+--              SubClassName1 = {
+--                arg1 = "...",
+--                arg2 = "...",
+--                arg3 = "...",
+--               },
+--              SubClassName2 = {
+--                arg1 = "...",
+--                arg2 = "...",
+--                arg3 = "...",
+--               },
+--         },
+--         ["Offset"] = {
+--              SubClassName1 = {
+--                  ModelId1 = {
+--                    arg1 = "...",
+--                    arg2 = "...",
+--                    arg3 = "...",
+--                  }
+--               },
+--              SubClassName2 = {
+--                  ModelId1 = {
+--                    arg1 = "...",
+--                    arg2 = "...",
+--                    arg3 = "...",
+--                  }
+--              },
+--         },
+--         ["SetModel"] = function (model, unit)
+--             model:ClearModel()
+--             model:SetUnit(unit) 
+--         end,
+--         ["SetScaling"] = {
+--             NameFunc1 = {arg1 = "..."[, arg2 = "...", arg3 = "...", ....]}, 
+--             NameFunc2 = {arg1 = "..."[, arg2 = "...", arg3 = "...", ....]}, 
+--             NameFunc3  = {arg1 = "..."[, arg2 = "...", arg3 = "...", ....]}, 
+--             NameFunc4  = {arg1 = "..."[, arg2 = "...", arg3 = "...", ....]}, 
+--         }
+--     }
+-- }
+------------------------------------------------------------------------------------------------------------------------
+
 local MODEL_LIST = {}
-
-local CONTROL_MODEL_TYPE = {
-    ["FULLMODEL"] = {
-        ["SubTypes"] = {
-            ["LEFT"] = true, 
-            ["RIGHT"] = true
-        },
-        ["Limit"] = {
-            ["CinematicModel"] = true
-        },
-        ["Default"] = {
-            ["LEFT"] = {
-                FacingLeft = true,
-                Camera = 1.8, 
-                Facing = -.92, 
-                TargetDistance = .27, 
-                HeightFactor = .34, 
-            }, 
-            ["RIGHT"] = {
-                FacingLeft = false,
-                Camera = 1.55, 
-                Facing = 2.3, 
-                TargetDistance = .27, 
-                HeightFactor = .4, 
-            }
-        },
-        ["Offset"] = {
-            ["LEFT"] = {
-
-            }, 
-            ["RIGHT"] = {
-                
-            }
-        },
-        ["Models"] = {
-            ["LEFT"] = function()
-                return UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none"
-            end, 
-            ["RIGHT"] = function()      
-                return "player"          
-            end
-        },
-        ["SetModel"] = function (model, unit)
-            model:ClearModel()
-            model:SetUnit(unit) 
-        end,
-        ["SetScaling"] = {
-            ["SetFacingLeft"] = {arg1 = "FacingLeft"}, 
-            ["InitializeCamera"] = {arg1 = "Camera"}, 
-            ["SetTargetDistance"] = {arg1 = "TargetDistance"}, 
-            ["SetHeightFactor"] = {arg1 = "HeightFactor"}, 
-            ["SetFacing"] = {arg1 = "Facing"}
-        }
-    },
-    ["PORTRAIT"] = {
-        ["SubTypes"] = {
-            ["LEFT"] = true, 
-            ["RIGHT"] = true
-        },
-        ["Limit"] = {
-            ["CinematicModel"] = true, 
-            ["PlayerModel"] = true
-        },
-        ["Default"] = {
-            ["LEFT"] = {
-                Camera = 1.8,
-                Facing = -.95,
-                TargetDistance = .22, 
-                HeightFactor = .325, 
-            }, 
-            ["RIGHT"] = {
-                Camera = 1.8,
-                Facing = 1.8, 
-                TargetDistance = .22, 
-                HeightFactor = .395, 
-            }
-        },
-        ["Offset"] = {
-            ["LEFT"] = {
-
-            }, 
-            ["RIGHT"] = {
-                
-            }
-        },
-        ["Model"] = {
-            ["LEFT"] = function()
-                return UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none"
-            end, 
-            ["RIGHT"] = function()      
-                return "player"          
-            end
-        },
-        ["SetModel"] = function (model, unit)
-            model:ClearModel()
-            model:SetUnit(unit) 
-        end,
-        ["SetScaling"] = {
-
-        }
-    }
-}
+local CLASS_MODEL = {}
 
 function ModelsManagementLib:CreateClassModel(ClassName, Limit, SetModel, SetScaling)
     if type(ClassName) ~= "string" then 
@@ -131,7 +103,7 @@ function ModelsManagementLib:CreateClassModel(ClassName, Limit, SetModel, SetSca
     end
 
     if type(SetModel) ~= "function" then 
-        error(MAJOR..":CreateNewClassModel(ClassName, Limit, SetModel, SetScaling) - default must be table, got "..type(SetModel)) 
+        error(MAJOR..":CreateNewClassModel(ClassName, Limit, SetModel, SetScaling) - SetModel must be function, got "..type(SetModel)) 
     end    
 
     if type(SetScaling) ~= "table" then 
@@ -139,7 +111,7 @@ function ModelsManagementLib:CreateClassModel(ClassName, Limit, SetModel, SetSca
     end    
 
     ClassName = ClassName:upper() 
-    if CONTROL_MODEL_TYPE[ClassName] then
+    if CLASS_MODEL[ClassName] then
         return false
     end
 
@@ -147,8 +119,8 @@ function ModelsManagementLib:CreateClassModel(ClassName, Limit, SetModel, SetSca
         return false     
     end
 
-    for typeObject, value in pairs(Limit) do
-        if not ModelsManagementLib.SupportModel[typeObject] or ModelsManagementLib.SupportModel[typeObject] ~= value then
+    for _, typeObject in ipairs(Limit) do
+        if not ModelsManagementLib.SupportModel[typeObject] then
             return false
         end
     end
@@ -159,14 +131,16 @@ function ModelsManagementLib:CreateClassModel(ClassName, Limit, SetModel, SetSca
         end
     end
 
-    CONTROL_MODEL_TYPE[ClassName] = {}
-    CONTROL_MODEL_TYPE[ClassName]["SubClass"] = {}
-    CONTROL_MODEL_TYPE[ClassName]["Limit"] = Limit
-    CONTROL_MODEL_TYPE[ClassName]["Models"] = {}
-    CONTROL_MODEL_TYPE[ClassName]["SetModel"] = SetModel
-    CONTROL_MODEL_TYPE[ClassName]["SetScaling"] = SetScaling
-    CONTROL_MODEL_TYPE[ClassName]["Default"] = {}
-    CONTROL_MODEL_TYPE[ClassName]["Offset"] = {}
+    CLASS_MODEL[ClassName] = {}
+    CLASS_MODEL[ClassName]["SubClass"] = {}
+    CLASS_MODEL[ClassName]["Limit"] = Limit
+    CLASS_MODEL[ClassName]["Models"] = {}
+    CLASS_MODEL[ClassName]["SetModel"] = SetModel
+    CLASS_MODEL[ClassName]["SetScaling"] = SetScaling
+    CLASS_MODEL[ClassName]["Default"] = {}
+    CLASS_MODEL[ClassName]["Offset"] = {}
+
+    return true
 end
 
 function ModelsManagementLib:CreateSubClassModel(ClassName, SubClassName, Model, Default, Offset)
@@ -175,39 +149,41 @@ function ModelsManagementLib:CreateSubClassModel(ClassName, SubClassName, Model,
     end
     
     if type(SubClassName) ~= "string" then 
-        error(MAJOR..":CreateSubClassModel(ClassName, SubClassName, Model, Default, Offset) - Limit must be table, got "..type(SubClassName)) 
+        error(MAJOR..":CreateSubClassModel(ClassName, SubClassName, Model, Default, Offset) - SubClassName must be string, got "..type(SubClassName)) 
     end
 
     if type(Model) ~= "function" then 
-        error(MAJOR..":CreateSubClassModel(ClassName, SubClassName, Model, Default, Offset) - default must be table, got "..type(Model)) 
+        error(MAJOR..":CreateSubClassModel(ClassName, SubClassName, Model, Default, Offset) - Model must be function, got "..type(Model)) 
     end    
 
     if type(Default) ~= "table" then 
-        error(MAJOR..":CreateSubClassModel(ClassName, SubClassName, Model, Default, Offset) - SetScaling must be table, got "..type(Default)) 
+        error(MAJOR..":CreateSubClassModel(ClassName, SubClassName, Model, Default, Offset) - Default must be table, got "..type(Default)) 
     end
 
     if Offset and type(Offset) ~= "table" then 
-        error(MAJOR..":CreateSubClassModel(ClassName, SubClassName, Model, Default, Offset) - SetScaling must be table, got "..type(Offset)) 
+        error(MAJOR..":CreateSubClassModel(ClassName, SubClassName, Model, Default, Offset) - Offset must be table, got "..type(Offset)) 
     end 
 
     ClassName = ClassName:upper() 
     SubClassName = SubClassName:upper()
-    if not CONTROL_MODEL_TYPE[ClassName] or CONTROL_MODEL_TYPE[ClassName]["SubClass"][SubClassName] then
+    if not CLASS_MODEL[ClassName] or CLASS_MODEL[ClassName]["SubClass"][SubClassName] then
         return false
     end
 
-    for _, args in pairs(CONTROL_MODEL_TYPE[ClassName]["SetScaling"]) do
+    for _, args in pairs(CLASS_MODEL[ClassName]["SetScaling"]) do
         for _, arg in pairs(args) do
-            if not Default[arg] then 
+            if Default[arg] == nil then 
                 return false 
             end 
         end
     end
 
-    CONTROL_MODEL_TYPE[ClassName]["SubClass"][SubClassName] = true
-    CONTROL_MODEL_TYPE[ClassName]["Models"][SubClassName] = Model
-    CONTROL_MODEL_TYPE[ClassName]["Default"][SubClassName] = Default
-    CONTROL_MODEL_TYPE[ClassName]["Offset"][SubClassName] = Offset
+    CLASS_MODEL[ClassName]["SubClass"][SubClassName] = true
+    CLASS_MODEL[ClassName]["Models"][SubClassName] = Model
+    CLASS_MODEL[ClassName]["Default"][SubClassName] = Default
+    CLASS_MODEL[ClassName]["Offset"][SubClassName] = Offset
+
+    return true
 end
 
 function ModelsManagementLib:RemoveClassOrSubClassModel(ClassName, SubClassName)
@@ -221,7 +197,7 @@ function ModelsManagementLib:RemoveClassOrSubClassModel(ClassName, SubClassName)
 
     ClassName = ClassName:upper() 
     SubClassName = SubClassName:upper()
-    if not CONTROL_MODEL_TYPE[ClassName] or CONTROL_MODEL_TYPE[ClassName] and not CONTROL_MODEL_TYPE[ClassName]["SubTypes"][SubClassName] then 
+    if not CLASS_MODEL[ClassName] or CLASS_MODEL[ClassName] and not CLASS_MODEL[ClassName]["SubTypes"][SubClassName] then 
         return false 
     end
 
@@ -232,10 +208,10 @@ function ModelsManagementLib:RemoveClassOrSubClassModel(ClassName, SubClassName)
             end
         end
 
-        CONTROL_MODEL_TYPE[ClassName]["SubClass"][SubClassName] = nil
-        CONTROL_MODEL_TYPE[ClassName]["Models"][SubClassName] = nil
-        CONTROL_MODEL_TYPE[ClassName]["Default"][SubClassName] = nil
-        CONTROL_MODEL_TYPE[ClassName]["Offset"][SubClassName] = nil
+        CLASS_MODEL[ClassName]["SubClass"][SubClassName] = nil
+        CLASS_MODEL[ClassName]["Models"][SubClassName] = nil
+        CLASS_MODEL[ClassName]["Default"][SubClassName] = nil
+        CLASS_MODEL[ClassName]["Offset"][SubClassName] = nil
     else
         for key, value in pairs(MODEL_LIST) do
             if  value.ClassName == ClassName then
@@ -243,61 +219,65 @@ function ModelsManagementLib:RemoveClassOrSubClassModel(ClassName, SubClassName)
             end
         end
 
-        CONTROL_MODEL_TYPE[ClassName] = nil
+        CLASS_MODEL[ClassName] = nil
     end
 
 end
 
 function ModelsManagementLib:ClearAll()
-    for key, _ in pairs(CONTROL_MODEL_TYPE) do
+    for key, _ in pairs(CLASS_MODEL) do
         self:RemoveClassOrSubClassModel(key)
     end
 end
 
-function ModelsManagementLib:RegisterModel(ClassName, SubClassName, FrameModel)
+function ModelsManagementLib:RegisterModel(ClassName, SubClassName, FrameModel, Name)
     if type(ClassName) ~= "string" then 
-        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel) - ClassName must be string, got "..type(ClassName)) 
+        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name) - ClassName must be string, got "..type(ClassName)) 
     end
 
     if type(SubClassName) ~= "string" then 
-        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel) - SubClassName must be string, got "..type(SubClassName)) 
+        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name) - SubClassName must be string, got "..type(SubClassName)) 
     end
 
     if type(FrameModel) ~= "table" then 
-        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel) - FrameModel must be object, got "..type(FrameModel)) 
+        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name) - FrameModel must be object, got "..type(FrameModel)) 
+    end
+
+    if Name and type(Name) ~= "table" then 
+        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name) - Name must be object, got "..type(Name)) 
     end
 
     ClassName = ClassName:upper() 
     SubClassName = SubClassName:upper()
-    if not CONTROL_MODEL_TYPE[ClassName] or CONTROL_MODEL_TYPE[ClassName] and not CONTROL_MODEL_TYPE[ClassName]["SubTypes"][SubClassName] then 
+    if not CLASS_MODEL[ClassName] or CLASS_MODEL[ClassName] and not CLASS_MODEL[ClassName]["SubClass"][SubClassName] then 
         return false 
     end
 
-    local typeObject = FrameModel:GetObjectType()
-    if CONTROL_MODEL_TYPE[ClassName]["Limit"][typeObject] then
-        if not MODEL_LIST[FrameModel] then MODEL_LIST[FrameModel] = {} end
-
-        MODEL_LIST[FrameModel].ClassName = ClassName
-        MODEL_LIST[FrameModel].SubClassName = SubClassName
-        MODEL_LIST[FrameModel].Default = CONTROL_MODEL_TYPE[ClassName]["Default"][SubClassName]
-        MODEL_LIST[FrameModel].Offset = CONTROL_MODEL_TYPE[ClassName]["Offset"][SubClassName]
-        
-        FrameModel["LibScalingGetModel"] = CONTROL_MODEL_TYPE[ClassName]["Models"][SubClassName]
-        FrameModel["LibScalingSetModel"] = CONTROL_MODEL_TYPE[ClassName]["SetModel"]
-
-        MODEL_LIST[FrameModel].ApplyScaling = CONTROL_MODEL_TYPE[ClassName]["SetScaling"]
-        return true
-
+    if not tContains(CLASS_MODEL[ClassName]["Limit"], FrameModel:GetObjectType()) or Name and Name:GetObjectType() ~= "FontString" then 
+        return false 
     end
 
-    return false
+    if not MODEL_LIST[FrameModel] then MODEL_LIST[FrameModel] = {} end
+
+    MODEL_LIST[FrameModel].ClassName = ClassName
+    MODEL_LIST[FrameModel].SubClassName = SubClassName
+    MODEL_LIST[FrameModel].Default = CLASS_MODEL[ClassName]["Default"][SubClassName]
+    MODEL_LIST[FrameModel].Offset = CLASS_MODEL[ClassName]["Offset"][SubClassName]
+    MODEL_LIST[FrameModel].Name = Name
+
+    FrameModel["LibScalingGetModelInfo"] = CLASS_MODEL[ClassName]["Models"][SubClassName]
+    FrameModel["LibScalingSetModel"] = CLASS_MODEL[ClassName]["SetModel"]
+
+    MODEL_LIST[FrameModel].ApplyScaling = CLASS_MODEL[ClassName]["SetScaling"]
+
+    return true
 end
 
 function ModelsManagementLib:DeleteModel(FrameModel)
     if MODEL_LIST[FrameModel] then 
         MODEL_LIST[FrameModel] = nil
         FrameModel["LibScalingSetModel"] = nil
-        FrameModel["LibScalingGetModel"] = nil
+        FrameModel["LibScalingGetModelInfo"] = nil
 
         return true 
     end
@@ -323,12 +303,13 @@ end
 function ModelsManagementLib:SetModel(Model)
     local info = MODEL_LIST[Model]
     if info then
-        Model:LibScalingSetModel(Model)
+        local unit = Model:LibScalingGetModelInfo(Model)
+        Model:LibScalingSetModel(unit)
 
         local id = Model:GetModelFileID()
         if id then
             local properties = GetModelProperties(info.Default, info.Offset, id)
-
+            
             for func, info in pairs(info.ApplyScaling) do
                 if Model[func] then
                     Model[func](Model, properties[info.arg1], properties[info.arg2], properties[info.arg3], properties[info.arg4])
@@ -368,3 +349,33 @@ function ModelsManagementLib:SetModelsByType(ClassName, SubClassName, Mode)
         end
     end
 end
+
+function ModelsManagementLib:GetModelName(Model)
+    local unit = Model:LibScalingGetModelInfo(Model)
+    if type(unit) == "string" and unit ~= "none" then
+        return select(1, UnitName(unit))
+    else
+        return UNKNOWN
+    end
+end
+
+function ModelsManagementLib:SetModelName(Model)
+    local info = MODEL_LIST[Model]
+    if info and info.Name then
+        local id = Model:GetModelFileID()
+        if id then
+            info.Name:SetText(self:GetModelName(Model))
+            info.Name:Show()
+        else
+            info.Name:Hide()
+        end
+    end
+end
+
+function ModelsManagementLib:SetModelsName(...)
+    local models = {...}
+    for i, model in ipairs(models) do
+        self:SetModelName(model)
+    end
+end
+

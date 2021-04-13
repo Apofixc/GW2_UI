@@ -29,7 +29,6 @@
     <Script file="immersive\skins\timeManager.lua"/>
     
     <Script file="immersive\skins\addons\immersion.lua"/>
-    <Script file="immersive\skins\addons\Storyline.lua"/>
     <Script file="immersive\skins\addons\postal.lua"/>
     <Script file="immersive\skins\addons\WorldQuestTracker.lua"/>
 </Ui>

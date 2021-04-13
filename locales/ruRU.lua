@@ -339,9 +339,10 @@ L["Weekly Reset"] = true
 L["Conduits"] = true
 L["Maximum lines of 'Copy Chat Frame'"] = true
 L["Set the maximum number of lines displayed in the Copy Chat Frame"] = true
-
+L["Deactivated because the following addon(s) loaded:"] = true
 
 L["Immersion"] = "Погружение"
+L["Immersive Frame"] = ""
 L["Setting Immersion elements."] = "Настройка элементов погружения."
 L["Set FullScreen mode as default mode."] = "Установить полноэкранный режим, как режим по умолчанию."
 L["Use backgrounds based on the current zone when possible."] = "По возможности используйте фон, основанный на текущей зоне"

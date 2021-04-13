@@ -1,6 +1,6 @@
 local _, GW = ...
 local L = GW.L
-local ModelScaling = GW.Libs.ModelScaling
+local ModelScaling = GW.Libs.Model
 local GetSetting = GW.GetSetting
 local RegisterMovableFrame = GW.RegisterMovableFrame
 local IsIn = GW.IsIn
@@ -42,67 +42,6 @@ local SHOW_TITLE_BUTTON
 local AutoNext
 local DIALOG_STRINGS_CURRENT
 local DIALOG_STRINGS
-
-local function QuestInfo_StyleDetail(template)
-	local totalHeight = 0
-	local elementsTable = template.frames
-
-	for i = 1, #elementsTable, 2 do
-		if _G[elementsTable[i]]:IsShown() then
-			if elementsTable[i] == "QuestInfoRewardsFrame" then
-				local lastFrame = QuestInfoRewardsFrame.Header
-				local height = lastFrame:GetHeight()
-			
-				for _, frame in ipairs({"QuestSessionBonusReward", "ItemReceiveText", "MoneyFrame", "XPFrame", "ArtifactXPFrame", "WarModeBonusFrame", "HonorFrame", "SkillPointFrame", "PlayerTitleText", "TitleFrame", "ItemChooseText"}) do
-					if QuestInfoRewardsFrame[frame] and QuestInfoRewardsFrame[frame]:IsShown() then
-						QuestInfoRewardsFrame[frame]:ClearAllPoints()
-						QuestInfoRewardsFrame[frame]:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
-						lastFrame = QuestInfoRewardsFrame[frame]
-						height = height + lastFrame:GetHeight() + 5
-					end
-				end
-				
-				for _, obj in ipairs(QuestInfoRewardsFrame.collectionObjectFromPolls) do
-					obj:ClearAllPoints()
-					obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
-					lastFrame = obj
-					height = height + lastFrame:GetHeight() + 5
-				end
-				
-				for i, questItem in ipairs(QuestInfoRewardsFrame.RewardButtons) do
-					if questItem:IsShown() then
-						questItem:ClearAllPoints()
-						questItem:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", i == 1 and 5 or 0, -5)
-						lastFrame = questItem
-						height = height + lastFrame:GetHeight() + 5
-					end
-				end
-			
-				QuestInfoRewardsFrame:SetHeight(height)
-			end
-
-			if elementsTable[i] == "GwQuestInfoProgress" then
-				local height = 0
-				local lastFrame 
-				if QuestInfoRequiredMoneyFrame:IsShown() then
-					height = height + QuestInfoRequiredMoneyFrame:GetHeight()
-					lastFrame = QuestInfoRequiredMoneyFrame
-				end
-
-				for _, obj in ipairs(GwQuestInfoProgress.collectionObjectFromPolls) do
-					obj:ClearAllPoints()
-					obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
-					lastFrame = obj
-					height = height + lastFrame:GetHeight() + 5
-				end
-			end
-
-			totalHeight = totalHeight + _G[elementsTable[i]]:GetHeight() + elementsTable[i + 1]
-		end
-	end
-
-	return totalHeight
-end
 
 local function ShownDetail(parentFrame, formatShow)
 	for _, frame in ipairs({QuestInfoObjectivesText, QuestInfoSpecialObjectivesFrame, QuestInfoGroupSize, QuestInfoSpecialObjectivesFrame, QuestInfoRewardsFrame, GwQuestInfoProgress}) do
@@ -154,7 +93,7 @@ local function TitleButtonShow(self, event, start, finish, current)
 			ACTIVE_TEMPLATE = _G["GW2_"..event.."_TEMPLATE"]
 			self.Detail.Scroll.ScrollBar:SetValue(0)
 			self.Detail.Title:SetText(ACTIVE_TEMPLATE.title)
-			local height = ShownDetail(self.Detail.Scroll.ScrollChildFrame, QuestInfo_StyleDetail)
+			local height = ShownDetail(self.Detail.Scroll.ScrollChildFrame, self.StyleReward)
 			self.Detail.Scroll.ScrollChildFrame:SetHeight(height)
 			self.Detail:SetShown(height > 0)
 		end
@@ -260,12 +199,9 @@ local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)
 	FadeAnimation(immersiveFrame, immersiveFrame:GetName(), immersiveFrame:GetAlpha(), 1, 0.2)
 		
 	immersiveFrame.ReputationBar:Show()
-	print(GetTime())
 	ModelScaling:SetModels(immersiveFrame.Models.Player, immersiveFrame.Models.Giver)
-	print(GetTime())
-	-- if self.Name then
-	-- 	self.Name.Text:SetText(unit == "none" and "UNKNOWN" or UnitName(unit))
-	-- end
+	ModelScaling:SetModelName(immersiveFrame.Models.Player)
+	ModelScaling:SetModelName(immersiveFrame.Models.Giver)
 
 	if title then
 		immersiveFrame.Title.Text:SetText(title)
@@ -665,6 +601,80 @@ local function LoadDetalies()
 	
 end
 
+local function LoadModel()
+	local defFullModelRight = {
+		FacingLeft = false,
+		Camera = 1.55, 
+		Facing = 2.3, 
+		TargetDistance = .27, 
+		HeightFactor = .4,    
+	}
+	
+	local defFullModelLeft = {
+		FacingLeft = true,
+		Camera = 1.8, 
+		Facing = -.92, 
+		TargetDistance = .27, 
+		HeightFactor = .34,   
+	}
+	
+	local defPortraitRight = {
+		DistanceScale = 1.1,
+		PortraitZoom = .7,
+		PositionX = 0,
+		PositionY = 0,
+		PositionZ = -.05,
+	}
+	
+	local defPortraitLeft = {
+		DistanceScale = 1.1,
+		PortraitZoom = .7,
+		PositionX = 0,
+		PositionY = 0,
+		PositionZ = -.05,
+	}
+	
+	local function defSetUnit(model, unit)
+		model:ClearModel()
+		model:SetUnit(unit) 
+	end
+	
+	local defFullModel = {
+		SetFacingLeft = { arg1 = "FacingLeft"}, 
+		InitializeCamera = {arg1 = "Camera"}, 
+		SetTargetDistance = {arg1 = "TargetDistance"}, 
+		SetHeightFactor = {arg1 = "HeightFactor"}, 
+		SetFacing = {arg1 = "Facing"},
+	}
+	
+	local defPortrait = {
+		SetCamDistanceScale = {arg1 = "DistanceScale"},
+		SetPortraitZoom = {arg1 = "PortraitZoom"},
+		SetPosition = {arg1 = "PositionX", arg2 = "PositionY", arg3 = "PositionZ"},
+		RefreshUnit = {}
+	}
+	
+	local function defGetPlayer()
+		return "player" 
+	end
+	
+	local function defGetNPC()
+		return UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none" 
+	end
+
+	ModelScaling:CreateClassModel("FULLMODEL", {"CinematicModel"}, defSetUnit, defFullModel)
+    ModelScaling:CreateSubClassModel("FULLMODEL", "RIGHT", defGetPlayer, defFullModelRight)
+    ModelScaling:CreateSubClassModel("FULLMODEL", "LEFT", defGetNPC, defFullModelLeft)
+    ModelScaling:CreateClassModel("PORTRAIT", {"CinematicModel", "PlayerModel"}, defSetUnit, defPortrait)
+    ModelScaling:CreateSubClassModel("PORTRAIT", "RIGHT", defGetPlayer, defPortraitRight)
+    ModelScaling:CreateSubClassModel("PORTRAIT", "LEFT", defGetNPC, defPortraitLeft)
+
+	ModelScaling:RegisterModel("FULLMODEL", "RIGHT", GwFullScreenGossipViewFrame.Models.Player)
+	ModelScaling:RegisterModel("FULLMODEL", "LEFT", GwFullScreenGossipViewFrame.Models.Giver)
+	ModelScaling:RegisterModel("PORTRAIT", "RIGHT", GwNormalScreenGossipViewFrame.Models.Player, GwNormalScreenGossipViewFrame.Models.Player.Name.Text)
+	ModelScaling:RegisterModel("PORTRAIT", "LEFT", GwNormalScreenGossipViewFrame.Models.Giver, GwNormalScreenGossipViewFrame.Models.Giver.Name.Text)
+end
+
 local function LoadImmersiveView()
 	for _, frame in ipairs({GossipFrame, QuestFrame}) do
 		frame:UnregisterAllEvents()
@@ -848,7 +858,7 @@ local function LoadImmersiveView()
 	end
 
 	if GetSetting("DYNAMIC_BACKGROUND") then ImmersiveDinamicArt(GwFullScreenGossipViewFrame) end
-	RegisterMovableFrame(GwNormalScreenGossipViewFrame, L["Gossip View Frame"], "GwGossipViewFramePos", "VerticalActionBarDummy", nil, nil, {"scaleable"} )
+	RegisterMovableFrame(GwNormalScreenGossipViewFrame, L["Immersive Frame"], "GwGossipViewFramePos", "VerticalActionBarDummy", nil, nil, {"scaleable"} )
 	GwNormalScreenGossipViewFrame:ClearAllPoints()
 	GwNormalScreenGossipViewFrame:SetPoint("TOPLEFT", GwNormalScreenGossipViewFrame.gwMover)
 	
@@ -860,9 +870,7 @@ local function LoadImmersiveView()
 
 	LoadTitleButtons()
 	LoadDetalies()
-
-	ModelScaling:RegisterModel("FULLMODEL", "RIGHT", GwFullScreenGossipViewFrame.Models.Player, ModelScaling.SetPlayer, ModelScaling.ApplyScalingToFullModel)
-	ModelScaling:RegisterModel("FULLMODEL", "LEFT", GwFullScreenGossipViewFrame.Models.Giver, ModelScaling.SetNPC, ModelScaling.ApplyScalingToFullModel)
+	LoadModel()
 end
 
 GW.LoadImmersiveView = LoadImmersiveView

@@ -337,7 +337,7 @@ L["Weekly Reset"] = true
 L["Conduits"] = true
 L["Maximum lines of 'Copy Chat Frame'"] = true
 L["Set the maximum number of lines displayed in the Copy Chat Frame"] = true
-
+L["Deactivated because the following addon(s) loaded:"] = true
 
 L["Immersion"] = true
 L["Setting Immersion elements."] = true
