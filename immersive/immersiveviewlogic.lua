@@ -3,7 +3,7 @@ local L = GW.L
 local GetSetting = GW.GetSetting
 local AddToAnimation = GW.AddToAnimation
 local StopAnimation = GW.StopAnimation
-local CompletedAnimation =  GW.CompletedAnimation
+local CheckStateAnimation =  GW.CheckStateAnimation
 local IsIn = GW.IsIn
 local ModelScaling = GW.Libs.Model
 
@@ -21,37 +21,6 @@ local INTERACTIVE_TEXT = {
 
 local function GetImmersiveInteractiveText(buttonType)
 	return INTERACTIVE_TEXT[buttonType][math.random(1, #INTERACTIVE_TEXT[buttonType])]
-end
-
-local function FadeAnimation(frame, name, fadeStart, fadeFinish, duration, funcFinish)
-	AddToAnimation(
-		name,
-		fadeStart,
-		fadeFinish,
-		GetTime(),
-		duration,
-		function(step)
-			frame:SetAlpha(step)	
-		end,
-		nil,
-		funcFinish,
-		true
-	)
-end
-
-local function DialogAnimation(frame, name, start, finish, duration, funcFinish)
-	AddToAnimation(
-		name,
-		start,
-		finish,
-		GetTime(),
-		duration,
-		function(step)
-			frame:SetAlphaGradient(step, 1)
-		end,
-		nil,
-		funcFinish
-	)
 end
 
 do
@@ -100,7 +69,6 @@ do
 		end
 		
 		local mapID = C_Map.GetBestMapForUnit("player");
-	
 		if mapID then
 			repeat
 				for map, info in pairs(BACKGROUNDS) do
@@ -121,7 +89,6 @@ do
 			return "Default", "Interface/AddOns/GW2_UI/textures/questview/bg_default", {0, 1, 0, 1}
 		end
 	end
-	
 	GW.GetCustomZoneBackground = GetCustomZoneBackground
 end
 
@@ -153,7 +120,7 @@ do
 	end
 
 	function AdvanceGossipTitleButtonMixin:OnClick()
-		if CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") and self.func and not self.ShowIn:IsPlaying() then
+		if not CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") and self.func and not self.ShowIn:IsPlaying() then
 			local scroll = self:GetParent():GetParent()
 			scroll.ScrollBar:SetAlpha(0)
 			scroll.ScrollChildFrame:Hide()
@@ -165,12 +132,21 @@ do
 			scroll.Text:Show()
 
 			local lenghtText = strlenutf8(scroll.Text:GetText())
-			local funcFinish = function()
-				self.func(self.arg)
-				PlaySound(self.playSound)
-			end
-
-			DialogAnimation(scroll.Text, "IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON", 0, lenghtText, GetSetting("ANIMATION_TEXT_SPEED_P") * lenghtText, funcFinish)
+			AddToAnimation(
+				"IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON",
+				0,
+				lenghtText,
+				GetTime(),
+				GetSetting("ANIMATION_TEXT_SPEED_P") * lenghtText,
+				function(step)
+					scroll.Text:SetAlphaGradient(step, 1)
+				end,
+				nil,
+				function()
+					self.func(self.arg)
+					PlaySound(self.playSound)
+				end
+			)
 		end
 	end 
 end
@@ -246,18 +222,6 @@ do
 		self.Scroll.ScrollChildFrame:SetHeight(totalHeight)
 	end
 
-	local function StopAnimationDialog(immersiveFrame, animationName)
-		if animationName then
-			StopAnimation(animationName)	
-		end
-
-		GwImmersiveFrame.AutoNext = false
-		immersiveFrame.Dialog.Text:SetAlphaGradient(immersiveFrame.maxSizeText, 1)
-		immersiveFrame.Scroll.ScrollChildFrame:Show()
-		immersiveFrame.Scroll.ScrollBar:SetAlpha(1)
-	end
-	GW.StopAnimationDialog = StopAnimationDialog
-
 	local function Split(text, maxSizeText, mode)
 		DIALOG_STRINGS = {}
 		DIALOG_STRINGS_CURRENT = 0
@@ -298,7 +262,7 @@ do
 	end
 
 	local function Dialog(immersiveFrame, operation)
-		if DIALOG_STRINGS_CURRENT and CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") and tonumber(operation) then
+		if DIALOG_STRINGS_CURRENT and not CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") and tonumber(operation) then
 			DIALOG_STRINGS_CURRENT = DIALOG_STRINGS_CURRENT + operation
 
 			if not DIALOG_STRINGS[DIALOG_STRINGS_CURRENT] then 
@@ -311,18 +275,32 @@ do
 			local sColor, name, fColor = string.match(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT], "^(%p%x+)(.*)(%p%a)")
 			local StartAnimation = strlenutf8(name)
 			local lenghtAnimation = strlenutf8(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT]) - strlenutf8(sColor) - strlenutf8(fColor)
-			local funcFinish = function()
-				if GwImmersiveFrame.AutoNext and DIALOG_STRINGS_CURRENT < #DIALOG_STRINGS then
-					C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
-						function() 
-							if GwImmersiveFrame.AutoNext and immersiveFrame:IsVisible() then Dialog(immersiveFrame, 1) end	
-						end
-					)
-				else
-					StopAnimationDialog(immersiveFrame)
+			AddToAnimation(
+				"IMMERSIVE_DIALOG_ANIMATION",
+				StartAnimation,
+				lenghtAnimation,
+				GetTime(),
+				GetSetting("ANIMATION_TEXT_SPEED_N") * lenghtAnimation,
+				function(step)
+					immersiveFrame.Dialog.Text:SetAlphaGradient(step, 1)
+				end,
+				nil,
+				function()
+					if GwImmersiveFrame.AutoNext and DIALOG_STRINGS_CURRENT < #DIALOG_STRINGS then
+						C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
+							function() 
+								if GwImmersiveFrame.AutoNext and immersiveFrame:IsVisible() then Dialog(immersiveFrame, 1) end	
+							end
+						)
+					else
+						GwImmersiveFrame.AutoNext = false
+
+						immersiveFrame.Dialog.Text:SetAlphaGradient(immersiveFrame.maxSizeText, 1)
+						immersiveFrame.Scroll.ScrollChildFrame:Show()
+						immersiveFrame.Scroll.ScrollBar:SetAlpha(1)
+					end
 				end
-			end
-			DialogAnimation(immersiveFrame.Dialog.Text, "IMMERSIVE_DIALOG_ANIMATION", StartAnimation, lenghtAnimation, GetSetting("ANIMATION_TEXT_SPEED_N") * lenghtAnimation, funcFinish)
+			)
 
 			TitleButtonShow(immersiveFrame, GwImmersiveFrame.LastEvent, 1, #DIALOG_STRINGS, DIALOG_STRINGS_CURRENT);
 		end
@@ -331,7 +309,19 @@ do
 
 	local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)	
 		immersiveFrame:Show()
-		FadeAnimation(immersiveFrame, immersiveFrame:GetName(), immersiveFrame:GetAlpha(), 1, 0.2)
+		AddToAnimation(
+			immersiveFrame:GetName(),
+			immersiveFrame:GetAlpha(),
+			1,
+			GetTime(),
+			0.2,
+			function(step)
+				immersiveFrame:SetAlpha(step)	
+			end,
+			nil,
+			nil,
+			true
+		)
 			
 		immersiveFrame.ReputationBar:Show()
 		ModelScaling:SetModels(immersiveFrame.Models.Player, immersiveFrame.Models.Giver)
@@ -340,9 +330,18 @@ do
 
 		if title then
 			immersiveFrame.Title.Text:SetText(title)
-			FadeAnimation(immersiveFrame.Title, "IMMERSIVE_TITLE_ANIMATION", immersiveFrame.Title:GetAlpha(), 1, 0.3)
+			AddToAnimation(
+				"IMMERSIVE_TITLE_ANIMATION",
+				immersiveFrame.Title:GetAlpha(),
+				1,
+				GetTime(),
+				0.3,
+				function(step)
+					immersiveFrame.Title:SetAlpha(step)	
+				end
+			)
 		else
-			if not CompletedAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
+			if CheckStateAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
 			immersiveFrame.Title:SetAlpha(0)
 		end
 
@@ -351,37 +350,48 @@ do
 	end
 	GW.ImmersiveFrameHandleShow = ImmersiveFrameHandleShow
 
-	local function ImmersiveFrameHandleHide(self)
+	local function ImmersiveFrameHandleHide(self, reframe)
 		if (self.customFrame) then
 			self.customFrame:Hide()
 			self.customFrame = nil	
 		elseif self.ActiveFrame:IsShown() then
-			if not CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION") end
-			if not CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
-			if not CompletedAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
+			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION") end
+			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
+			if CheckStateAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
 
-			local funcFinish = function()
-				self.ActiveFrame:Hide()
-				self.ActiveFrame.Scroll.Icon:Hide()
-				self.ActiveFrame.Scroll.Text:Hide()
-				self.ActiveFrame.Scroll.ScrollChildFrame:Hide()
-				self.ActiveFrame.Detail:Hide()
-			end
+			AddToAnimation(
+				self.ActiveFrame:GetName(),
+				self.ActiveFrame:GetAlpha(),
+				0,
+				GetTime(),
+				0.5,
+				function(step)
+					self.ActiveFrame:SetAlpha(step)	
+				end,
+				nil,
+				function()
+					self.ActiveFrame:Hide()
+					self.ActiveFrame.Scroll.Icon:Hide()
+					self.ActiveFrame.Scroll.Text:Hide()
+					self.ActiveFrame.Scroll.ScrollChildFrame:Hide()
+					self.ActiveFrame.Detail:Hide()
 
-			FadeAnimation(self.ActiveFrame, self.ActiveFrame:GetName(), self.ActiveFrame:GetAlpha(), 0, 0.5, funcFinish)
+					if reframe then
+						self.ActiveFrame = self.ActiveFrame.mode == "NORMAL" and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
+						self.ActiveFrame.FontColor()
+						
+						pcall(self:GetScript("OnEvent"), self, self.LastEvent)
+					end
+				end,
+				true
+			)
 		end
 	end
 	GW.ImmersiveFrameHandleHide = ImmersiveFrameHandleHide
 
 	local function LoadTitleButtons()
-		local function FramePool_HideAndClear(framePool, frame)
-			frame:Hide()
-			frame:ClearAllPoints()
-			frame.Icon:SetTexCoord(0, 1, 0, 1)
-		end
-	
-		GwImmersiveFrame.TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate", FramePool_HideAndClear)
-	
+		GwImmersiveFrame.TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate")
+		
 		local function GetAvailableQuests() return C_GossipInfo.GetAvailableQuests() end
 		local function GetOptions() return C_GossipInfo.GetOptions() end		
 	
@@ -482,6 +492,8 @@ do
 			{ type = "EXIT", show = ShowExit, callBack = C_GossipInfo.CloseGossip, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE, getInfo = function() return GetAction("EXIT", 7) end},
 			{ type = "RESET", show = ShowRepeat, callBack = Repeat, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("REPEAT", 8) end}
 		}
+
+
 	end
 	GW.LoadTitleButtons = LoadTitleButtons
 

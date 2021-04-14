@@ -66,6 +66,8 @@
 				if self.ShowIn:IsPlaying() then 
 					self.ShowIn:Stop();
 				end
+
+				self.Icon:SetTexCoord(0, 1, 0, 1)
 			</OnHide>
 			<OnEnter>
 				self.Highlight:Play();
@@ -117,19 +119,6 @@
 				<Frames>
 					<CinematicModel parentKey="Player" useParentLevel="true" setAllPoints="true"/>
 					<CinematicModel parentKey="Giver" useParentLevel="true" setAllPoints="true"/>
-					<!-- <Frame parentKey="ModelScene" useParentLevel="true" hidden="true">
-						<Size x="300" y="400"/>
-						<Anchors>
-							<Anchor point="CENTER" relativeKey="$parent" relativePoint="CENTER" x="0" y="0"/>
-						</Anchors>
-						<Layers>
-							<Layer level="BACKGROUND">
-								<Texture parentKey="Background" file="Interface/AddOns/GW2_UI/Textures/gossipview/advanced_fs_gw2" setAllPoints="true"> 
-									<TexCoords left="0.635" right="0.993269" top="0.502" bottom="0.7842"/>
-								</Texture>
-							</Layer>
-						</Layers>
-					</Frame> -->
 				</Frames>
 			</Frame>		
 			<Frame parentKey="Title" alpha="0" frameLevel="3">

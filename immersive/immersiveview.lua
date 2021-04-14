@@ -4,8 +4,8 @@ local ModelScaling = GW.Libs.Model
 local GetSetting = GW.GetSetting
 local RegisterMovableFrame = GW.RegisterMovableFrame
 local IsIn = GW.IsIn
-local CompletedAnimation =  GW.CompletedAnimation
-local StopAnimationDialog = GW.StopAnimationDialog
+local CheckStateAnimation =  GW.CheckStateAnimation
+local StopAnimation = GW.StopAnimation
 local ImmersiveFrameHandleShow = GW.ImmersiveFrameHandleShow
 local ImmersiveFrameHandleHide = GW.ImmersiveFrameHandleHide
 local GetCustomZoneBackground = GW.GetCustomZoneBackground
@@ -148,19 +148,16 @@ local function GwImmersiveFrames_OnKeyDown(self, button)
 				PlaySound(SOUNDKIT.IG_QUEST_LIST_CLOSE)
 			end
 		elseif button == "SPACE" then
-			if not CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") then
-				StopAnimationDialog(self, "IMMERSIVE_DIALOG_ANIMATION")
+			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") then
+				StopAnimation("IMMERSIVE_DIALOG_ANIMATION")
+
+				self.AutoNext = false
+				self.Dialog.Text:SetAlphaGradient(self.maxSizeText, 1)
+				self.Scroll.ScrollChildFrame:Show()
+				self.Scroll.ScrollBar:SetAlpha(1)
 			end
 		elseif button == "F1" then
-			ImmersiveFrameHandleHide(GwImmersiveFrame)			
-			
-			C_Timer.After(1,
-				function()
-					GwImmersiveFrame.ActiveFrame = self.mode == "NORMAL" and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
-					GwImmersiveFrame.ActiveFrame.FontColor()
-					GwImmersiveFrame_OnEvent(GwImmersiveFrame, GwImmersiveFrame.LastEvent)
-				end
-			)
+			ImmersiveFrameHandleHide(GwImmersiveFrame, true)			
 		elseif button == "F2" then
 			if self.Dialog:GetScript("OnClick") then self.Dialog:SetMouseClickEnabled(not self.Dialog:IsMouseEnabled()) end
 		else 
@@ -182,14 +179,19 @@ local function GwImmersiveFrames_OnKeyDown(self, button)
 end
 
 local function GwNormalScreenGossipViewFrame_OnClick(self, button)
-	if CompletedAnimation("IMMERSIVE_DIALOG_ANIMATION") then
-		Dialog(GwImmersiveFrame.ActiveFrame, button == "LeftButton" and 1 or -1)
+	if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") then
+		StopAnimation("IMMERSIVE_DIALOG_ANIMATION")
+	
+		GwImmersiveFrame.AutoNext = false
+		GwImmersiveFrame.ActiveFrame.Dialog.Text:SetAlphaGradient(GwImmersiveFrame.ActiveFrame.maxSizeText, 1)
+		GwImmersiveFrame.ActiveFrame.Scroll.ScrollChildFrame:Show()
+		GwImmersiveFrame.ActiveFrame.Scroll.ScrollBar:SetAlpha(1)		
 	else
-		StopAnimationDialog(GwImmersiveFrame.ActiveFrame, "IMMERSIVE_DIALOG_ANIMATION")
+		Dialog(GwImmersiveFrame.ActiveFrame, button == "LeftButton" and 1 or -1)
 	end
 end
 
-local function SetStyleWoWFullScreen()
+local function SetStyleFullScreen()
 	-- <Layer level="ARTWORK">	
 	-- 			<Texture parentKey="BottomLeft" hidden="true">
 	-- 				<Anchors>
@@ -349,6 +351,7 @@ local function LoadImmersiveView()
 
 	CreateFrame("Frame", "GwNormalScreenGossipViewFrame", UIParent, "GwNormalScreenGossipViewFrameTemplate")
 	GwNormalScreenGossipViewFrame:SetScript("OnKeyDown", GwImmersiveFrames_OnKeyDown)
+
 	if GetSetting("MOUSE_DIALOG") then
 		GwNormalScreenGossipViewFrame.Dialog:SetScript("OnClick", GwNormalScreenGossipViewFrame_OnClick)
 	end
@@ -363,14 +366,14 @@ local function LoadImmersiveView()
 	LoadDetalies()
 
 	ModelScaling:CreateClassModel("FULLMODEL", {"CinematicModel"}, ModelScaling.defSetUnit, ModelScaling.defFullModel)
-    ModelScaling:CreateSubClassModel("FULLMODEL", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defFullModelRight)
-    ModelScaling:CreateSubClassModel("FULLMODEL", "LEFT", ModelScaling.defGetNPC, ModelScaling.defFullModelLeft)
+    ModelScaling:CreateSubClassModel("FULLMODEL", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defFullModelRight, ModelScaling.defFullModelOffsetRight)
+    ModelScaling:CreateSubClassModel("FULLMODEL", "LEFT", ModelScaling.defGetNPC, ModelScaling.defFullModelLeft, ModelScaling.defFullModelOffsetLeft)
 	ModelScaling:RegisterModel("FULLMODEL", "RIGHT", GwFullScreenGossipViewFrame.Models.Player)
 	ModelScaling:RegisterModel("FULLMODEL", "LEFT", GwFullScreenGossipViewFrame.Models.Giver)
 
     ModelScaling:CreateClassModel("PORTRAIT", {"CinematicModel", "PlayerModel"}, ModelScaling.defSetUnit, ModelScaling.defPortrait)
-    ModelScaling:CreateSubClassModel("PORTRAIT", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defPortraitRight)
-    ModelScaling:CreateSubClassModel("PORTRAIT", "LEFT", ModelScaling.defGetNPC, ModelScaling.defPortraitLeft)
+    ModelScaling:CreateSubClassModel("PORTRAIT", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defPortraitRight, ModelScaling.defPortraitOffsetRight)
+    ModelScaling:CreateSubClassModel("PORTRAIT", "LEFT", ModelScaling.defGetNPC, ModelScaling.defPortraitLeft, ModelScaling.defPortraitOffsetLeft)
 	ModelScaling:RegisterModel("PORTRAIT", "RIGHT", GwNormalScreenGossipViewFrame.Models.Player, GwNormalScreenGossipViewFrame.Models.Player.Name.Text)
 	ModelScaling:RegisterModel("PORTRAIT", "LEFT", GwNormalScreenGossipViewFrame.Models.Giver, GwNormalScreenGossipViewFrame.Models.Giver.Name.Text)
 end

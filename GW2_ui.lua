@@ -253,10 +253,10 @@ local function StopAnimation(name)
 end
 GW.StopAnimation = StopAnimation
 
-local function CompletedAnimation(name)
-	return animations[name] == nil or animations[name]["completed"] == true
+local function CheckStateAnimation(name)
+	return animations[name] and animations[name]["completed"] == false
 end
-GW.CompletedAnimation = CompletedAnimation
+GW.CheckStateAnimation = CheckStateAnimation
 
 local function swimAnim()
     local r, g, b = hudArtFrame.actionBarHud.RightSwim:GetVertexColor()
@@ -390,6 +390,7 @@ local function loadAddon(self)
     --Create Settings window
     GW.LoadMovers()
     GW.LoadSettings()
+
    	hooksecurefunc("StaticPopup_Show", function(which)
     	if which == "EXPERIMENTAL_CVAR_WARNING" then
         	StaticPopup_Hide("EXPERIMENTAL_CVAR_WARNING")

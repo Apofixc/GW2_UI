@@ -90,12 +90,18 @@ ModelsManagementLib.defFullModelRight = {
     HeightFactor = .4,    
 }
 
+ModelsManagementLib.defFullModelOffsetRight = {
+}
+
 ModelsManagementLib.defFullModelLeft = {
     FacingLeft = true,
     Camera = 1.8, 
     Facing = -.92, 
     TargetDistance = .27, 
     HeightFactor = .34,   
+}
+
+ModelsManagementLib.defFullModelOffsetLeft= {
 }
 
 ModelsManagementLib.defPortraitRight = {
@@ -106,12 +112,18 @@ ModelsManagementLib.defPortraitRight = {
     PositionZ = -.05,
 }
 
+ModelsManagementLib.defPortraitOffsetRight = {
+}
+
 ModelsManagementLib.defPortraitLeft = {
     DistanceScale = 1.1,
     PortraitZoom = .7,
     PositionX = 0,
     PositionY = 0,
     PositionZ = -.05,
+}
+
+ModelsManagementLib.defPortraitOffsetLeft= {
 }
 
 local MODEL_LIST = {}
@@ -221,11 +233,8 @@ function ModelsManagementLib:RemoveClassOrSubClassModel(ClassName, SubClassName)
 
     ClassName = ClassName:upper() 
     SubClassName = SubClassName:upper()
-    if not CLASS_MODEL[ClassName] or CLASS_MODEL[ClassName] and not CLASS_MODEL[ClassName]["SubTypes"][SubClassName] then 
-        return false 
-    end
 
-    if SubClassName then
+    if SubClassName and CLASS_MODEL[ClassName] and CLASS_MODEL[ClassName]["SubTypes"][SubClassName] then
         for key, value in pairs(MODEL_LIST) do
             if value.ClassName == ClassName and value.SubClassName == SubClassName then
                 self:DeleteModel(key)
@@ -236,7 +245,9 @@ function ModelsManagementLib:RemoveClassOrSubClassModel(ClassName, SubClassName)
         CLASS_MODEL[ClassName]["Models"][SubClassName] = nil
         CLASS_MODEL[ClassName]["Default"][SubClassName] = nil
         CLASS_MODEL[ClassName]["Offset"][SubClassName] = nil
-    else
+
+        return true
+    elseif CLASS_MODEL[ClassName] then
         for key, value in pairs(MODEL_LIST) do
             if  value.ClassName == ClassName then
                 self:DeleteModel(key)
@@ -244,8 +255,11 @@ function ModelsManagementLib:RemoveClassOrSubClassModel(ClassName, SubClassName)
         end
 
         CLASS_MODEL[ClassName] = nil
+
+        return true
     end
 
+    return false
 end
 
 function ModelsManagementLib:ClearAll()
@@ -386,13 +400,7 @@ end
 function ModelsManagementLib:SetModelName(Model)
     local info = MODEL_LIST[Model]
     if info and info.Name then
-        local id = Model:GetModelFileID()
-        if id then
-            info.Name:SetText(self:GetModelName(Model))
-            info.Name:Show()
-        else
-            info.Name:Hide()
-        end
+        info.Name:SetText(self:GetModelName(Model))
     end
 end
 
