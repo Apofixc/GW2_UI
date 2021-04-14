@@ -525,12 +525,12 @@ do
 				local parent, frameTemplate = ...
 	
 				pool = CreateFromMixins(FramePoolMixin, CollectionMixin)
-				pool:OnLoad("BUTTON", parent, frameTemplate, FramePool_HideAndClearAnchors)
+				pool:OnLoad("BUTTON", parent, frameTemplate)
 			elseif typePool == "FontString" then
 				local parent, layer, subLayer, fontStringTemplate = ...
 	
 				pool = CreateFromMixins(FontStringPoolMixin, CollectionMixin)
-				pool:OnLoad(parent, layer, subLayer, fontStringTemplate, FontStringPool_HideAndClearAnchors)
+				pool:OnLoad(parent, layer, subLayer, fontStringTemplate)
 			end
 			pool.collection = QuestInfoRewardsFrame.collectionObjectFromPolls
 	

@@ -98,7 +98,7 @@ local function GwImmersiveFrame_OnEvent(self, event, ...)
 		if IsIn(self.LastEvent, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") and self.ActiveFrame.Detail:IsVisible() then
 			self.ActiveFrame.Detail:Hide()
 			self.ActiveFrame.Detail.Scroll.ScrollBar:SetValue(0)
-			self.ActiveFrame.Detail:SetShown(ShownDetail(LastEvent, self.ActiveFrame.Detail.Scroll.ScrollChildFrame))
+			self.ActiveFrame.Detail:SetShown(ShownDetail(self.LastEvent, self.ActiveFrame.Detail.Scroll.ScrollChildFrame))
 		end
 	elseif event == "QUEST_LOG_UPDATE" then
 		if (self.LastEvent == "GOSSIP_SHOW" and self.hasActiveQuest) or self.LastEvent == "QUEST_GREETING" then
@@ -151,7 +151,7 @@ local function GwImmersiveFrames_OnKeyDown(self, button)
 			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") then
 				StopAnimation("IMMERSIVE_DIALOG_ANIMATION")
 
-				self.AutoNext = false
+				GwImmersiveFrame.AutoNext = false
 				self.Dialog.Text:SetAlphaGradient(self.maxSizeText, 1)
 				self.Scroll.ScrollChildFrame:Show()
 				self.Scroll.ScrollBar:SetAlpha(1)
@@ -364,6 +364,8 @@ local function LoadImmersiveView()
 
 	LoadTitleButtons()
 	LoadDetalies()
+
+	CreateFrame("Frame", "fes", UIParent, "GwNormalScreenGossipViewFrameTemplate")
 
 	ModelScaling:CreateClassModel("FULLMODEL", {"CinematicModel"}, ModelScaling.defSetUnit, ModelScaling.defFullModel)
     ModelScaling:CreateSubClassModel("FULLMODEL", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defFullModelRight, ModelScaling.defFullModelOffsetRight)
