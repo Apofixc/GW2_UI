@@ -212,7 +212,7 @@ local function LoadSummon()
         SummonFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
         SummonFrame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
         SummonFrame:RegisterEvent("UPDATE_STEALTH")
-        --SummonFrame:RegisterEvent("UNIT_AURA")
+        -- --SummonFrame:RegisterEvent("UNIT_AURA")
         SummonFrame:RegisterEvent("COMPANION_UPDATE")
     end
     

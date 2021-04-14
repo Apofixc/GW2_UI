@@ -1,6 +1,5 @@
 {
     "Lua.diagnostics.globals": [
-        "GwImmersiveFrame",
         "CustomGossipManagerMixin",
         "CustomGossipFrameManager",
         "GwFullScreenGossipViewFrame",
@@ -51,10 +50,16 @@
         "QuestInfoObjectivesText",
         "QuestInfoGroupSize",
         "ACTION_DISPLAY",
-        "StaticPopup_Show"
+        "StaticPopup_Show",
+        "GwImmersiveFrame"
     ],
+    
     "Lua.diagnostics.disable": [
 
     ],
-    "Lua.telemetry.enable": false
+    "Lua.telemetry.enable": false,
+    "Lua.completion.callSnippet": "Both",
+    "Lua.completion.keywordSnippet": "Both",
+    "Lua.hint.enable": true,
+    "Lua.hint.setType": true
 }

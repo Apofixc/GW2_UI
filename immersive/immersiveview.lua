@@ -10,7 +10,7 @@ local ImmersiveFrameHandleShow = GW.ImmersiveFrameHandleShow
 local ImmersiveFrameHandleHide = GW.ImmersiveFrameHandleHide
 local GetCustomZoneBackground = GW.GetCustomZoneBackground
 
-local Dialog = GW.Dialog
+--local Dialog = GW.Dialog
 local LoadTitleButtons = GW.LoadTitleButtons
 local LoadDetalies = GW.LoadDetalies
 
@@ -51,7 +51,7 @@ local function GwImmersiveFrame_OnEvent(self, event, ...)
 			dialog = GetGreetingText()
 		end
 
-		ImmersiveFrameHandleShow(self.ActiveFrame, nil, dialog)
+		ImmersiveFrameHandleShow(self, nil, dialog)
 	elseif IsIn(event, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") then
 		local dialog
 
@@ -91,7 +91,7 @@ local function GwImmersiveFrame_OnEvent(self, event, ...)
 			dialog = GetProgressText()
 		end
 
-		ImmersiveFrameHandleShow(self.ActiveFrame, GetTitleText(), dialog)
+		ImmersiveFrameHandleShow(self, GetTitleText(), dialog)
 	elseif IsIn(event, "GOSSIP_CLOSED", "QUEST_FINISHED") then
 		ImmersiveFrameHandleHide(self)
 	elseif IsIn(event, "QUEST_ITEM_UPDATE", "LEARNED_SPELL_IN_TAB") then

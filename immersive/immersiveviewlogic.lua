@@ -152,351 +152,6 @@ do
 end
 
 do
-	local ACTIVE_TEMPLATE
-	local SHOW_TITLE_BUTTON
-	local DIALOG_STRINGS_CURRENT
-	local DIALOG_STRINGS
-
-	local function ShownDetail(parentFrame, formatShow)
-		for _, frame in ipairs({QuestInfoObjectivesText, QuestInfoSpecialObjectivesFrame, QuestInfoGroupSize, QuestInfoSpecialObjectivesFrame, QuestInfoRewardsFrame, GwQuestInfoProgress}) do
-			frame:ClearAllPoints()
-			frame:Hide()
-		end
-	
-		ACTIVE_TEMPLATE.contentWidth = parentFrame:GetWidth()
-		QuestInfo_Display(ACTIVE_TEMPLATE, parentFrame)
-	
-		return formatShow(ACTIVE_TEMPLATE)
-	end
-
-	local function TitleButtonShow(self, event, start, finish, current)
-		local firstElement = current == start
-		local lastElement = current == finish
-		local totalHeight = 0
-	
-		GwImmersiveFrame.TitleButtonPool:ReleaseAll()
-	
-		for id, value in ipairs(SHOW_TITLE_BUTTON) do
-			if value.show(event, firstElement, lastElement) then
-				for titleIndex, info in pairs(value.getInfo()) do
-					local button = GwImmersiveFrame.TitleButtonPool:Acquire() 
-					local numActiveButton = GwImmersiveFrame.TitleButtonPool:GetNumActive()
-					button:SetParent(self.Scroll.ScrollChildFrame)
-					button:SetHighlightTexture(self.titleHighlightTexture)
-					button:SetPoint('TOPLEFT', self.Scroll.ScrollChildFrame, 'TOPLEFT', 0, -totalHeight)
-					button:Show()		
-					
-					if value.type == "AVAILABLE" then
-						button:SetQuest(numActiveButton..". "..info.title, info.questLevel, info.isTrivial, info.frequency, info.repeatable, info.isLegendary, info.isIgnored, info.questID)
-					elseif value.type == "ACTIVE" then
-						button:SetActiveQuest(numActiveButton..". "..info.title, info.questLevel, info.isTrivial, info.isComplete, info.isLegendary, info.isIgnored, info.questID)
-					elseif value.type == "GOSSIP" then
-						button:SetOption(numActiveButton..". "..info.name, info.type, info.spellID)
-					else
-						button:SetAction(numActiveButton..". "..info.name, info.icon)
-					end
-	
-					button:AddCallbackForClick(numActiveButton, value.callBack, id < 6 and titleIndex or value.arg, value.playSound)
-					totalHeight = totalHeight + button:GetHeight() + 5						
-				end
-			end
-		end
-	
-		if IsIn(event, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") and lastElement then
-			if not self.Detail:IsVisible() then
-				ACTIVE_TEMPLATE = _G["GW2_"..event.."_TEMPLATE"]
-				self.Detail.Scroll.ScrollBar:SetValue(0)
-				self.Detail.Title:SetText(ACTIVE_TEMPLATE.title)
-				local height = ShownDetail(self.Detail.Scroll.ScrollChildFrame, self.StyleReward)
-				self.Detail.Scroll.ScrollChildFrame:SetHeight(height)
-				self.Detail:SetShown(height > 0)
-			end
-		else
-			if self.Detail:IsVisible() then
-				self.Detail:Hide()
-			end
-		end
-	
-		self.Scroll.ScrollBar:SetValue(0)
-		self.Scroll.ScrollBar:SetAlpha(0)
-		self.Scroll.ScrollChildFrame:SetHeight(totalHeight)
-	end
-
-	local function Split(text, maxSizeText, mode)
-		DIALOG_STRINGS = {}
-		DIALOG_STRINGS_CURRENT = 0
-		GwImmersiveFrame.AutoNext = GetSetting("AUTO_NEXT")
-
-		local unitName = format("|cFFFF5A00%s|r ", (mode == "FULL_SCREEN") and UnitName("npc")..": " or "")
-
-		for _, value in ipairs({ strsplit('\n', text)}) do
-			if strtrim(value) ~= "" then
-				local strLen = strlenutf8(value)
-
-				if strLen < maxSizeText then
-					table.insert(DIALOG_STRINGS, unitName..value)
-				else
-					local sizePart = math.ceil(strLen/math.ceil(strLen/maxSizeText))
-					local forceInsert = false
-					local new = ""
-
-					for key, newValue in ipairs({ strsplit('\n', value:gsub('%.%s%.%s%.', '...'):gsub('%.%s+', '.\n'):gsub('%.%.%.\n', '...\n...'):gsub('%!%s+', '!\n'):gsub('%?%s+', '?\n')) }) do
-						if strtrim(newValue) ~= "" then
-							local size = strlenutf8(new) + strlenutf8(newValue) + 1
-
-							if size < maxSizeText and not forceInsert then
-								new = new.." "..newValue
-								if size >= sizePart then forceInsert = true	end
-							else
-								table.insert(DIALOG_STRINGS, unitName..new)
-								forceInsert = false
-								new = newValue
-							end
-						end
-					end
-
-					if new ~= "" then table.insert(DIALOG_STRINGS, unitName..new) end
-				end
-			end
-		end
-	end
-
-	local function Dialog(immersiveFrame, operation)
-		if DIALOG_STRINGS_CURRENT and not CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") and tonumber(operation) then
-			DIALOG_STRINGS_CURRENT = DIALOG_STRINGS_CURRENT + operation
-
-			if not DIALOG_STRINGS[DIALOG_STRINGS_CURRENT] then 
-				DIALOG_STRINGS_CURRENT = DIALOG_STRINGS_CURRENT - operation
-				return 
-			end
-
-			immersiveFrame.Dialog.Text:SetText(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT])
-
-			local sColor, name, fColor = string.match(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT], "^(%p%x+)(.*)(%p%a)")
-			local StartAnimation = strlenutf8(name)
-			local lenghtAnimation = strlenutf8(DIALOG_STRINGS[DIALOG_STRINGS_CURRENT]) - strlenutf8(sColor) - strlenutf8(fColor)
-			AddToAnimation(
-				"IMMERSIVE_DIALOG_ANIMATION",
-				StartAnimation,
-				lenghtAnimation,
-				GetTime(),
-				GetSetting("ANIMATION_TEXT_SPEED_N") * lenghtAnimation,
-				function(step)
-					immersiveFrame.Dialog.Text:SetAlphaGradient(step, 1)
-				end,
-				nil,
-				function()
-					if GwImmersiveFrame.AutoNext and DIALOG_STRINGS_CURRENT < #DIALOG_STRINGS then
-						C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
-							function() 
-								if GwImmersiveFrame.AutoNext and immersiveFrame:IsVisible() then Dialog(immersiveFrame, 1) end	
-							end
-						)
-					else
-						GwImmersiveFrame.AutoNext = false
-
-						immersiveFrame.Dialog.Text:SetAlphaGradient(immersiveFrame.maxSizeText, 1)
-						immersiveFrame.Scroll.ScrollChildFrame:Show()
-						immersiveFrame.Scroll.ScrollBar:SetAlpha(1)
-					end
-				end
-			)
-
-			TitleButtonShow(immersiveFrame, GwImmersiveFrame.LastEvent, 1, #DIALOG_STRINGS, DIALOG_STRINGS_CURRENT);
-		end
-	end
-	GW.Dialog = Dialog
-
-	local function ImmersiveFrameHandleShow(immersiveFrame, title, dialog)	
-		immersiveFrame:Show()
-		AddToAnimation(
-			immersiveFrame:GetName(),
-			immersiveFrame:GetAlpha(),
-			1,
-			GetTime(),
-			0.2,
-			function(step)
-				immersiveFrame:SetAlpha(step)	
-			end,
-			nil,
-			nil,
-			true
-		)
-			
-		immersiveFrame.ReputationBar:Show()
-		ModelScaling:SetModels(immersiveFrame.Models.Player, immersiveFrame.Models.Giver)
-		ModelScaling:SetModelName(immersiveFrame.Models.Player)
-		ModelScaling:SetModelName(immersiveFrame.Models.Giver)
-
-		if title then
-			immersiveFrame.Title.Text:SetText(title)
-			AddToAnimation(
-				"IMMERSIVE_TITLE_ANIMATION",
-				immersiveFrame.Title:GetAlpha(),
-				1,
-				GetTime(),
-				0.3,
-				function(step)
-					immersiveFrame.Title:SetAlpha(step)	
-				end
-			)
-		else
-			if CheckStateAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
-			immersiveFrame.Title:SetAlpha(0)
-		end
-
-		Split(dialog, immersiveFrame.maxSizeText, immersiveFrame.mode);
-		Dialog(immersiveFrame, 1)
-	end
-	GW.ImmersiveFrameHandleShow = ImmersiveFrameHandleShow
-
-	local function ImmersiveFrameHandleHide(self, reframe)
-		if (self.customFrame) then
-			self.customFrame:Hide()
-			self.customFrame = nil	
-		elseif self.ActiveFrame:IsShown() then
-			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION") end
-			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
-			if CheckStateAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
-
-			AddToAnimation(
-				self.ActiveFrame:GetName(),
-				self.ActiveFrame:GetAlpha(),
-				0,
-				GetTime(),
-				0.5,
-				function(step)
-					self.ActiveFrame:SetAlpha(step)	
-				end,
-				nil,
-				function()
-					self.ActiveFrame:Hide()
-					self.ActiveFrame.Scroll.Icon:Hide()
-					self.ActiveFrame.Scroll.Text:Hide()
-					self.ActiveFrame.Scroll.ScrollChildFrame:Hide()
-					self.ActiveFrame.Detail:Hide()
-
-					if reframe then
-						self.ActiveFrame = self.ActiveFrame.mode == "NORMAL" and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
-						self.ActiveFrame.FontColor()
-						
-						pcall(self:GetScript("OnEvent"), self, self.LastEvent)
-					end
-				end,
-				true
-			)
-		end
-	end
-	GW.ImmersiveFrameHandleHide = ImmersiveFrameHandleHide
-
-	local function LoadTitleButtons()
-		GwImmersiveFrame.TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate")
-		
-		local function GetAvailableQuests() return C_GossipInfo.GetAvailableQuests() end
-		local function GetOptions() return C_GossipInfo.GetOptions() end		
-	
-		local function GetActiveQuests()
-			local GossipQuests = C_GossipInfo.GetActiveQuests()  
-			GwImmersiveFrame.hasActiveQuest = #GossipQuests > 0
-			return GossipQuests
-		end
-	
-		local function GetGreetingAvailableQuests()
-			local info ={}
-			local GreetingAvailableQuests = GetNumAvailableQuests();
-			for ID = 1, GreetingAvailableQuests do
-				local title, isTrivial, frequency, isRepeatable, isLegendary, questID, questLevel = GetAvailableTitle(ID), GetAvailableQuestInfo(ID), GetActiveLevel(ID)
-				tinsert(info, {title = title, questLevel = questLevel, isTrivial = isTrivial, frequency = frequency, isRepeatable = isRepeatable, isLegendary = isLegendary, questID = questID})
-			end
-	
-			return info
-		end
-	
-		local function GetGreetingActiveQuests()
-			local info ={}
-			local GreetingActiveQuests = GetNumActiveQuests();
-			for ID = 1, GreetingActiveQuests do
-				local title, isComplete, questID, isTrivial, isLegendary, questLevel = GetActiveTitle(ID), GetActiveQuestID(ID), IsActiveQuestTrivial(ID), IsActiveQuestLegendary(ID), GetAvailableLevel(ID)
-				tinsert(info, {title = title, questLevel = questLevel, isComplete = isComplete, isTrivial = isTrivial, isLegendary = isLegendary, questID = questID})
-			end
-	
-			return info
-		end	
-	
-		local function GetAction(typeAction, icon)
-			local info = {}
-			tinsert(info, {name = GetImmersiveInteractiveText(typeAction), icon = icon})
-	
-			return info
-		end
-	
-		local function Accept()
-			if QuestFlagsPVP() then
-				StaticPopup_Show('CONFIRM_ACCEPT_PVP_QUEST')
-			else
-				if QuestGetAutoAccept() then
-					AcknowledgeAutoAcceptQuest()
-				else
-					AcceptQuest()
-				end
-			end
-		end
-	
-		local function Finish()
-			local numQuestChoices = GetNumQuestChoices()
-			if numQuestChoices > 1 then
-				QuestChooseRewardError()
-			else
-				if numQuestChoices == 1 then QuestInfoFrame.itemChoice = 1 end
-	
-				GetQuestReward(QuestInfoFrame.itemChoice)
-			end
-		end
-	
-		local function Next() Dialog(GwImmersiveFrame.ActiveFrame, 1) end
-		local function Back() Dialog(GwImmersiveFrame.ActiveFrame, -1) end
-		local function Repeat() 
-			DIALOG_STRINGS_CURRENT = 0
-			GwImmersiveFrame.AutoNext = GetSetting("AUTO_NEXT")
-			Dialog(GwImmersiveFrame.ActiveFrame, 1) 
-		end
-	
-		local function ShowAvailable(event, firstElement, lastElement) return lastElement and event == "GOSSIP_SHOW" end
-		local function ShowGreetingAvailable(event, firstElement, lastElement) return lastElement and event == "QUEST_GREETING" end
-		local function ShowActive(event, firstElement, lastElement) return lastElement and event == "GOSSIP_SHOW" end
-		local function ShowGreetingActive(event, firstElement, lastElement) return lastElement and event == "QUEST_GREETING" end
-		local function ShowGossip(event, firstElement, lastElement) return lastElement and event == "GOSSIP_SHOW" end
-		local function ShowAccept(event, firstElement, lastElement) return lastElement and event == "QUEST_DETAIL" end
-		local function ShowDecline(event, firstElement, lastElement) return lastElement and event == "QUEST_DETAIL" and not QuestGetAutoAccept() end
-		local function ShowComplete(event, firstElement, lastElement) return lastElement and event == "QUEST_PROGRESS" and IsQuestCompletable() end
-		local function ShowFinish(event, firstElement, lastElement) return lastElement and event == "QUEST_COMPLETE" and GetNumQuestChoices() <= 1 end
-		local function ShowNext(event, firstElement, lastElement) return not lastElement end 
-		local function ShowBack(event, firstElement, lastElement) return not firstElement end
-		local function ShowCancel(event, firstElement, lastElement) return IsIn(event, "QUEST_GREETING", "QUEST_PROGRESS", "QUEST_COMPLETE") end
-		local function ShowExit(event, firstElement, lastElement) return event == "GOSSIP_SHOW" end
-		local function ShowRepeat(event, firstElement, lastElement) return lastElement and false end
-	
-		SHOW_TITLE_BUTTON = {
-			{ type = "AVAILABLE", show = ShowAvailable, callBack = C_GossipInfo.SelectAvailableQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetAvailableQuests },
-			{ type = "AVAILABLE", show = ShowGreetingAvailable, callBack = SelectAvailableQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetGreetingAvailableQuests },
-			{ type = "ACTIVE", show = ShowActive, callBack = C_GossipInfo.SelectActiveQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetActiveQuests },
-			{ type = "ACTIVE", show = ShowGreetingActive, callBack = SelectActiveQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetGreetingActiveQuests },
-			{ type = "GOSSIP", show = ShowGossip, callBack = C_GossipInfo.SelectOption, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetOptions },
-			{ type = "ACCEPT", show = ShowAccept, callBack = Accept, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("ACCEPT", 0) end },
-			{ type = "DECLINE", show = ShowDecline, callBack = DeclineQuest, playSound = SOUNDKIT.IG_QUEST_CANCEL, getInfo = function() return GetAction("DECLINE", 1) end },
-			{ type = "COMPLETE", show = ShowComplete, callBack = CompleteQuest, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("COMPLETE", 2) end },
-			{ type = "FINISH", show = ShowFinish, callBack = Finish, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("FINISH", 3) end },
-			{ type = "NEXT", show = ShowNext, callBack = Next, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("NEXT", 4) end },
-			{ type = "BACK", show = ShowBack, callBack = Back, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("BACK", 5) end },
-			{ type = "CANCEL", show = ShowCancel, callBack = CloseQuest, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE, getInfo = function() return GetAction("CANCEL", 6) end},
-			{ type = "EXIT", show = ShowExit, callBack = C_GossipInfo.CloseGossip, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE, getInfo = function() return GetAction("EXIT", 7) end},
-			{ type = "RESET", show = ShowRepeat, callBack = Repeat, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("REPEAT", 8) end}
-		}
-
-
-	end
-	GW.LoadTitleButtons = LoadTitleButtons
-
 	local function LoadDetalies()
 		local CollectionMixin = {}
 	
@@ -699,4 +354,349 @@ do
 		
 	end
 	GW.LoadDetalies = LoadDetalies
+end
+
+do
+	local ACTIVE_TEMPLATE
+	local SHOW_TITLE_BUTTON
+
+	local function ShownDetail(parentFrame, formatShow)
+		for _, frame in ipairs({QuestInfoObjectivesText, QuestInfoSpecialObjectivesFrame, QuestInfoGroupSize, QuestInfoSpecialObjectivesFrame, QuestInfoRewardsFrame, GwQuestInfoProgress}) do
+			frame:ClearAllPoints()
+			frame:Hide()
+		end
+	
+		ACTIVE_TEMPLATE.contentWidth = parentFrame:GetWidth()
+		QuestInfo_Display(ACTIVE_TEMPLATE, parentFrame)
+	
+		return formatShow(ACTIVE_TEMPLATE)
+	end
+
+	local function TitleButtonShow(gwImmersiveFrame, start, finish, current)
+		local firstElement = current == start
+		local lastElement = current == finish
+		local totalHeight = 0
+	
+		gwImmersiveFrame.TitleButtonPool:ReleaseAll()
+	
+		for id, value in ipairs(SHOW_TITLE_BUTTON) do
+			if value.show(gwImmersiveFrame.LastEvent, firstElement, lastElement) then
+				for titleIndex, info in pairs(value.getInfo()) do
+					local button = gwImmersiveFrame.TitleButtonPool:Acquire() 
+					local numActiveButton = gwImmersiveFrame.TitleButtonPool:GetNumActive()
+					button:SetParent(gwImmersiveFrame.ActiveFrame.Scroll.ScrollChildFrame)
+					button:SetHighlightTexture(gwImmersiveFrame.ActiveFrame.titleHighlightTexture)
+					button:SetPoint('TOPLEFT', gwImmersiveFrame.ActiveFrame.Scroll.ScrollChildFrame, 'TOPLEFT', 0, -totalHeight)
+					button:Show()		
+					
+					if value.type == "AVAILABLE" then
+						button:SetQuest(numActiveButton..". "..info.title, info.questLevel, info.isTrivial, info.frequency, info.repeatable, info.isLegendary, info.isIgnored, info.questID)
+					elseif value.type == "ACTIVE" then
+						button:SetActiveQuest(numActiveButton..". "..info.title, info.questLevel, info.isTrivial, info.isComplete, info.isLegendary, info.isIgnored, info.questID)
+					elseif value.type == "GOSSIP" then
+						button:SetOption(numActiveButton..". "..info.name, info.type, info.spellID)
+					else
+						button:SetAction(numActiveButton..". "..info.name, info.icon)
+					end
+	
+					button:AddCallbackForClick(numActiveButton, value.callBack, id < 6 and titleIndex or value.arg, value.playSound)
+					totalHeight = totalHeight + button:GetHeight() + 5						
+				end
+			end
+		end
+	
+		if IsIn(gwImmersiveFrame.LastEvent, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") and lastElement then
+			if not gwImmersiveFrame.ActiveFrame.Detail:IsVisible() then
+				ACTIVE_TEMPLATE = _G["GW2_"..gwImmersiveFrame.LastEvent.."_TEMPLATE"]
+				gwImmersiveFrame.ActiveFrame.Detail.Scroll.ScrollBar:SetValue(0)
+				gwImmersiveFrame.ActiveFrame.Detail.Title:SetText(ACTIVE_TEMPLATE.title)
+				local height = ShownDetail(gwImmersiveFrame.ActiveFrame.Detail.Scroll.ScrollChildFrame, gwImmersiveFrame.ActiveFrame.StyleReward)
+				gwImmersiveFrame.ActiveFrame.Detail.Scroll.ScrollChildFrame:SetHeight(height)
+				gwImmersiveFrame.ActiveFrame.Detail:SetShown(height > 0)
+			end
+		else
+			if gwImmersiveFrame.ActiveFrame.Detail:IsVisible() then
+				gwImmersiveFrame.ActiveFrame.Detail:Hide()
+			end
+		end
+	
+		gwImmersiveFrame.ActiveFrame.Scroll.ScrollBar:SetValue(0)
+		gwImmersiveFrame.ActiveFrame.Scroll.ScrollBar:SetAlpha(0)
+		gwImmersiveFrame.ActiveFrame.Scroll.ScrollChildFrame:SetHeight(totalHeight)
+	end
+
+	local function Split(gwImmersiveFrame, text, maxSizeText, mode)
+		gwImmersiveFrame.Dialog = {}
+		gwImmersiveFrame.DialogCurrent = 0
+		gwImmersiveFrame.AutoNext = GetSetting("AUTO_NEXT")
+
+		local unitName = format("|cFFFF5A00%s|r ", (mode == "FULL_SCREEN") and UnitName("npc")..": " or "")
+
+		for _, value in ipairs({ strsplit('\n', text)}) do
+			if strtrim(value) ~= "" then
+				local strLen = strlenutf8(value)
+
+				if strLen < maxSizeText then
+					table.insert(gwImmersiveFrame.Dialog, unitName..value)
+				else
+					local sizePart = math.ceil(strLen/math.ceil(strLen/maxSizeText))
+					local forceInsert = false
+					local new = ""
+
+					for key, newValue in ipairs({ strsplit('\n', value:gsub('%.%s%.%s%.', '...'):gsub('%.%s+', '.\n'):gsub('%.%.%.\n', '...\n...'):gsub('%!%s+', '!\n'):gsub('%?%s+', '?\n')) }) do
+						if strtrim(newValue) ~= "" then
+							local size = strlenutf8(new) + strlenutf8(newValue) + 1
+
+							if size < maxSizeText and not forceInsert then
+								new = new.." "..newValue
+								if size >= sizePart then forceInsert = true	end
+							else
+								table.insert(gwImmersiveFrame.Dialog, unitName..new)
+								forceInsert = false
+								new = newValue
+							end
+						end
+					end
+
+					if new ~= "" then table.insert(gwImmersiveFrame.Dialog, unitName..new) end
+				end
+			end
+		end
+	end
+
+	local function Dialog(gwImmersiveFrame, operation)
+		if gwImmersiveFrame.DialogCurrent and not CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") and tonumber(operation) then
+			gwImmersiveFrame.DialogCurrent = gwImmersiveFrame.DialogCurrent + operation
+
+			if not gwImmersiveFrame.Dialog[gwImmersiveFrame.DialogCurrent] then 
+				gwImmersiveFrame.DialogCurrent = gwImmersiveFrame.DialogCurrent - operation
+				return 
+			end
+
+			gwImmersiveFrame.ActiveFrame.Dialog.Text:SetText(gwImmersiveFrame.Dialog[gwImmersiveFrame.DialogCurrent])
+
+			local sColor, name, fColor = string.match(gwImmersiveFrame.Dialog[gwImmersiveFrame.DialogCurrent], "^(%p%x+)(.*)(%p%a)")
+			local StartAnimation = strlenutf8(name)
+			local lenghtAnimation = strlenutf8(gwImmersiveFrame.Dialog[gwImmersiveFrame.DialogCurrent]) - strlenutf8(sColor) - strlenutf8(fColor)
+			AddToAnimation(
+				"IMMERSIVE_DIALOG_ANIMATION",
+				StartAnimation,
+				lenghtAnimation,
+				GetTime(),
+				GetSetting("ANIMATION_TEXT_SPEED_N") * lenghtAnimation,
+				function(step)
+					gwImmersiveFrame.ActiveFrame.Dialog.Text:SetAlphaGradient(step, 1)
+				end,
+				nil,
+				function()
+					if gwImmersiveFrame.AutoNext and gwImmersiveFrame.DialogCurrent < #gwImmersiveFrame.Dialog then
+						C_Timer.After(GetSetting("AUTO_NEXT_TIME"), 
+							function() 
+								if gwImmersiveFrame.AutoNext and gwImmersiveFrame.ActiveFrame:IsVisible() then Dialog(gwImmersiveFrame, 1) end	
+							end
+						)
+					else
+						gwImmersiveFrame.AutoNext = false
+
+						gwImmersiveFrame.ActiveFrame.Dialog.Text:SetAlphaGradient(gwImmersiveFrame.ActiveFrame.maxSizeText, 1)
+						gwImmersiveFrame.ActiveFrame.Scroll.ScrollChildFrame:Show()
+						gwImmersiveFrame.ActiveFrame.Scroll.ScrollBar:SetAlpha(1)
+					end
+				end
+			)
+
+			TitleButtonShow(gwImmersiveFrame, 1, #gwImmersiveFrame.Dialog, gwImmersiveFrame.DialogCurrent);
+		end
+	end
+	GW.Dialog = Dialog
+
+	local function ImmersiveFrameHandleShow(gwImmersiveFrame, title, dialog)	
+		gwImmersiveFrame.ActiveFrame:Show()
+		AddToAnimation(
+			gwImmersiveFrame.ActiveFrame:GetName(),
+			gwImmersiveFrame.ActiveFrame:GetAlpha(),
+			1,
+			GetTime(),
+			0.2,
+			function(step)
+				gwImmersiveFrame.ActiveFrame:SetAlpha(step)	
+			end,
+			nil,
+			nil,
+			true
+		)
+			
+		gwImmersiveFrame.ActiveFrame.ReputationBar:Show()
+		ModelScaling:SetModels(gwImmersiveFrame.ActiveFrame.Models.Player, gwImmersiveFrame.ActiveFrame.Models.Giver)
+		ModelScaling:SetModelName(gwImmersiveFrame.ActiveFrame.Models.Player)
+		ModelScaling:SetModelName(gwImmersiveFrame.ActiveFrame.Models.Giver)
+
+		if title then
+			gwImmersiveFrame.ActiveFrame.Title.Text:SetText(title)
+			AddToAnimation(
+				"IMMERSIVE_TITLE_ANIMATION",
+				gwImmersiveFrame.ActiveFrame.Title:GetAlpha(),
+				1,
+				GetTime(),
+				0.3,
+				function(step)
+					gwImmersiveFrame.ActiveFrame.Title:SetAlpha(step)	
+				end
+			)
+		else
+			if CheckStateAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
+			gwImmersiveFrame.ActiveFrame.Title:SetAlpha(0)
+		end
+
+		Split(gwImmersiveFrame, dialog, gwImmersiveFrame.ActiveFrame.maxSizeText, gwImmersiveFrame.ActiveFrame.mode);
+		Dialog(gwImmersiveFrame, 1)
+	end
+	GW.ImmersiveFrameHandleShow = ImmersiveFrameHandleShow
+
+	local function ImmersiveFrameHandleHide(gwImmersiveFrame, reframe)
+		if (gwImmersiveFrame.customFrame) then
+			gwImmersiveFrame.customFrame:Hide()
+			gwImmersiveFrame.customFrame = nil	
+		elseif gwImmersiveFrame.ActiveFrame:IsShown() then
+			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION") end
+			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
+			if CheckStateAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
+
+			AddToAnimation(
+				gwImmersiveFrame.ActiveFrame:GetName(),
+				gwImmersiveFrame.ActiveFrame:GetAlpha(),
+				0,
+				GetTime(),
+				0.5,
+				function(step)
+					gwImmersiveFrame.ActiveFrame:SetAlpha(step)	
+				end,
+				nil,
+				function()
+					gwImmersiveFrame.ActiveFrame:Hide()
+					gwImmersiveFrame.ActiveFrame.Scroll.Icon:Hide()
+					gwImmersiveFrame.ActiveFrame.Scroll.Text:Hide()
+					gwImmersiveFrame.ActiveFrame.Scroll.ScrollChildFrame:Hide()
+					gwImmersiveFrame.ActiveFrame.Detail:Hide()
+
+					if reframe then
+						gwImmersiveFrame.ActiveFrame = gwImmersiveFrame.ActiveFrame.mode == "NORMAL" and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
+						gwImmersiveFrame.ActiveFrame.FontColor()
+						
+						pcall(gwImmersiveFrame:GetScript("OnEvent"), gwImmersiveFrame, gwImmersiveFrame.LastEvent)
+					end
+				end,
+				true
+			)
+		end
+	end
+	GW.ImmersiveFrameHandleHide = ImmersiveFrameHandleHide
+
+	local function LoadTitleButtons()
+		GwImmersiveFrame.TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate")
+		
+		local function GetAvailableQuests() return C_GossipInfo.GetAvailableQuests() end
+		local function GetOptions() return C_GossipInfo.GetOptions() end		
+	
+		local function GetActiveQuests()
+			local GossipQuests = C_GossipInfo.GetActiveQuests()  
+			GwImmersiveFrame.hasActiveQuest = #GossipQuests > 0
+			return GossipQuests
+		end
+	
+		local function GetGreetingAvailableQuests()
+			local info ={}
+			local GreetingAvailableQuests = GetNumAvailableQuests();
+			for ID = 1, GreetingAvailableQuests do
+				local title, isTrivial, frequency, isRepeatable, isLegendary, questID, questLevel = GetAvailableTitle(ID), GetAvailableQuestInfo(ID), GetActiveLevel(ID)
+				tinsert(info, {title = title, questLevel = questLevel, isTrivial = isTrivial, frequency = frequency, isRepeatable = isRepeatable, isLegendary = isLegendary, questID = questID})
+			end
+	
+			return info
+		end
+	
+		local function GetGreetingActiveQuests()
+			local info ={}
+			local GreetingActiveQuests = GetNumActiveQuests();
+			for ID = 1, GreetingActiveQuests do
+				local title, isComplete, questID, isTrivial, isLegendary, questLevel = GetActiveTitle(ID), GetActiveQuestID(ID), IsActiveQuestTrivial(ID), IsActiveQuestLegendary(ID), GetAvailableLevel(ID)
+				tinsert(info, {title = title, questLevel = questLevel, isComplete = isComplete, isTrivial = isTrivial, isLegendary = isLegendary, questID = questID})
+			end
+	
+			return info
+		end	
+	
+		local function GetAction(typeAction, icon)
+			local info = {}
+			tinsert(info, {name = GetImmersiveInteractiveText(typeAction), icon = icon})
+	
+			return info
+		end
+	
+		local function Accept()
+			if QuestFlagsPVP() then
+				StaticPopup_Show('CONFIRM_ACCEPT_PVP_QUEST')
+			else
+				if QuestGetAutoAccept() then
+					AcknowledgeAutoAcceptQuest()
+				else
+					AcceptQuest()
+				end
+			end
+		end
+	
+		local function Finish()
+			local numQuestChoices = GetNumQuestChoices()
+			if numQuestChoices > 1 then
+				QuestChooseRewardError()
+			else
+				if numQuestChoices == 1 then QuestInfoFrame.itemChoice = 1 end
+	
+				GetQuestReward(QuestInfoFrame.itemChoice)
+			end
+		end
+	
+		local function Next() Dialog(GwImmersiveFrame, 1) end
+		local function Back() Dialog(GwImmersiveFrame, -1) end
+		local function Repeat() 
+			GwImmersiveFrame.DialogCurrent = 0
+			GwImmersiveFrame.AutoNext = GetSetting("AUTO_NEXT")
+			Dialog(GwImmersiveFrame, 1) 
+		end
+	
+		local function ShowAvailable(event, firstElement, lastElement) return lastElement and event == "GOSSIP_SHOW" end
+		local function ShowGreetingAvailable(event, firstElement, lastElement) return lastElement and event == "QUEST_GREETING" end
+		local function ShowActive(event, firstElement, lastElement) return lastElement and event == "GOSSIP_SHOW" end
+		local function ShowGreetingActive(event, firstElement, lastElement) return lastElement and event == "QUEST_GREETING" end
+		local function ShowGossip(event, firstElement, lastElement) return lastElement and event == "GOSSIP_SHOW" end
+		local function ShowAccept(event, firstElement, lastElement) return lastElement and event == "QUEST_DETAIL" end
+		local function ShowDecline(event, firstElement, lastElement) return lastElement and event == "QUEST_DETAIL" and not QuestGetAutoAccept() end
+		local function ShowComplete(event, firstElement, lastElement) return lastElement and event == "QUEST_PROGRESS" and IsQuestCompletable() end
+		local function ShowFinish(event, firstElement, lastElement) return lastElement and event == "QUEST_COMPLETE" and GetNumQuestChoices() <= 1 end
+		local function ShowNext(event, firstElement, lastElement) return not lastElement end 
+		local function ShowBack(event, firstElement, lastElement) return not firstElement end
+		local function ShowCancel(event, firstElement, lastElement) return IsIn(event, "QUEST_GREETING", "QUEST_PROGRESS", "QUEST_COMPLETE") end
+		local function ShowExit(event, firstElement, lastElement) return event == "GOSSIP_SHOW" end
+		local function ShowRepeat(event, firstElement, lastElement) return lastElement and false end
+	
+		SHOW_TITLE_BUTTON = {
+			{ type = "AVAILABLE", show = ShowAvailable, callBack = C_GossipInfo.SelectAvailableQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetAvailableQuests },
+			{ type = "AVAILABLE", show = ShowGreetingAvailable, callBack = SelectAvailableQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetGreetingAvailableQuests },
+			{ type = "ACTIVE", show = ShowActive, callBack = C_GossipInfo.SelectActiveQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetActiveQuests },
+			{ type = "ACTIVE", show = ShowGreetingActive, callBack = SelectActiveQuest, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetGreetingActiveQuests },
+			{ type = "GOSSIP", show = ShowGossip, callBack = C_GossipInfo.SelectOption, playSound = SOUNDKIT.IG_QUEST_LIST_SELECT, getInfo = GetOptions },
+			{ type = "ACCEPT", show = ShowAccept, callBack = Accept, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("ACCEPT", 0) end },
+			{ type = "DECLINE", show = ShowDecline, callBack = DeclineQuest, playSound = SOUNDKIT.IG_QUEST_CANCEL, getInfo = function() return GetAction("DECLINE", 1) end },
+			{ type = "COMPLETE", show = ShowComplete, callBack = CompleteQuest, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("COMPLETE", 2) end },
+			{ type = "FINISH", show = ShowFinish, callBack = Finish, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("FINISH", 3) end },
+			{ type = "NEXT", show = ShowNext, callBack = Next, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("NEXT", 4) end },
+			{ type = "BACK", show = ShowBack, callBack = Back, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("BACK", 5) end },
+			{ type = "CANCEL", show = ShowCancel, callBack = CloseQuest, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE, getInfo = function() return GetAction("CANCEL", 6) end},
+			{ type = "EXIT", show = ShowExit, callBack = C_GossipInfo.CloseGossip, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE, getInfo = function() return GetAction("EXIT", 7) end},
+			{ type = "RESET", show = ShowRepeat, callBack = Repeat, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("REPEAT", 8) end}
+		}
+
+
+	end
+	GW.LoadTitleButtons = LoadTitleButtons
 end
