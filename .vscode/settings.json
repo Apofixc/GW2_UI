@@ -71,7 +71,20 @@
         "AJ_PRIMARY_REWARD_TEXT",
         "GetMoneyString",
         "CreateFontString",
-        "MONEY"
+        "MONEY",
+        "REWARD_ITEMS",
+        "REWARD_ITEMS_ONLY",
+        "REWARD_CHOOSE",
+        "REWARD_CHOICES",
+        "QUEST_SPELL_REWARD_TYPE_TRADESKILL_SPELL",
+        "QUEST_SPELL_REWARD_TYPE_ABILITY",
+        "QUEST_SPELL_REWARD_TYPE_FOLLOWER",
+        "QUEST_SPELL_REWARD_TYPE_SPELL",
+        "QUEST_SPELL_REWARD_TYPE_UNLOCK",
+        "QUEST_SPELL_REWARD_TYPE_AURA",
+        "QUEST_INFO_SPELL_REWARD_ORDERING",
+        "QUEST_INFO_SPELL_REWARD_TO_HEADER",
+        "GwQuestInfoObjectivesText"
     ],
     
     "Lua.diagnostics.disable": [

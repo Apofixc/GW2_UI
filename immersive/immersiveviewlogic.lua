@@ -156,32 +156,31 @@ do
 		tinsert(table, {name = name, element = element})
 	end
 
-	local function ShowObjectivesText() -- Not Hide, Frame used in QUEST_TEMPLATE_LOG and QUEST_TEMPLATE_MAP_DETAILS 
+	local function ShowObjectivesText()
 		local questObjectives = GetObjectiveText()
 
 		if questObjectives then
-			QuestInfoObjectivesText:SetText(questObjectives)
+			GwQuestInfoObjectivesText:SetText(questObjectives)
 			
-			return QuestInfoObjectivesText
+			return GwQuestInfoObjectivesText
 		else
 			return nil
 		end
 	end
 
-	local function ShowSpecialObjectives() -- Can Hide
+	local function ShowSpecialObjectives()
 		return QuestInfo_ShowSpecialObjectives()
 	end
 
-	local function ShowGroupSize() -- Can Hide
+	local function ShowGroupSize()
 		return QuestInfo_ShowGroupSize()
 	end
 
-	local function ShowSeal() -- Not Hide, Frame used in QUEST_TEMPLATE_LOG and QUEST_TEMPLATE_MAP_DETAILS 
-		local questID = GetQuestID()
-		local sealInfo = C_QuestLog.GetQuestDetailsTheme(questID)
-		if  sealInfo and (sealInfo.signature ~= "" or sealInfo.seal) then
-			QuestInfoSealFrame.Text:SetText(sealInfo.signature)
-			QuestInfoSealFrame.Texture:SetAtlas(sealInfo.seal)
+	local function ShowSeal() 
+		local theme = QuestInfoSealFrame.theme
+		if  theme and (theme.signature ~= "" or theme.seal) then
+			QuestInfoSealFrame.Text:SetText(theme.signature)
+			QuestInfoSealFrame.Texture:SetAtlas(theme.seal)
 
 			return QuestInfoSealFrame
 		else
@@ -310,145 +309,155 @@ do
 		end
 
 		local objects = {}
-		local rewardButtons = QuestInfoRewardsFrame.RewardButtons
-		for i = totalRewards + 1, #rewardButtons do
-			rewardButtons[i]:ClearAllPoints()
-			rewardButtons[i]:Hide()
+		local numRewardButtons = 0
+		QuestInfoRewardsFrame.RewardsHeaderPool:ReleaseAll()
+		for i = totalRewards + 1, #QuestInfoRewardsFrame.RewardButtons do
+			QuestInfoRewardsFrame.RewardButtons[i]:ClearAllPoints()
+			QuestInfoRewardsFrame.RewardButtons[i]:Hide()
 		end
 		AddElement(objects, "Header", QuestInfoRewardsFrame.Header)
 
-		if numQuestRewards > 0 or numQuestCurrencies > 0 or money > 0 or xp > 0 or honor > 0 or artifactXP > 0 or hasChanceForQuestSessionBonusReward or playerTitle then
-			if hasWarModeBonus and C_PvP.IsWarModeDesired() then
-				QuestInfoRewardsFrame.WarModeBonusFrame.Count:SetFormattedText(PLUS_PERCENT_FORMAT, C_PvP.GetWarModeRewardBonus())
-				AddElement(objects, "WarModeBonusFrame", QuestInfoRewardsFrame.WarModeBonusFrame)
-			end
+		if hasWarModeBonus and C_PvP.IsWarModeDesired() then
+			QuestInfoRewardsFrame.WarModeBonusFrame.Count:SetFormattedText(PLUS_PERCENT_FORMAT, C_PvP.GetWarModeRewardBonus())
+			AddElement(objects, "WarModeBonusFrame", QuestInfoRewardsFrame.WarModeBonusFrame)
+		end
 
-			if money > 0 then
-				MoneyFrame_Update(QuestInfoRewardsFrame.MoneyFrame, money)
-				QuestInfoRewardsFrame.MoneyFrameButton.Name:SetText(GetMoneyString(money))	
-				AddElement(objects, "MoneyFrame", QuestInfoRewardsFrame.MoneyFrame)
-				AddElement(objects, "MoneyFrameButton", QuestInfoRewardsFrame.MoneyFrameButton)
-			end
+		if totalRewards > 0 or money > 0 or xp > 0 then
+			QuestInfoRewardsFrame.questItemReceiveText:SetText(numQuestChoices > 0 or numQuestSpellRewards > 0 or playerTitle and REWARD_ITEMS or REWARD_ITEMS_ONLY)
+			AddElement(objects, "ItemReceiveText", QuestInfoRewardsFrame.questItemReceiveText)
+		end
 
-			if xp > 0 then
-				QuestInfoRewardsFrame.XPFrame.ValueText:SetText(BreakUpLargeNumbers(xp))
-				QuestInfoRewardsFrame.XPFrameButton.Name:SetText(BreakUpLargeNumbers(xp))
-				AddElement(objects, "XPFrame", QuestInfoRewardsFrame.XPFrame)				
-				AddElement(objects, "XPFrameButton", QuestInfoRewardsFrame.XPFrameButton)
-			end
-			
-			if honor > 0 then
-				local faction = UnitFactionGroup('player')
-				local icon = faction and ('Interface/Icons/PVPCurrency-Honor-%s'):format(faction)
+		if money > 0 then
+			MoneyFrame_Update(QuestInfoRewardsFrame.MoneyFrame, money)
+			QuestInfoRewardsFrame.MoneyFrameButton.Name:SetText(GetMoneyString(money))	
+			AddElement(objects, "MoneyFrame", QuestInfoRewardsFrame.RewardsHeaderPool:Acquire():SetText(MONEY))
+			AddElement(objects, "MoneyFrameButton", QuestInfoRewardsFrame.MoneyFrameButton)
+		end
 
-				QuestInfoRewardsFrame.HonorFrame.Count:SetText(BreakUpLargeNumbers(honor))
-				QuestInfoRewardsFrame.HonorFrame.Name:SetText(HONOR)
-				QuestInfoRewardsFrame.HonorFrame.Icon:SetTexture(icon)
-
-				AddElement(objects, "HonorFrame", QuestInfoRewardsFrame.HonorFrame)
-			end
-
-			if artifactXP > 0 then
-				local name, icon = C_ArtifactUI.GetArtifactXPRewardTargetInfo(artifactCategory)
-				
-				QuestInfoRewardsFrame.ArtifactXPFrame.Name:SetText(BreakUpLargeNumbers(artifactXP))
-				QuestInfoRewardsFrame.ArtifactXPFrame.Icon:SetTexture(icon or "Interface/Icons/INV_Misc_QuestionMark")
-				
-				AddElement(objects, "ArtifactXPFrame", QuestInfoRewardsFrame.ArtifactXPFrame)
-			end
-
-			if skillPoints then
-				QuestInfoRewardsFrame.SkillPointFrame.ValueText:SetText(skillPoints)
-				QuestInfoRewardsFrame.SkillPointFrame.Icon:SetTexture(skillIcon)
-
-				if skillName then
-					QuestInfoRewardsFrame.SkillPointFrame.Name:SetFormattedText(BONUS_SKILLPOINTS, skillName)
-					QuestInfoRewardsFrame.SkillPointFrame.tooltip = format(BONUS_SKILLPOINTS_TOOLTIP, skillPoints, skillName)
-				else
-					QuestInfoRewardsFrame.SkillPointFrame.tooltip = nil
-					QuestInfoRewardsFrame.SkillPointFrame.Name:SetText("")
-				end
-				
-				AddElement(objects, "SkillPointFrame", QuestInfoRewardsFrame.SkillPointFrame)
-			end
-			
-			if playerTitle then
-				QuestInfoRewardsFrame.TitleFrame.Name:SetText(playerTitle)
-				QuestInfoRewardsFrame.TitleFrameButton.Name:SetText(playerTitle)
-				AddElement(objects, "PlayerTitleText", QuestInfoRewardsFrame.PlayerTitleText)
-				AddElement(objects, "TitleFrame", QuestInfoRewardsFrame.TitleFrame)				
-				AddElement(objects, "TitleFrameButton", QuestInfoRewardsFrame.TitleFrameButton)
-			end
-
---[[ 			if numQuestRewards > 0 then
-				--AddElement(objects, "TitleFrame", QuestInfoRewardsFrame.TitleFrame)
-				for index = 1, numQuestRewards, 1 do
-					local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, index)
-					questItem.type = 'reward'
-					questItem.objectType = 'item'
-					questItem:SetID(index)	
-	
-					AddElement(questItem, true, index)
-				end
-			end ]]
-
---[[ 			if (numQuestCurrencies > 0) then
-				--self:AddElement(self.CurrencyText);
-				for index = 1, numQuestCurrencies, 1 do
-					local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, index)
-					questItem.type = 'reward';
-					questItem.objectType = 'currency';
-					questItem:SetID(index);
-
-					AddElement(questItem, true, index);
-				end
-			end ]]
-
---[[ 			if hasChanceForQuestSessionBonusReward then
-				--self:AddElement(self.QuestSessionBonusReward);
-
-				local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, index)
-				questItem.type = "reward";
-				questItem.objectType = "questSessionBonusReward";
-
-				AddElement(questItem, true, 1);
-			end ]]
+		if xp > 0 then
+			QuestInfoRewardsFrame.XPFrame.ValueText:SetText(BreakUpLargeNumbers(xp))
+			QuestInfoRewardsFrame.XPFrameButton.Name:SetText(BreakUpLargeNumbers(xp))
+			AddElement(objects, "XPFrame", QuestInfoRewardsFrame.XPFrame)				
+			AddElement(objects, "XPFrameButton", QuestInfoRewardsFrame.XPFrameButton)
 		end
 		
---[[ 		if (numQuestChoices > 0) then
-			self.ItemChooseText:SetText((numQuestChoices == 1 and REWARD_ITEMS_ONLY) or (self.chooseItems and REWARD_CHOOSE) or REWARD_CHOICES);
+		if honor > 0 then
+			local faction = UnitFactionGroup('player')
+			local icon = faction and ('Interface/Icons/PVPCurrency-Honor-%s'):format(faction)
 
-			self:AddElement(self.ItemChooseText);
+			QuestInfoRewardsFrame.HonorFrame.Count:SetText(BreakUpLargeNumbers(honor))
+			QuestInfoRewardsFrame.HonorFrame.Name:SetText(HONOR)
+			QuestInfoRewardsFrame.HonorFrame.Icon:SetTexture(icon)
 
-			local highestValue, moneyItem
+			AddElement(objects, "HonorFrame", QuestInfoRewardsFrame.HonorFrame)
+		end		
+
+		if artifactXP > 0 then
+			local name, icon = C_ArtifactUI.GetArtifactXPRewardTargetInfo(artifactCategory)
+			
+			QuestInfoRewardsFrame.ArtifactXPFrame.Name:SetText(BreakUpLargeNumbers(artifactXP))
+			QuestInfoRewardsFrame.ArtifactXPFrame.Icon:SetTexture(icon or "Interface/Icons/INV_Misc_QuestionMark")
+			
+			AddElement(objects, "ArtifactXPFrame", QuestInfoRewardsFrame.ArtifactXPFrame)
+		end
+
+		if skillPoints then
+			QuestInfoRewardsFrame.SkillPointFrame.ValueText:SetText(skillPoints)
+			QuestInfoRewardsFrame.SkillPointFrame.Icon:SetTexture(skillIcon)
+
+			if skillName then
+				QuestInfoRewardsFrame.SkillPointFrame.Name:SetFormattedText(BONUS_SKILLPOINTS, skillName)
+				QuestInfoRewardsFrame.SkillPointFrame.tooltip = format(BONUS_SKILLPOINTS_TOOLTIP, skillPoints, skillName)
+			else
+				QuestInfoRewardsFrame.SkillPointFrame.tooltip = nil
+				QuestInfoRewardsFrame.SkillPointFrame.Name:SetText("")
+			end
+			
+			AddElement(objects, "SkillPointFrame", QuestInfoRewardsFrame.SkillPointFrame)
+		end
+
+		if playerTitle then
+			QuestInfoRewardsFrame.TitleFrame.Name:SetText(playerTitle)
+			QuestInfoRewardsFrame.TitleFrameButton.Name:SetText(playerTitle)
+			AddElement(objects, "PlayerTitleText", QuestInfoRewardsFrame.PlayerTitleText)
+			AddElement(objects, "TitleFrame", QuestInfoRewardsFrame.TitleFrame)				
+			AddElement(objects, "TitleFrameButton", QuestInfoRewardsFrame.TitleFrameButton)
+		end
+
+		if numQuestRewards > 0 then
+			AddElement(objects, "RewardItemsHeader", QuestInfoRewardsFrame.RewardsHeaderPool:Acquire():SetText(ITEMS))
+			for index = 1, numQuestRewards do
+				local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, numRewardButtons)
+				numRewardButtons = numRewardButtons + 1
+				questItem.type = 'reward'
+				questItem.objectType = 'item'
+				questItem:SetID(index)	
+	
+				--AddElement(objects, "RewardItems_"..index, questItem)
+			end
+		end
+
+		if numQuestCurrencies > 0 then
+			AddElement(objects, "RewardCurrenciesHeader", QuestInfoRewardsFrame.RewardsHeaderPool:Acquire():SetText(CURRENCY))
+			for index = 1, numQuestCurrencies do
+				local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, numRewardButtons)
+				numRewardButtons = numRewardButtons + 1
+				questItem.type = 'reward'
+				questItem.objectType = 'currency'
+				questItem:SetID(index)
+
+				--AddElement(objects, "RewardCurrencies_"..index, questItem)
+			end
+		end
+
+		if hasChanceForQuestSessionBonusReward then
+			AddElement(objects, "QuestSessionBonusRewardHeader", QuestInfoRewardsFrame.QuestSessionBonusReward)
+			local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, numRewardButtons)
+			numRewardButtons = numRewardButtons + 1
+			questItem.type = "reward";
+			questItem.objectType = "questSessionBonusReward";
+
+			--AddElement(objects, "QuestSessionBonusReward", questItem)
+		end
+
+		if numQuestChoices > 0 then
+			if numQuestChoices == 1 and QuestInfoFrame.chooseItems then
+				QuestInfoFrame.chooseItems = nil
+			end
+			QuestInfoRewardsFrame.ItemChooseText:SetText(numQuestChoices == 1 and REWARD_ITEMS_ONLY or QuestInfoFrame.chooseItems and REWARD_CHOOSE or REWARD_CHOICES);
+			AddElement(objects, "ItemChooseText", QuestInfoRewardsFrame.ItemChooseText)
+
 			for index = 1, numQuestChoices do
-				local questItem = GetItemButton(GwImmersiveFrame.rewardPool, GwImmersiveFrame.rewardButtons, self);
-				questItem.type = 'choice';
-				questItem.objectType = 'item';
-				numItems = 1;
-				questItem:SetID(index);	
+				local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, numRewardButtons)
+				numRewardButtons = numRewardButtons + 1
+				questItem.questID = questID
+				questItem.type = 'choice'
+				questItem.objectType = 'item'
+				questItem:SetID(index);
 
-				self:UpdateItemInfo(questItem);	
-				self:AddElement(questItem, true, index);
+				--AddElement(objects, "ItemChoose"..index, questItem)
 
-				local link = GetQuestItemLink(questItem.type, index);
-				local vendorValue = link and select(11, GetItemInfo(link));
-
-				if vendorValue and ( not highestValue or vendorValue > highestValue ) then
-					highestValue = vendorValue;
-					if vendorValue > 0 and numQuestChoices > 1 then
-						moneyItem = questItem;
-					end
-				end	
+				-- local lootType = 0; -- LOOT_LIST_ITEM
+				-- if ( QuestInfoFrame.questLog ) then
+				-- 	lootType = GetQuestLogChoiceInfoLootType(i);
+				-- else
+				-- 	lootType = GetQuestItemInfoLootType(questItem.type, i);
+				-- end
+	
+				-- if (lootType == 0) then -- LOOT_LIST_ITEM
+				-- 	QuestInfo_ShowRewardAsItem(questItem, i);
+				-- elseif (lootType == 1) then -- LOOT_LIST_CURRENCY
+				-- 	QuestInfo_ShowRewardAsCurrency(questItem, i, true);
+				-- end
 			end	
 
-			if (moneyItem) then
-				self.MoneyIcon:SetPoint('BOTTOMRIGHT', moneyItem, -13, 6);
-				self.MoneyIcon:Show();
-			end	
-		end ]]
+		end
 
---[[ 		if (numQuestSpellRewards > 0) then
+		QuestInfoRewardsFrame.spellRewardPool:ReleaseAll()
+		QuestInfoRewardsFrame.followerRewardPool:ReleaseAll()
+		QuestInfoRewardsFrame.spellHeaderPool:ReleaseAll()
+
+		if numQuestSpellRewards > 0 then
 			local spellBuckets = {}
 
 			-- Generate spell buckets
@@ -458,9 +467,9 @@ do
 				if (texture and not knownSpell and (not isBoostSpell or IsCharacterNewlyBoosted()) and (not garrFollowerID or not C_Garrison.IsFollowerCollected(garrFollowerID))) then
 					local bucket = 	isTradeskillSpell 	and QUEST_SPELL_REWARD_TYPE_TRADESKILL_SPELL or
 									isBoostSpell 		and QUEST_SPELL_REWARD_TYPE_ABILITY or
-									garrFollowerID 		and QUEST_SPELL_REWARD_TYPE_FOLLOWER or
+									garrFollowerID 		and C_Garrison.GetFollowerInfo(garrFollowerID).followerTypeID == Enum.GarrisonFollowerType.FollowerType_9_0 and QUEST_SPELL_REWARD_TYPE_COMPANION or QUEST_SPELL_REWARD_TYPE_FOLLOWER or
 									isSpellLearned 		and QUEST_SPELL_REWARD_TYPE_SPELL or
-									genericUnlock 		and QUEST_SPELL_REWARD_TYPE_UNLOCK or QUEST_SPELL_REWARD_TYPE_AURA;
+									genericUnlock 		and QUEST_SPELL_REWARD_TYPE_UNLOCK or QUEST_SPELL_REWARD_TYPE_AURA
 					
 									-- local followerInfo = C_Garrison.GetFollowerInfo(garrFollowerID);
 									-- if followerInfo.followerTypeID == Enum.GarrisonFollowerType.FollowerType_9_0 then
@@ -469,7 +478,7 @@ do
 									-- 	AddSpellToBucket(spellBuckets, QUEST_SPELL_REWARD_TYPE_FOLLOWER, rewardSpellIndex);
 									-- end
 
-					if (not spellBuckets[type]) then
+					if not spellBuckets[type] then
 						spellBuckets[type] = {}
 					end
 
@@ -480,41 +489,50 @@ do
 
 			-- Sort buckets in the correct order
 			for orderIndex, spellBucketType in ipairs(QUEST_INFO_SPELL_REWARD_ORDERING) do
-				local spellBucket = spellBuckets[spellBucketType];
-				if (spellBucket) then
+				local spellBucket = spellBuckets[spellBucketType]
+				if spellBucket then
 					for i, rewardSpellIndex in ipairs(spellBucket) do
 						local texture, name, isTradeskillSpell, isSpellLearned, _, isBoostSpell, garrFollowerID = GetRewardSpell(rewardSpellIndex);
 						if i == 1 then
-							local header = GetItemButton(GwImmersiveFrame.headerSpellPool, GwImmersiveFrame.headerSpellButtons, self);
-							header:SetText(QUEST_INFO_SPELL_REWARD_TO_HEADER[spellBucketType]);
-							-- if self.spellHeaderPool.textR and self.spellHeaderPool.textG and self.spellHeaderPool.textB then
-							-- 	header:SetVertexColor(self.spellHeaderPool.textR, self.spellHeaderPool.textG, self.spellHeaderPool.textB)
-							-- end
+							local header = 	QuestInfoRewardsFrame.spellRewardPool:Acquire()
+							header:SetText(QUEST_INFO_SPELL_REWARD_TO_HEADER[spellBucketType])
+							if QuestInfoRewardsFrame.spellHeaderPool.textR and QuestInfoRewardsFrame.spellHeaderPool.textG and QuestInfoRewardsFrame.spellHeaderPool.textB then
+								header:SetVertexColor(QuestInfoRewardsFrame.spellHeaderPool.textR, QuestInfoRewardsFrame.spellHeaderPool.textG, QuestInfoRewardsFrame.spellHeaderPool.textB)
+							end
 
-							self:AddElement(header);
+							--AddElement(objects, "ItemChoose"..index, header)
 						end
 
-						if (garrFollowerID) then
-							local followerFrame = GetItemButton(GwImmersiveFrame.rewardFollowerPool, GwImmersiveFrame.rewardFollowerButtons, self);
-							local followerInfo = C_Garrison.GetFollowerInfo(garrFollowerID);
-							followerFrame.Name:SetText(followerInfo.name);
-							followerFrame.Class:SetAtlas(followerInfo.classAtlas);
-							followerFrame.PortraitFrame:SetupPortrait(followerInfo);
-							followerFrame.ID = garrFollowerID;
-							
-							self:AddElement(followerFrame);
-						else
-							local spellRewardFrame = GetItemButton(GwImmersiveFrame.rewardSpellPool, GwImmersiveFrame.rewardSpellButtons, self);
-							spellRewardFrame.Icon:SetTexture(texture);
-							spellRewardFrame.Name:SetText(name);
-							spellRewardFrame.rewardSpellIndex = rewardSpellIndex;
+						if garrFollowerID then
+							local followerFrame = QuestInfoRewardsFrame.followerRewardPool:Acquire()
+							local followerInfo = C_Garrison.GetFollowerInfo(garrFollowerID)
+							followerFrame.Name:SetText(followerInfo.name)
 
-							self:AddElement(spellRewardFrame);
+							local adventureCompanion = followerInfo.followerTypeID == Enum.GarrisonFollowerType.FollowerType_9_0
+							followerFrame.AdventuresFollowerPortraitFrame:SetShown(adventureCompanion)
+							followerFrame.PortraitFrame:SetShown(not adventureCompanion)
+
+							if adventureCompanion then
+								followerFrame.AdventuresFollowerPortraitFrame:SetupPortrait(followerInfo)
+							else
+								followerFrame.PortraitFrame:SetupPortrait(followerInfo);
+								followerFrame.Class:SetAtlas(followerInfo.classAtlas);
+							end
+							followerFrame.ID = garrFollowerID
+							
+							--AddElement(objects, "ItemChoose"..index, followerFrame)
+						else
+							local spellRewardFrame = QuestInfoRewardsFrame.spellHeaderPool:Acquire()
+							spellRewardFrame.Icon:SetTexture(texture)
+							spellRewardFrame.Name:SetText(name)
+							spellRewardFrame.rewardSpellIndex = rewardSpellIndex
+
+							--AddElement(objects, "ItemChoose"..index, spellRewardFrame)
 						end
 					end
 				end
 			end
-		end ]]
+		end
 
 		return QuestInfoRewardsFrame, objects
 	end
@@ -545,6 +563,7 @@ do
 	}
 
 end
+
 
 do
 	local SHOW_TITLE_BUTTON
@@ -766,7 +785,7 @@ do
 	end
 	GW.ImmersiveFrameHandleHide = ImmersiveFrameHandleHide
 
-	local function LoadTitleButtons()
+	do
 		local function GetAvailableQuests() return C_GossipInfo.GetAvailableQuests() end
 		local function GetOptions() return C_GossipInfo.GetOptions() end		
 	
@@ -867,8 +886,5 @@ do
 			{ type = "EXIT", show = ShowExit, callBack = C_GossipInfo.CloseGossip, playSound = SOUNDKIT.IG_QUEST_LIST_CLOSE, getInfo = function() return GetAction("EXIT", 7) end},
 			{ type = "RESET", show = ShowRepeat, callBack = Repeat, playSound = SOUNDKIT.IG_QUEST_LIST_OPEN, getInfo = function() return GetAction("REPEAT", 8) end}
 		}
-
-
 	end
-	GW.LoadTitleButtons = LoadTitleButtons
 end

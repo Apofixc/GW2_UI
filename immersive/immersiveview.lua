@@ -11,7 +11,6 @@ local ImmersiveFrameHandleHide = GW.ImmersiveFrameHandleHide
 local GetCustomZoneBackground = GW.GetCustomZoneBackground
 
 local Dialog = GW.Dialog
-local LoadTitleButtons = GW.LoadTitleButtons
 
 C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end
 
@@ -196,6 +195,13 @@ local function GwImmersiveDetail_OnShow(self)
 		local template = _G["GW2_"..GwImmersiveFrame.LastEvent.."_TEMPLATE"]
 		local parentFrame = self.Scroll.ScrollChildFrame
 
+		if template.canHaveSealMaterial then
+			local questID = GetQuestID()
+			local theme = C_QuestLog.GetQuestDetailsTheme(questID)
+
+			QuestInfoSealFrame.theme = theme
+		end
+
 		for _, child in pairs({parentFrame:GetRegions()}) do
 			child:Hide()
 			child:SetParent(nil)
@@ -208,6 +214,7 @@ local function GwImmersiveDetail_OnShow(self)
 
 		QuestInfoFrame.questLog = template.questLog
 		QuestInfoFrame.chooseItems = template.chooseItems
+		QuestInfoFrame.acceptButton = nil
 
 		if QuestInfoFrame.mapView == true then
 			QuestInfoFrame.mapView = false
@@ -215,32 +222,11 @@ local function GwImmersiveDetail_OnShow(self)
 			MapQuestInfoRewardsFrame:Hide()
 		end
 
-		if not QuestInfoFrame.material then
-			-- -- headers
-			-- QuestInfoTitleHeader:SetTextColor(titleTextColor[1], titleTextColor[2], titleTextColor[3]);
-			-- QuestInfoDescriptionHeader:SetTextColor(titleTextColor[1], titleTextColor[2], titleTextColor[3]);
-			-- QuestInfoObjectivesHeader:SetTextColor(titleTextColor[1], titleTextColor[2], titleTextColor[3]);
-			-- QuestInfoRewardsFrame.Header:SetTextColor(titleTextColor[1], titleTextColor[2], titleTextColor[3]);
-			-- -- other text
-			-- QuestInfoDescriptionText:SetTextColor(textColor[1], textColor[2], textColor[3]);
-			-- QuestInfoObjectivesText:SetTextColor(textColor[1], textColor[2], textColor[3]);
-			-- QuestInfoGroupSize:SetTextColor(textColor[1], textColor[2], textColor[3]);
-			-- QuestInfoRewardText:SetTextColor(textColor[1], textColor[2], textColor[3]);
-			-- -- reward frame text
-			-- QuestInfoRewardsFrame.ItemChooseText:SetTextColor(textColor[1], textColor[2], textColor[3]);
-			-- QuestInfoRewardsFrame.ItemReceiveText:SetTextColor(textColor[1], textColor[2], textColor[3]);
-			-- QuestInfoRewardsFrame.PlayerTitleText:SetTextColor(textColor[1], textColor[2], textColor[3]);
-			-- QuestInfoRewardsFrame.QuestSessionBonusReward:SetTextColor(textColor[1], textColor[2], textColor[3]);
-			-- QuestInfoRewardsFrame.XPFrame.ReceiveText:SetTextColor(textColor[1], textColor[2], textColor[3]);
-
-			-- QuestInfoRewardsFrame.spellHeaderPool.textR, QuestInfoRewardsFrame.spellHeaderPool.textG, QuestInfoRewardsFrame.spellHeaderPool.textB = textColor[1], textColor[2], textColor[3];
-		end
-
 		if not parentFrame.questInfoHyperlinksInstalled then
-			parentFrame.questInfoHyperlinksInstalled = true;
-			parentFrame:SetHyperlinksEnabled(true);
-			parentFrame:SetScript("OnHyperlinkEnter", QuestInfo_OnHyperlinkEnter);
-			parentFrame:SetScript("OnHyperlinkLeave", QuestInfo_OnHyperlinkLeave);
+			parentFrame.questInfoHyperlinksInstalled = true
+			parentFrame:SetHyperlinksEnabled(true)
+			parentFrame:SetScript("OnHyperlinkEnter", QuestInfo_OnHyperlinkEnter)
+			parentFrame:SetScript("OnHyperlinkLeave", QuestInfo_OnHyperlinkLeave)
 		end
 
 		local lastFrame = nil
@@ -348,8 +334,6 @@ local function LoadImmersiveView()
 	GwImmersiveFrame.ActiveFrame = GetSetting("FULL_SCREEN") and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
 	GwImmersiveFrame.ActiveFrame.FontColor()
 
-	LoadTitleButtons()
-
 	local FramePool_HideAndClearAnchors = function(framePool, frame)
 		frame:Hide()
 		frame:ClearAllPoints()
@@ -361,9 +345,14 @@ local function LoadImmersiveView()
 	GwQuestInfoProgress.ProgressHeaderPool = CreateFontStringPool(GwQuestInfoProgress, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate")
 	GwQuestInfoProgress.ProgressButtonPool = CreateFramePool("BUTTON", GwQuestInfoProgress, "QuestItemTemplate")
 
-	QuestInfoRewardsFrame.RewardsHeaderPool = CreateFontStringPool(GwQuestInfoProgress, "BACKGROUND", 0, "QuestFont")
+	QuestInfoRewardsFrame.Header:ClearAllPoints()
+	QuestInfoFrame:CreateFontString("GwQuestInfoObjectivesText", "BACKGROUND", "QuestFontLeft")
+
+	QuestInfoRewardsFrame.RewardsHeaderPool = CreateFontStringPool(QuestInfoRewardsFrame, "BACKGROUND", 0, "QuestFont")
+
+	QuestInfoRewardsFrame.Header:ClearAllPoints()
 	QuestInfoRewardsFrame.Header:SetText(AJ_PRIMARY_REWARD_TEXT)
-	QuestInfoRewardsFrame.Header:Hode()
+	QuestInfoRewardsFrame.Header:Hide()
 
 	QuestInfoRewardsFrame.MoneyFrame:ClearAllPoints()
 	QuestInfoRewardsFrame.MoneyFrame:Hide()
