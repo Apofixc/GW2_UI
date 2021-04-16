@@ -10,9 +10,8 @@ local ImmersiveFrameHandleShow = GW.ImmersiveFrameHandleShow
 local ImmersiveFrameHandleHide = GW.ImmersiveFrameHandleHide
 local GetCustomZoneBackground = GW.GetCustomZoneBackground
 
---local Dialog = GW.Dialog
+local Dialog = GW.Dialog
 local LoadTitleButtons = GW.LoadTitleButtons
-local LoadDetalies = GW.LoadDetalies
 
 C_GossipInfo.ForceGossip = function() return GetSetting("FORCE_GOSSIP") end
 
@@ -96,9 +95,9 @@ local function GwImmersiveFrame_OnEvent(self, event, ...)
 		ImmersiveFrameHandleHide(self)
 	elseif IsIn(event, "QUEST_ITEM_UPDATE", "LEARNED_SPELL_IN_TAB") then
 		if IsIn(self.LastEvent, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") and self.ActiveFrame.Detail:IsVisible() then
+			self.LoadDetail = true
 			self.ActiveFrame.Detail:Hide()
-			self.ActiveFrame.Detail.Scroll.ScrollBar:SetValue(0)
-			self.ActiveFrame.Detail:SetShown(ShownDetail(self.LastEvent, self.ActiveFrame.Detail.Scroll.ScrollChildFrame))
+			self.ActiveFrame.Detail:Show()
 		end
 	elseif event == "QUEST_LOG_UPDATE" then
 		if (self.LastEvent == "GOSSIP_SHOW" and self.hasActiveQuest) or self.LastEvent == "QUEST_GREETING" then
@@ -191,135 +190,118 @@ local function GwNormalScreenGossipViewFrame_OnClick(self, button)
 	end
 end
 
-local function SetStyleFullScreen()
-	-- <Layer level="ARTWORK">	
-	-- 			<Texture parentKey="BottomLeft" hidden="true">
-	-- 				<Anchors>
-	-- 					<Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="0"/>
-	-- 				</Anchors>
-	-- 			</Texture>
-	-- 			<Texture parentKey="BottomRight" hidden="true">
-	-- 				<Anchors>
-	-- 					<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
-	-- 				</Anchors>
-	-- 			</Texture>
-	-- 			<Texture parentKey="TopRight" hidden="true">
-	-- 				<Anchors>
-	-- 					<Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT" x="0" y="0"/>
-	-- 				</Anchors>
-	-- 			</Texture>
-	-- 			<Texture parentKey="TopLeft" hidden="true">
-	-- 				<Anchors>
-	-- 					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-	-- 				</Anchors>
-	-- 			</Texture>		
-	-- 			<Texture parentKey="Left" hidden="true">
-	-- 				<Anchors>
-	-- 					<Anchor point="LEFT" relativeKey="$parent" relativePoint="LEFT" x="0" y="0"/>
-	-- 					<Anchor point="BOTTOM" relativeKey="$parent.BottomLeft" relativePoint="TOP" x="0" y="0"/>
-	-- 					<Anchor point="TOP" relativeKey="$parent.TopLeft" relativePoint="BOTTOM" x="0" y="0"/>
-	-- 				</Anchors>
-	-- 			</Texture>
-	-- 			<Texture parentKey="Right" hidden="true">
-	-- 				<Anchors>
-	-- 					<Anchor point="RIGHT" relativeKey="$parent" relativePoint="RIGHT" x="0" y="0"/>
-	-- 					<Anchor point="BOTTOM" relativeKey="$parent.BottomRight" relativePoint="TOP" x="0" y="0"/>
-	-- 					<Anchor point="TOP" relativeKey="$parent.TopRight" relativePoint="BOTTOM" x="0" y="0"/>
-	-- 				</Anchors>
-	-- 			</Texture>
-	-- 			<Texture parentKey="Bottom" hidden="true">
-	-- 				<Anchors>
-	-- 					<Anchor point="BOTTOM" relativeKey="$parent" relativePoint="BOTTOM" x="0" y="0"/>
-	-- 					<Anchor point="LEFT" relativeKey="$parent.BottomLeft" relativePoint="RIGHT" x="0" y="0"/>
-	-- 					<Anchor point="RIGHT" relativeKey="$parent.BottomRight" relativePoint="LEFT" x="0" y="0"/>
-	-- 				</Anchors>
-	-- 			</Texture>
-	-- 			<Texture parentKey="Top" hidden="true">
-	-- 				<Anchors>
-	-- 					<Anchor point="TOP" relativeKey="$parent" relativePoint="TOP" x="0" y="0"/>
-	-- 					<Anchor point="LEFT" relativeKey="$parent.TopLeft" relativePoint="RIGHT" x="0" y="0"/>
-	-- 					<Anchor point="RIGHT" relativeKey="$parent.TopRight" relativePoint="LEFT" x="0" y="0"/>
-	-- 				</Anchors>
-	-- 			</Texture>
-	-- 		</Layer>  
-	-- t = {
-	-- 	SHADOWLANDS = {	
-	-- 		maxSizeText = 400,
-	-- 		TitleHighlightTexture = "Interface/QuestFrame/UI-QuestTitleHighlight",
-	-- 		Parent = {
-	-- 			Border = {format = true, atlas = "UI-Frame-%s-CardParchmentWider", useAtlasSize = true},
-	-- 			--MaskBorder = {atlas = "covenantchoice-celebration-background", useAtlasSize = true},
-	-- 			Middleground = {points = {{"TOPLEFT", 0, -205}, {"BOTTOMRIGHT", 0, 170}}},
-	-- 			Background = {points = {{"TOPLEFT", 0, -205}, {"BOTTOMRIGHT", 0, 170}}},
-	-- 			Foreground = {points = {{"TOPLEFT", 0, -205}, {"BOTTOMRIGHT", 0, 170}}},
-	-- 			BottomLeft = {format = true, atlas = "%s-NineSlice-CornerBottomLeft", useAtlasSize = true},	
-	-- 			BottomRight = {format = true, atlas = "%s-NineSlice-CornerBottomRight", useAtlasSize = true},	
-	-- 			TopRight = {format = true, atlas = "%s-NineSlice-CornerTopRight", useAtlasSize = true},
-	-- 			TopLeft = {format = true, atlas = "%s-NineSlice-CornerTopLeft", useAtlasSize = true},
-	-- 			Bottom = {format = true, atlas = "_%s-NineSlice-EdgeBottom", useAtlasSize = true},
-	-- 			Right = {format = true, atlas = "!%s-NineSlice-EdgeRight", useAtlasSize = true},
-	-- 			Left = {format = true, atlas = "!%s-NineSlice-EdgeLeft", useAtlasSize = true},
-	-- 			Top = {format = true, atlas = "_%s-NineSlice-EdgeTop", useAtlasSize = true},
-	-- 		},
-	-- 		Title = {
-	-- 			TitleLeft = {format = true, atlas = "UI-Frame-%s-TitleLeft", useAtlasSize = true},
-	-- 			TitleRight = {format = true, atlas = "UI-Frame-%s-TitleRight", useAtlasSize = true},
-	-- 			TitleMiddle = {format = true, atlas = "_UI-Frame-%s-TitleMiddle", useAtlasSize = true}
-	-- 		},
-	-- 		Dialog = {
-	-- 			Background = {format = true, atlas = "UI-Frame-%s-PortraitWiderDisable", useAtlasSize = false}
-	-- 		},
-	-- 		Scroll = {
-	-- 			Background = {format = true, atlas = "UI-Frame-%s-PortraitWiderDisable", useAtlasSize = false}
-	-- 		},
-	-- 		ReputationBar = {
-	-- 			Background = {format = true, atlas = "covenantsanctum-level-border-%s", useAtlasSize = false, texCoord = {1, 0, 0, 0, 1, 1, 0, 1}, points = {{"TOPLEFT", -42, 59}, {"BOTTOMRIGHT", 42, -57}}},
-	-- 			--Background = {atlas = "Garr_Mission_MaterialFrame", useAtlasSize = false, points = {{"TOPLEFT", -33, 15}, {"BOTTOMRIGHT", 33, -15}}},
-	-- 		},
-	-- 		Detail = {
-	-- 			Background = {format = true, atlas = "covenantchoice-offering-parchment-%s", useAtlasSize = true},
-	-- 			Title1 = {format = true, atlas = "UI-Frame-%s-Ribbon", useAtlasSize = true},
-	-- 		},
-	-- 	},
-	-- 	CLASSIC = {
-	-- 		maxSizeText = 400,
-	-- 		TitleHighlightTexture = "Interface/QuestFrame/UI-QuestTitleHighlight",
-	-- 		Parent = {
-	-- 			Border = {format = true, atlas = "UI-Frame-%s-CardParchmentWider", useAtlasSize = true},
-	-- 			MaskBorder = {atlas = "covenantchoice-celebration-background", useAtlasSize = true},
-	-- 			BottomLeft = {format = true, atlas = "%s-NineSlice-CornerBottomLeft", useAtlasSize = true},	
-	-- 			BottomRight = {format = true, atlas = "%s-NineSlice-CornerBottomRight", useAtlasSize = true},	
-	-- 			TopRight = {format = true, atlas = "%s-NineSlice-CornerTopRight", useAtlasSize = true},
-	-- 			TopLeft = {format = true, atlas = "%s-NineSlice-CornerTopLeft", useAtlasSize = true},
-	-- 			Bottom = {format = true, atlas = "_%s-NineSlice-EdgeBottom", useAtlasSize = true},
-	-- 			Right = {format = true, atlas = "!%s-NineSlice-EdgeRight", useAtlasSize = true},
-	-- 			Left = {format = true, atlas = "!%s-NineSlice-EdgeLeft", useAtlasSize = true},
-	-- 			Top = {format = true, atlas = "_%s-NineSlice-EdgeTop", useAtlasSize = true},
-	-- 		},
-	-- 		Title = {
-	-- 			TitleLeft = {format = true, atlas = "UI-Frame-%s-TitleLeft", useAtlasSize = true},
-	-- 			TitleRight = {format = true, atlas = "UI-Frame-%s-TitleRight", useAtlasSize = true},
-	-- 			TitleMiddle = {format = true, atlas = "_UI-Frame-%s-TitleMiddle", useAtlasSize = true}
-	-- 		},
-	-- 		Dialog = {
-	-- 			Background = {format = true, atlas = "UI-Frame-%s-PortraitWiderDisable", useAtlasSize = false}
-	-- 		},
-	-- 		Scroll = {
-	-- 			Background = {format = true, atlas = "UI-Frame-%s-PortraitWiderDisable", useAtlasSize = false}
-	-- 		},
-	-- 		ReputationBar = {
-	-- 			Border = {format = true, atlas = "Garr_Mission_MaterialFrame", useAtlasSize = true--[[ , points = {{"TOPLEFT", -35, 30}, {"BOTTOMRIGHT", 7, -10}} ]]},
-	-- 			--MaskBorder = {path = "Interface/ChatFrame/UI-ChatIcon-HotS"},
-	-- 		},
-	-- 		Detail = {
-	-- 			Background = {format = true, atlas = "covenantchoice-offering-parchment-%s", useAtlasSize = true},
-	-- 			Title1 = {format = true, atlas = "UI-Frame-%s-Ribbon", useAtlasSize = true},
-	-- 		},			
-	-- 	}
-	-- }
+local function GwImmersiveDetail_OnShow(self)
+	if GwImmersiveFrame.LoadDetail then
+		GwImmersiveFrame.LoadDetail = false
+		local template = _G["GW2_"..GwImmersiveFrame.LastEvent.."_TEMPLATE"]
+		local parentFrame = self.Scroll.ScrollChildFrame
+
+		for _, child in pairs({parentFrame:GetRegions()}) do
+			child:Hide()
+			child:SetParent(nil)
+		end
+	
+		for _, child in pairs({parentFrame:GetChildren()}) do
+			child:Hide()
+			child:SetParent(nil)
+		end
+
+		QuestInfoFrame.questLog = template.questLog
+		QuestInfoFrame.chooseItems = template.chooseItems
+
+		if QuestInfoFrame.mapView == true then
+			QuestInfoFrame.mapView = false
+			QuestInfoFrame.rewardsFrame = QuestInfoRewardsFrame
+			MapQuestInfoRewardsFrame:Hide()
+		end
+
+		if not QuestInfoFrame.material then
+			-- -- headers
+			-- QuestInfoTitleHeader:SetTextColor(titleTextColor[1], titleTextColor[2], titleTextColor[3]);
+			-- QuestInfoDescriptionHeader:SetTextColor(titleTextColor[1], titleTextColor[2], titleTextColor[3]);
+			-- QuestInfoObjectivesHeader:SetTextColor(titleTextColor[1], titleTextColor[2], titleTextColor[3]);
+			-- QuestInfoRewardsFrame.Header:SetTextColor(titleTextColor[1], titleTextColor[2], titleTextColor[3]);
+			-- -- other text
+			-- QuestInfoDescriptionText:SetTextColor(textColor[1], textColor[2], textColor[3]);
+			-- QuestInfoObjectivesText:SetTextColor(textColor[1], textColor[2], textColor[3]);
+			-- QuestInfoGroupSize:SetTextColor(textColor[1], textColor[2], textColor[3]);
+			-- QuestInfoRewardText:SetTextColor(textColor[1], textColor[2], textColor[3]);
+			-- -- reward frame text
+			-- QuestInfoRewardsFrame.ItemChooseText:SetTextColor(textColor[1], textColor[2], textColor[3]);
+			-- QuestInfoRewardsFrame.ItemReceiveText:SetTextColor(textColor[1], textColor[2], textColor[3]);
+			-- QuestInfoRewardsFrame.PlayerTitleText:SetTextColor(textColor[1], textColor[2], textColor[3]);
+			-- QuestInfoRewardsFrame.QuestSessionBonusReward:SetTextColor(textColor[1], textColor[2], textColor[3]);
+			-- QuestInfoRewardsFrame.XPFrame.ReceiveText:SetTextColor(textColor[1], textColor[2], textColor[3]);
+
+			-- QuestInfoRewardsFrame.spellHeaderPool.textR, QuestInfoRewardsFrame.spellHeaderPool.textG, QuestInfoRewardsFrame.spellHeaderPool.textB = textColor[1], textColor[2], textColor[3];
+		end
+
+		if not parentFrame.questInfoHyperlinksInstalled then
+			parentFrame.questInfoHyperlinksInstalled = true;
+			parentFrame:SetHyperlinksEnabled(true);
+			parentFrame:SetScript("OnHyperlinkEnter", QuestInfo_OnHyperlinkEnter);
+			parentFrame:SetScript("OnHyperlinkLeave", QuestInfo_OnHyperlinkLeave);
+		end
+
+		local lastFrame = nil
+		local totalHeight = 0
+		for _, GetElement in ipairs(template.elements) do
+			local shownFrame, objects = GetElement()
+			if shownFrame and objects then
+				for _, obj in ipairs(objects) do
+					obj.element:ClearAllPoints()
+					if lastFrame then
+						obj.element:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+					else
+						obj.element:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", 0, 0)
+					end
+
+					lastFrame = obj.element
+					totalHeight = totalHeight + obj.element:GetHeight() + 5
+					obj.element:Show()
+					
+					if obj.element:IsObjectType("BUTTON") then 
+						GW.HandleReward(obj.element)
+					end
+				end
+
+				shownFrame:SetWidth(parentFrame:GetWidth())
+				shownFrame:SetParent(parentFrame)
+				shownFrame:Show()	
+			end	
+		end
+
+		
+		
+		if totalHeight > 0 then
+			self.Title:SetText(template.title)
+			self.Scroll.ScrollBar:SetValue(0)
+			self.Scroll.ScrollChildFrame:SetHeight(totalHeight)		
+
+		else
+			self:Hide()
+		end
+	end
+
+end
+
+local function GwImmersiveDetail_OnHide(self)
+
 end
 
 local function LoadImmersiveView()
+	function QuestInfoItem_OnClick(self)
+		if self.type == "choice" then
+			if QuestInfoFrame.itemChoice == self:GetID() then
+				GetQuestReward(QuestInfoFrame.itemChoice)
+			else
+				QuestInfoItemHighlight:SetPoint("TOPLEFT", self, "TOPLEFT", -8, 7)
+				QuestInfoItemHighlight:Show()
+				QuestInfoFrame.itemChoice = self:GetID()
+			end
+		end
+	end
+
 	for _, frame in ipairs({GossipFrame, QuestFrame}) do
 		frame:UnregisterAllEvents()
 		frame:EnableMouse(false)
@@ -343,15 +325,19 @@ local function LoadImmersiveView()
 
 	GwImmersiveFrame:SetScript("OnEvent", GwImmersiveFrame_OnEvent)
 	GwImmersiveFrame.hasActiveQuest = false
+	GwImmersiveFrame.LoadDetail = true
 	CreateFrame("Frame", "GwFullScreenGossipViewFrame", UIParent, "GwFullScreenGossipViewFrameTemplate")
 	GwFullScreenGossipViewFrame:SetScript("OnKeyDown", GwImmersiveFrames_OnKeyDown)
+	GwFullScreenGossipViewFrame.Detail:SetScript("OnShow", GwImmersiveDetail_OnShow)
+	GwFullScreenGossipViewFrame.Detail:SetScript("OnHide", GwImmersiveDetail_OnHide)
 	if GetSetting("DYNAMIC_BACKGROUND") then 
 		GwFullScreenGossipViewFrame:HookScript("OnShow", GwFullScreenGossipViewFrame_OnShow)
 	end
 
 	CreateFrame("Frame", "GwNormalScreenGossipViewFrame", UIParent, "GwNormalScreenGossipViewFrameTemplate")
 	GwNormalScreenGossipViewFrame:SetScript("OnKeyDown", GwImmersiveFrames_OnKeyDown)
-
+	GwNormalScreenGossipViewFrame.Detail:SetScript("OnShow", GwImmersiveDetail_OnShow)
+	GwNormalScreenGossipViewFrame.Detail:SetScript("OnHide", GwImmersiveDetail_OnHide)
 	if GetSetting("MOUSE_DIALOG") then
 		GwNormalScreenGossipViewFrame.Dialog:SetScript("OnClick", GwNormalScreenGossipViewFrame_OnClick)
 	end
@@ -363,9 +349,40 @@ local function LoadImmersiveView()
 	GwImmersiveFrame.ActiveFrame.FontColor()
 
 	LoadTitleButtons()
-	LoadDetalies()
 
-	CreateFrame("Frame", "fes", UIParent, "GwNormalScreenGossipViewFrameTemplate")
+	local FramePool_HideAndClearAnchors = function(framePool, frame)
+		frame:Hide()
+		frame:ClearAllPoints()
+		frame.Icon:SetTexCoord(0, 1, 0, 1)
+	end
+
+	GwImmersiveFrame.TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate", FramePool_HideAndClearAnchors)
+	CreateFrame("Frame", "GwQuestInfoProgress")
+	GwQuestInfoProgress.ProgressHeaderPool = CreateFontStringPool(GwQuestInfoProgress, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate")
+	GwQuestInfoProgress.ProgressButtonPool = CreateFramePool("BUTTON", GwQuestInfoProgress, "QuestItemTemplate")
+
+	QuestInfoRewardsFrame.RewardsHeaderPool = CreateFontStringPool(GwQuestInfoProgress, "BACKGROUND", 0, "QuestFont")
+	QuestInfoRewardsFrame.Header:SetText(AJ_PRIMARY_REWARD_TEXT)
+	QuestInfoRewardsFrame.Header:Hode()
+
+	QuestInfoRewardsFrame.MoneyFrame:ClearAllPoints()
+	QuestInfoRewardsFrame.MoneyFrame:Hide()
+
+	QuestInfoRewardsFrame.MoneyFrameButton = CreateFrame("BUTTON", nil, QuestInfoRewardsFrame, "LargeQuestRewardItemButtonTemplate")
+	QuestInfoRewardsFrame.MoneyFrameButton.Icon:SetTexture("Interface\\Icons\\inv_misc_coin_01")
+	QuestInfoRewardsFrame.MoneyFrameButton.Name:SetFontObject("GameFontHighlight")
+	QuestInfoRewardsFrame.MoneyFrameButton:Hide()
+
+	QuestInfoRewardsFrame.XPFrameButton = CreateFrame("BUTTON", nil, QuestInfoRewardsFrame, "LargeQuestRewardItemButtonTemplate")
+	QuestInfoRewardsFrame.XPFrameButton.Icon:SetTexture("Interface\\Icons\\XP_Icon")
+	QuestInfoRewardsFrame.XPFrameButton.Name:SetFontObject("NumberFontNormal")
+	QuestInfoRewardsFrame.XPFrameButton:Hide()
+
+	QuestInfoRewardsFrame.ArtifactXPFrame.Name:SetFontObject("NumberFontNormal")
+
+	QuestInfoRewardsFrame.TitleFrameButton = CreateFrame("BUTTON", nil, QuestInfoRewardsFrame, "LargeQuestRewardItemButtonTemplate")
+	QuestInfoRewardsFrame.TitleFrameButton.Icon:SetTexture("Interface\\Icons\\INV_Misc_Note_02")
+	QuestInfoRewardsFrame.TitleFrameButton:Hide()
 
 	ModelScaling:CreateClassModel("FULLMODEL", {"CinematicModel"}, ModelScaling.defSetUnit, ModelScaling.defFullModel)
     ModelScaling:CreateSubClassModel("FULLMODEL", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defFullModelRight, ModelScaling.defFullModelOffsetRight)

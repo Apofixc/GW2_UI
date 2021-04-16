@@ -51,7 +51,27 @@
         "QuestInfoGroupSize",
         "ACTION_DISPLAY",
         "StaticPopup_Show",
-        "GwImmersiveFrame"
+        "GwImmersiveFrame",
+        "QuestInfo_OnHyperlinkEnter",
+        "QuestInfo_OnHyperlinkLeave",
+        "QuestInfo_ShowSeal",
+        "CreateFontStringPool",
+        "QuestInfoSealFrame",
+        "MapQuestInfoRewardsFrame",
+        "titleTextColor",
+        "QuestInfoSpellObjectiveFrame",
+        "LEARN_SPELL_OBJECTIVE",
+        "QuestInfoSpellObjectiveLearnLabel",
+        "QUEST_SUGGESTED_GROUP_NUM",
+        "PLUS_PERCENT_FORMAT",
+        "HONOR",
+        "BONUS_SKILLPOINTS",
+        "BONUS_SKILLPOINTS_TOOLTIP",
+        "QuestInfo_GetRewardButton",
+        "AJ_PRIMARY_REWARD_TEXT",
+        "GetMoneyString",
+        "CreateFontString",
+        "MONEY"
     ],
     
     "Lua.diagnostics.disable": [
@@ -61,5 +81,6 @@
     "Lua.completion.callSnippet": "Both",
     "Lua.completion.keywordSnippet": "Both",
     "Lua.hint.enable": true,
-    "Lua.hint.setType": true
+    "Lua.hint.setType": true,
+    "editor.semanticHighlighting.enabled": true
 }

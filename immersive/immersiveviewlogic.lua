@@ -93,9 +93,9 @@ do
 end
 
 do
-	AdvanceGossipTitleButtonMixin = {}
+	GWAdvanceGossipTitleButtonMixin = {}
 	
-	function AdvanceGossipTitleButtonMixin:SetAction(titleText, icon)
+	function GWAdvanceGossipTitleButtonMixin:SetAction(titleText, icon)
 		self.type = "Action"
 
 		self:SetFormattedText(ACTION_DISPLAY, titleText)
@@ -106,7 +106,7 @@ do
 		self:Resize()
 	end
 	
-	function AdvanceGossipTitleButtonMixin:AddCallbackForClick(id, func, arg, playSound)
+	function GWAdvanceGossipTitleButtonMixin:AddCallbackForClick(id, func, arg, playSound)
 		self:SetID(id)
 
 		self.func = func
@@ -114,12 +114,12 @@ do
 		self.playSound = playSound
 	end
 
-	function AdvanceGossipTitleButtonMixin:Resize()
+	function GWAdvanceGossipTitleButtonMixin:Resize()
 		self:SetHeight(math.max(self:GetTextHeight() + 2, self.Icon:GetHeight()))
 		self:SetWidth(self:GetParent():GetWidth())
 	end
 
-	function AdvanceGossipTitleButtonMixin:OnClick()
+	function GWAdvanceGossipTitleButtonMixin:OnClick()
 		if not CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") and self.func and not self.ShowIn:IsPlaying() then
 			local scroll = self:GetParent():GetParent()
 			scroll.ScrollBar:SetAlpha(0)
@@ -151,226 +151,403 @@ do
 	end 
 end
 
-do
-	local function LoadDetalies()
-		local CollectionMixin = {}
-	
-		function CollectionMixin:Acquire()
-			local obj = ObjectPoolMixin.Acquire(self)
-			tinsert(self.collection, obj)
+do 	
+	local function AddElement(table, name, element)
+		tinsert(table, {name = name, element = element})
+	end
+
+	local function ShowObjectivesText() -- Not Hide, Frame used in QUEST_TEMPLATE_LOG and QUEST_TEMPLATE_MAP_DETAILS 
+		local questObjectives = GetObjectiveText()
+
+		if questObjectives then
+			QuestInfoObjectivesText:SetText(questObjectives)
 			
-			return obj
+			return QuestInfoObjectivesText
+		else
+			return nil
 		end
-	
-		function CollectionMixin:Release(obj)
-			for index, objCollection in ipairs(self.collection) do
-				if objCollection == obj then 
-					tremove(self.collection, index) 
-					break
+	end
+
+	local function ShowSpecialObjectives() -- Can Hide
+		return QuestInfo_ShowSpecialObjectives()
+	end
+
+	local function ShowGroupSize() -- Can Hide
+		return QuestInfo_ShowGroupSize()
+	end
+
+	local function ShowSeal() -- Not Hide, Frame used in QUEST_TEMPLATE_LOG and QUEST_TEMPLATE_MAP_DETAILS 
+		local questID = GetQuestID()
+		local sealInfo = C_QuestLog.GetQuestDetailsTheme(questID)
+		if  sealInfo and (sealInfo.signature ~= "" or sealInfo.seal) then
+			QuestInfoSealFrame.Text:SetText(sealInfo.signature)
+			QuestInfoSealFrame.Texture:SetAtlas(sealInfo.seal)
+
+			return QuestInfoSealFrame
+		else
+			return nil
+		end
+	end
+
+	local function ShowProgress() 
+		local numRequiredMoney = GetQuestMoneyToGet()
+		local numRequiredItems = GetNumQuestItems()
+		local numRequiredCurrencies = GetNumQuestCurrencies()
+
+		local objects = {}
+		GwQuestInfoProgress.ProgressHeaderPool:ReleaseAll()
+		GwQuestInfoProgress.ProgressButtonPool:ReleaseAll()
+
+		-- numRequiredMoney = math.random(10, 100)
+		-- numRequiredItems = math.random(0, 1)
+		-- numRequiredCurrencies = math.random(0, 1)
+
+
+		if numRequiredMoney == 0 and numRequiredItems == 0 and numRequiredCurrencies == 0 then
+			return nil
+		end
+
+		if numRequiredMoney > 0 then
+			MoneyFrame_Update("QuestInfoRequiredMoneyDisplay", numRequiredMoney);
+			
+			if numRequiredMoney > GetMoney() then
+				QuestInfoRequiredMoneyText:SetTextColor(0, 0, 0)
+				SetMoneyFrameColor("QuestInfoRequiredMoneyDisplay", "red")
+			else
+				QuestInfoRequiredMoneyText:SetTextColor(0.2, 0.2, 0.2);
+				SetMoneyFrameColor("QuestInfoRequiredMoneyDisplay", "white")
+			end
+			QuestInfoRequiredMoneyFrame:SetParent(GwQuestInfoProgress)
+
+			AddElement(objects, "QuestInfoRequiredMoneyDisplay", QuestInfoRequiredMoneyFrame)
+		end
+
+		local addFontString = true
+		for id = 1, numRequiredItems do
+			local hidden = IsQuestItemHidden(id)
+			if hidden == 0 then
+				if addFontString then
+					addFontString = false
+
+					local fontString  = GwQuestInfoProgress.ProgressHeaderPool:Acquire()
+					fontString:SetText(ITEMS)
+					fontString:SetParent(GwQuestInfoProgress)
+					AddElement(objects, "RequiredItemText", fontString)
 				end
+
+				local requiredItem = GwQuestInfoProgress.ProgressButtonPool:Acquire()
+				requiredItem.type = "required"
+				requiredItem.objectType = "item"
+				requiredItem:SetID(id)
+				local name, texture, numItems = GetQuestItemInfo(requiredItem.type, id)
+				SetItemButtonCount(requiredItem, numItems)
+				SetItemButtonTexture(requiredItem, texture)
+				requiredItem:Show()
+				requiredItem.Name:SetText(name)
+
+				requiredItem:SetParent(GwQuestInfoProgress)
+				AddElement(objects, "RequiredItem", requiredItem)
 			end
-	
-			ObjectPoolMixin.Release(self, obj)
 		end
-	
-		local function CreatePool(typePool, ...)
-			local pool
-	
-			if typePool == "Button" then
-				local parent, frameTemplate = ...
-	
-				pool = CreateFromMixins(FramePoolMixin, CollectionMixin)
-				pool:OnLoad("BUTTON", parent, frameTemplate)
-			elseif typePool == "FontString" then
-				local parent, layer, subLayer, fontStringTemplate = ...
-	
-				pool = CreateFromMixins(FontStringPoolMixin, CollectionMixin)
-				pool:OnLoad(parent, layer, subLayer, fontStringTemplate)
+
+		addFontString = true
+		for id = 1, numRequiredCurrencies do
+			if addFontString then
+				addFontString = false
+
+				local fontString = GwQuestInfoProgress.ProgressHeaderPool:Acquire()
+				fontString:SetText(CURRENCY)
+				fontString:SetParent(GwQuestInfoProgress)
+				AddElement(objects, "RequiredCurrenciesText", fontString)
 			end
-			pool.collection = QuestInfoRewardsFrame.collectionObjectFromPolls
-	
-			return pool
+
+			local requiredCurrencie = GwQuestInfoProgress.ProgressButtonPool:Acquire()
+			requiredCurrencie.type = "required"
+			requiredCurrencie.objectType = "currency"
+			requiredCurrencie:SetID(id)
+			local name, texture, numItems = GetQuestCurrencyInfo(requiredCurrencie.type, id)
+			SetItemButtonCount(requiredCurrencie, numItems)
+			SetItemButtonTexture(requiredCurrencie, texture)
+			requiredCurrencie:Show()
+			requiredCurrencie.Name:SetText(name)
+
+			requiredCurrencie:SetParent(GwQuestInfoProgress)
+			AddElement(objects, "RequiredCurrencies", requiredCurrencie)
 		end
+
+		return GwQuestInfoProgress, objects
+	end
+
+	local function ShowRewards()
+		local numQuestRewards = GetNumQuestRewards()
+		local numQuestChoices = GetNumQuestChoices()
+		local numQuestCurrencies = GetNumRewardCurrencies()
+		local money = GetRewardMoney()
+		local skillName, skillIcon, skillPoints = GetRewardSkillPoints()
+		local xp = GetRewardXP()
+		local artifactXP, artifactCategory = GetRewardArtifactXP()
+		local honor = GetRewardHonor()
+		local playerTitle = GetRewardTitle()
+		local numSpellRewards = GetNumRewardSpells()
+		local questID = GetQuestID()
+		local hasChanceForQuestSessionBonusReward = C_QuestLog.QuestHasQuestSessionBonus(questID)
+		local hasWarModeBonus = C_QuestLog.QuestCanHaveWarModeBonus(questID)
+
+		local numQuestSpellRewards = 0
+		for rewardSpellIndex = 1, numSpellRewards do
+			local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetRewardSpell(rewardSpellIndex)
+			local knownSpell = tonumber(spellID) and IsSpellKnownOrOverridesKnown(spellID)
+
+			if texture and not knownSpell and (not isBoostSpell or IsCharacterNewlyBoosted()) and (not garrFollowerID or not C_Garrison.IsFollowerCollected(garrFollowerID)) then
+				numQuestSpellRewards = numQuestSpellRewards + 1
+			end
+		end
+
+		local totalRewards = numQuestRewards + numQuestChoices + numQuestCurrencies
+		if totalRewards == 0 and money == 0 and xp == 0 and not playerTitle and numQuestSpellRewards == 0 and artifactXP == 0 then
+			QuestInfoRewardsFrame:Hide()
+			return nil
+		end
+
+		local objects = {}
+		local rewardButtons = QuestInfoRewardsFrame.RewardButtons
+		for i = totalRewards + 1, #rewardButtons do
+			rewardButtons[i]:ClearAllPoints()
+			rewardButtons[i]:Hide()
+		end
+		AddElement(objects, "Header", QuestInfoRewardsFrame.Header)
+
+		if numQuestRewards > 0 or numQuestCurrencies > 0 or money > 0 or xp > 0 or honor > 0 or artifactXP > 0 or hasChanceForQuestSessionBonusReward or playerTitle then
+			if hasWarModeBonus and C_PvP.IsWarModeDesired() then
+				QuestInfoRewardsFrame.WarModeBonusFrame.Count:SetFormattedText(PLUS_PERCENT_FORMAT, C_PvP.GetWarModeRewardBonus())
+				AddElement(objects, "WarModeBonusFrame", QuestInfoRewardsFrame.WarModeBonusFrame)
+			end
+
+			if money > 0 then
+				MoneyFrame_Update(QuestInfoRewardsFrame.MoneyFrame, money)
+				QuestInfoRewardsFrame.MoneyFrameButton.Name:SetText(GetMoneyString(money))	
+				AddElement(objects, "MoneyFrame", QuestInfoRewardsFrame.MoneyFrame)
+				AddElement(objects, "MoneyFrameButton", QuestInfoRewardsFrame.MoneyFrameButton)
+			end
+
+			if xp > 0 then
+				QuestInfoRewardsFrame.XPFrame.ValueText:SetText(BreakUpLargeNumbers(xp))
+				QuestInfoRewardsFrame.XPFrameButton.Name:SetText(BreakUpLargeNumbers(xp))
+				AddElement(objects, "XPFrame", QuestInfoRewardsFrame.XPFrame)				
+				AddElement(objects, "XPFrameButton", QuestInfoRewardsFrame.XPFrameButton)
+			end
+			
+			if honor > 0 then
+				local faction = UnitFactionGroup('player')
+				local icon = faction and ('Interface/Icons/PVPCurrency-Honor-%s'):format(faction)
+
+				QuestInfoRewardsFrame.HonorFrame.Count:SetText(BreakUpLargeNumbers(honor))
+				QuestInfoRewardsFrame.HonorFrame.Name:SetText(HONOR)
+				QuestInfoRewardsFrame.HonorFrame.Icon:SetTexture(icon)
+
+				AddElement(objects, "HonorFrame", QuestInfoRewardsFrame.HonorFrame)
+			end
+
+			if artifactXP > 0 then
+				local name, icon = C_ArtifactUI.GetArtifactXPRewardTargetInfo(artifactCategory)
+				
+				QuestInfoRewardsFrame.ArtifactXPFrame.Name:SetText(BreakUpLargeNumbers(artifactXP))
+				QuestInfoRewardsFrame.ArtifactXPFrame.Icon:SetTexture(icon or "Interface/Icons/INV_Misc_QuestionMark")
+				
+				AddElement(objects, "ArtifactXPFrame", QuestInfoRewardsFrame.ArtifactXPFrame)
+			end
+
+			if skillPoints then
+				QuestInfoRewardsFrame.SkillPointFrame.ValueText:SetText(skillPoints)
+				QuestInfoRewardsFrame.SkillPointFrame.Icon:SetTexture(skillIcon)
+
+				if skillName then
+					QuestInfoRewardsFrame.SkillPointFrame.Name:SetFormattedText(BONUS_SKILLPOINTS, skillName)
+					QuestInfoRewardsFrame.SkillPointFrame.tooltip = format(BONUS_SKILLPOINTS_TOOLTIP, skillPoints, skillName)
+				else
+					QuestInfoRewardsFrame.SkillPointFrame.tooltip = nil
+					QuestInfoRewardsFrame.SkillPointFrame.Name:SetText("")
+				end
+				
+				AddElement(objects, "SkillPointFrame", QuestInfoRewardsFrame.SkillPointFrame)
+			end
+			
+			if playerTitle then
+				QuestInfoRewardsFrame.TitleFrame.Name:SetText(playerTitle)
+				QuestInfoRewardsFrame.TitleFrameButton.Name:SetText(playerTitle)
+				AddElement(objects, "PlayerTitleText", QuestInfoRewardsFrame.PlayerTitleText)
+				AddElement(objects, "TitleFrame", QuestInfoRewardsFrame.TitleFrame)				
+				AddElement(objects, "TitleFrameButton", QuestInfoRewardsFrame.TitleFrameButton)
+			end
+
+--[[ 			if numQuestRewards > 0 then
+				--AddElement(objects, "TitleFrame", QuestInfoRewardsFrame.TitleFrame)
+				for index = 1, numQuestRewards, 1 do
+					local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, index)
+					questItem.type = 'reward'
+					questItem.objectType = 'item'
+					questItem:SetID(index)	
 	
-		QuestInfoRewardsFrame.collectionObjectFromPolls = {}
-		QuestInfoRewardsFrame.spellRewardPool = CreatePool("Button", QuestInfoRewardsFrame, "QuestSpellTemplate, QuestInfoRewardSpellCodeTemplate")
-		QuestInfoRewardsFrame.followerRewardPool = CreatePool("Button", QuestInfoRewardsFrame, "LargeQuestInfoRewardFollowerTemplate")
-		QuestInfoRewardsFrame.spellHeaderPool = CreatePool("FontString", QuestInfoRewardsFrame, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate")
-	
-		CreateFrame("Frame", "GwQuestInfoProgress", QuestInfoFrame)
-		GwQuestInfoProgress.collectionObjectFromPolls = {}
-		GwQuestInfoProgress.progressHeaderPool = CreatePool("FontString", GwQuestInfoProgress, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate")
-		GwQuestInfoProgress.progressButtonPool = CreatePool("Button", GwQuestInfoProgress, "QuestItemTemplate")
-	
-		local function QuestInfo_ShowHookObjectivesText()
-			local objectivesText = QuestInfo_ShowObjectivesText()
-			objectivesText:Show()
-	
-			return objectivesText
+					AddElement(questItem, true, index)
+				end
+			end ]]
+
+--[[ 			if (numQuestCurrencies > 0) then
+				--self:AddElement(self.CurrencyText);
+				for index = 1, numQuestCurrencies, 1 do
+					local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, index)
+					questItem.type = 'reward';
+					questItem.objectType = 'currency';
+					questItem:SetID(index);
+
+					AddElement(questItem, true, index);
+				end
+			end ]]
+
+--[[ 			if hasChanceForQuestSessionBonusReward then
+				--self:AddElement(self.QuestSessionBonusReward);
+
+				local questItem = QuestInfo_GetRewardButton(QuestInfoRewardsFrame, index)
+				questItem.type = "reward";
+				questItem.objectType = "questSessionBonusReward";
+
+				AddElement(questItem, true, 1);
+			end ]]
 		end
 		
-		local function QuestInfo_ShowProgressRequired()
-			GwQuestInfoProgress:SetWidth(ACTIVE_TEMPLATE.contentWidth)
-			GwQuestInfoProgress.progressButtonPool:ReleaseAll()
-			GwQuestInfoProgress.progressHeaderPool:ReleaseAll()
-	
-			local lastAnchorElement
-			local totalHeight = 0	
-	
-			local requiredMoney = GetQuestMoneyToGet()
-			if requiredMoney > 0 then
-				MoneyFrame_Update("QuestInfoRequiredMoneyDisplay", requiredMoney)
-				if requiredMoney > GetMoney() then
-					QuestInfoRequiredMoneyText:SetTextColor(0, 0, 0)
-					SetMoneyFrameColor("QuestInfoRequiredMoneyDisplay", "red")
-				else
-					QuestInfoRequiredMoneyText:SetTextColor(0.2, 0.2, 0.2);
-					SetMoneyFrameColor("QuestInfoRequiredMoneyDisplay", "white")
-				end
-	
-				QuestInfoRequiredMoneyFrame:SetPoint("TOPLEFT", 0, -5)
-				QuestInfoRequiredMoneyFrame:SetParent(GwQuestInfoProgress)
-				QuestInfoRequiredMoneyFrame:Show()
-	
-				lastAnchorElement = QuestInfoRequiredMoneyFrame
-				totalHeight = totalHeight + QuestInfoRequiredMoneyFrame:GetHeight() + 5
-			else
-				QuestInfoRequiredMoneyFrame:Hide()
-			end
-	
-			local progress = {
-				{GetNumQuestRequired = GetNumQuestItems, Name = ITEMS, IsHidden = IsQuestItemHidden, objectType = "item", GetQuestInfo = GetQuestItemInfo}, 
-				{GetNumQuestRequired = GetNumQuestCurrencies, Name = CURRENCY, IsHidden = function() return 0 end, objectType = "currency", GetQuestInfo = GetQuestCurrencyInfo }
-			}
-	
-			for _, required  in ipairs(progress) do
-				local numRequired = required.GetNumQuestRequired()
-				if numRequired > 0 then
-					local numButton = 0
-					local header = GwQuestInfoProgress.progressHeaderPool:Acquire()
-					header:SetText(required.Name)
-	
-					if lastAnchorElement then
-						header:SetPoint("TOPLEFT", lastAnchorElement, "BOTTOMLEFT", 0, -5)
-					else
-						header:SetPoint("TOPLEFT", 0, -5)
+--[[ 		if (numQuestChoices > 0) then
+			self.ItemChooseText:SetText((numQuestChoices == 1 and REWARD_ITEMS_ONLY) or (self.chooseItems and REWARD_CHOOSE) or REWARD_CHOICES);
+
+			self:AddElement(self.ItemChooseText);
+
+			local highestValue, moneyItem
+			for index = 1, numQuestChoices do
+				local questItem = GetItemButton(GwImmersiveFrame.rewardPool, GwImmersiveFrame.rewardButtons, self);
+				questItem.type = 'choice';
+				questItem.objectType = 'item';
+				numItems = 1;
+				questItem:SetID(index);	
+
+				self:UpdateItemInfo(questItem);	
+				self:AddElement(questItem, true, index);
+
+				local link = GetQuestItemLink(questItem.type, index);
+				local vendorValue = link and select(11, GetItemInfo(link));
+
+				if vendorValue and ( not highestValue or vendorValue > highestValue ) then
+					highestValue = vendorValue;
+					if vendorValue > 0 and numQuestChoices > 1 then
+						moneyItem = questItem;
 					end
-	
-					header:Show()
-					totalHeight = totalHeight + header:GetHeight() + 5
-					lastAnchorElement = header
-	
-					for i = 1, numRequired do
-						local hidden = required.IsHidden(i)
-						if hidden == 0 then
-							local requiredItem = GwQuestInfoProgress.progressButtonPool:Acquire()
-							numButton = numButton + 1
-							requiredItem.type = "required"
-							requiredItem.objectType = required.objectType
-							requiredItem:SetID(i)
-							local name, texture, numItems = required.GetQuestInfo(requiredItem.type, 1)
-							SetItemButtonCount(requiredItem, numItems)
-							SetItemButtonTexture(requiredItem, texture)
-							requiredItem:Show()
-							requiredItem.Name:SetText(name)
-			
-							if numButton % 2 == 1 then
-								requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "BOTTOMLEFT", 0, -5)
-								lastAnchorElement = requiredItem
-								totalHeight = totalHeight + requiredItem:GetHeight() + 5
-							else
-								requiredItem:SetPoint("TOPLEFT", lastAnchorElement, "TOPRIGHT", 1, 0)
-							end
+				end	
+			end	
+
+			if (moneyItem) then
+				self.MoneyIcon:SetPoint('BOTTOMRIGHT', moneyItem, -13, 6);
+				self.MoneyIcon:Show();
+			end	
+		end ]]
+
+--[[ 		if (numQuestSpellRewards > 0) then
+			local spellBuckets = {}
+
+			-- Generate spell buckets
+			for rewardSpellIndex = 1, numSpellRewards do
+				local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetRewardSpell(rewardSpellIndex);
+				local knownSpell = IsSpellKnownOrOverridesKnown(spellID);
+				if (texture and not knownSpell and (not isBoostSpell or IsCharacterNewlyBoosted()) and (not garrFollowerID or not C_Garrison.IsFollowerCollected(garrFollowerID))) then
+					local bucket = 	isTradeskillSpell 	and QUEST_SPELL_REWARD_TYPE_TRADESKILL_SPELL or
+									isBoostSpell 		and QUEST_SPELL_REWARD_TYPE_ABILITY or
+									garrFollowerID 		and QUEST_SPELL_REWARD_TYPE_FOLLOWER or
+									isSpellLearned 		and QUEST_SPELL_REWARD_TYPE_SPELL or
+									genericUnlock 		and QUEST_SPELL_REWARD_TYPE_UNLOCK or QUEST_SPELL_REWARD_TYPE_AURA;
+					
+									-- local followerInfo = C_Garrison.GetFollowerInfo(garrFollowerID);
+									-- if followerInfo.followerTypeID == Enum.GarrisonFollowerType.FollowerType_9_0 then
+									-- 	AddSpellToBucket(spellBuckets, QUEST_SPELL_REWARD_TYPE_COMPANION, rewardSpellIndex);
+									-- else
+									-- 	AddSpellToBucket(spellBuckets, QUEST_SPELL_REWARD_TYPE_FOLLOWER, rewardSpellIndex);
+									-- end
+
+					if (not spellBuckets[type]) then
+						spellBuckets[type] = {}
+					end
+
+					local spellBucket = spellBuckets[type];
+					spellBucket[#spellBucket + 1] = rewardSpellIndex;
+				end
+			end
+
+			-- Sort buckets in the correct order
+			for orderIndex, spellBucketType in ipairs(QUEST_INFO_SPELL_REWARD_ORDERING) do
+				local spellBucket = spellBuckets[spellBucketType];
+				if (spellBucket) then
+					for i, rewardSpellIndex in ipairs(spellBucket) do
+						local texture, name, isTradeskillSpell, isSpellLearned, _, isBoostSpell, garrFollowerID = GetRewardSpell(rewardSpellIndex);
+						if i == 1 then
+							local header = GetItemButton(GwImmersiveFrame.headerSpellPool, GwImmersiveFrame.headerSpellButtons, self);
+							header:SetText(QUEST_INFO_SPELL_REWARD_TO_HEADER[spellBucketType]);
+							-- if self.spellHeaderPool.textR and self.spellHeaderPool.textG and self.spellHeaderPool.textB then
+							-- 	header:SetVertexColor(self.spellHeaderPool.textR, self.spellHeaderPool.textG, self.spellHeaderPool.textB)
+							-- end
+
+							self:AddElement(header);
+						end
+
+						if (garrFollowerID) then
+							local followerFrame = GetItemButton(GwImmersiveFrame.rewardFollowerPool, GwImmersiveFrame.rewardFollowerButtons, self);
+							local followerInfo = C_Garrison.GetFollowerInfo(garrFollowerID);
+							followerFrame.Name:SetText(followerInfo.name);
+							followerFrame.Class:SetAtlas(followerInfo.classAtlas);
+							followerFrame.PortraitFrame:SetupPortrait(followerInfo);
+							followerFrame.ID = garrFollowerID;
+							
+							self:AddElement(followerFrame);
+						else
+							local spellRewardFrame = GetItemButton(GwImmersiveFrame.rewardSpellPool, GwImmersiveFrame.rewardSpellButtons, self);
+							spellRewardFrame.Icon:SetTexture(texture);
+							spellRewardFrame.Name:SetText(name);
+							spellRewardFrame.rewardSpellIndex = rewardSpellIndex;
+
+							self:AddElement(spellRewardFrame);
 						end
 					end
-	
-					if numButton == 0 then
-						totalHeight = totalHeight - header:GetHeight() - 5
-						GwQuestInfoProgress.progressHeaderPool:Release(header)
-						lastAnchorElement = QuestInfoRequiredMoneyFrame:IsShown() and QuestInfoRequiredMoneyFrame or nil 
-					end
 				end
 			end
-		
-			if totalHeight > 0 then
-				GwQuestInfoProgress:SetHeight(totalHeight)
-				GwQuestInfoProgress:Show()
-	
-				return GwQuestInfoProgress
-			else
-				GwQuestInfoProgress:Hide()
-	
-				return nil	
-			end
-		end
-		
-		GW2_QUEST_DETAIL_TEMPLATE = {
-			chooseItems = nil, canHaveSealMaterial = false, title = QUEST_DETAILS,
-			elements = {		
-				QuestInfo_ShowHookObjectivesText, 0, 0,
-				QuestInfo_ShowSpecialObjectives, 0, -10,
-				QuestInfo_ShowGroupSize, 0, -10,
-				QuestInfo_ShowRewards, 0, -15,
-			},
-			frames = {
-				"QuestInfoObjectivesText", 0,
-				"QuestInfoSpecialObjectivesFrame", 10,
-				"QuestInfoGroupSize", 10,
-				"QuestInfoRewardsFrame", 15
-			}
-		}
-	
-		GW2_QUEST_PROGRESS_TEMPLATE = {
-			chooseItems = nil, canHaveSealMaterial = false, title = QUEST_OBJECTIVES,
-			elements = {
-				QuestInfo_ShowProgressRequired, 0, 0
-			},
-			frames = {
-				"GwQuestInfoProgress", 0
-			}	
-		}
-	
-		GW2_QUEST_COMPLETE_TEMPLATE = {
-			chooseItems = true, canHaveSealMaterial = false, title = QUEST_REWARDS,
-			elements = {
-				QuestInfo_ShowRewards, 0, 0,
-			},
-			frames = {
-				"QuestInfoRewardsFrame", 0
-			}
-		}
-	
-		function QuestInfoItem_OnClick(self)
-			if self.type == "choice" then
-				if QuestInfoFrame.itemChoice == self:GetID() then
-					GetQuestReward(QuestInfoFrame.itemChoice)
-				else
-					QuestInfoItemHighlight:SetPoint("TOPLEFT", self, "TOPLEFT", -8, 7)
-					QuestInfoItemHighlight:Show()
-					QuestInfoFrame.itemChoice = self:GetID()
-				end
-			end
-		end
-		
+		end ]]
+
+		return QuestInfoRewardsFrame, objects
 	end
-	GW.LoadDetalies = LoadDetalies
+
+	GW2_QUEST_DETAIL_TEMPLATE = {
+		questLog = nil, chooseItems = nil, canHaveSealMaterial = false, title = QUEST_DETAILS,
+		elements = {		
+			ShowObjectivesText,
+			ShowSeal,
+			ShowSpecialObjectives,
+			ShowGroupSize,
+			ShowRewards
+		},
+	}
+
+	GW2_QUEST_PROGRESS_TEMPLATE = {
+		questLog = nil, chooseItems = nil, canHaveSealMaterial = false, title = QUEST_OBJECTIVES,
+		elements = {
+			ShowProgress
+		},
+	}
+
+	GW2_QUEST_COMPLETE_TEMPLATE = {
+		questLog = nil, chooseItems = true, canHaveSealMaterial = false, title = QUEST_REWARDS,
+		elements = {
+--			ShowRewards,
+		},
+	}
+
 end
 
 do
-	local ACTIVE_TEMPLATE
 	local SHOW_TITLE_BUTTON
-
-	local function ShownDetail(parentFrame, formatShow)
-		for _, frame in ipairs({QuestInfoObjectivesText, QuestInfoSpecialObjectivesFrame, QuestInfoGroupSize, QuestInfoSpecialObjectivesFrame, QuestInfoRewardsFrame, GwQuestInfoProgress}) do
-			frame:ClearAllPoints()
-			frame:Hide()
-		end
-	
-		ACTIVE_TEMPLATE.contentWidth = parentFrame:GetWidth()
-		QuestInfo_Display(ACTIVE_TEMPLATE, parentFrame)
-	
-		return formatShow(ACTIVE_TEMPLATE)
-	end
 
 	local function TitleButtonShow(gwImmersiveFrame, start, finish, current)
 		local firstElement = current == start
@@ -407,12 +584,7 @@ do
 	
 		if IsIn(gwImmersiveFrame.LastEvent, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") and lastElement then
 			if not gwImmersiveFrame.ActiveFrame.Detail:IsVisible() then
-				ACTIVE_TEMPLATE = _G["GW2_"..gwImmersiveFrame.LastEvent.."_TEMPLATE"]
-				gwImmersiveFrame.ActiveFrame.Detail.Scroll.ScrollBar:SetValue(0)
-				gwImmersiveFrame.ActiveFrame.Detail.Title:SetText(ACTIVE_TEMPLATE.title)
-				local height = ShownDetail(gwImmersiveFrame.ActiveFrame.Detail.Scroll.ScrollChildFrame, gwImmersiveFrame.ActiveFrame.StyleReward)
-				gwImmersiveFrame.ActiveFrame.Detail.Scroll.ScrollChildFrame:SetHeight(height)
-				gwImmersiveFrame.ActiveFrame.Detail:SetShown(height > 0)
+				gwImmersiveFrame.ActiveFrame.Detail:Show()
 			end
 		else
 			if gwImmersiveFrame.ActiveFrame.Detail:IsVisible() then
@@ -558,9 +730,11 @@ do
 			gwImmersiveFrame.customFrame:Hide()
 			gwImmersiveFrame.customFrame = nil	
 		elseif gwImmersiveFrame.ActiveFrame:IsShown() then
+			gwImmersiveFrame.LoadDetail = true
 			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION") end
 			if CheckStateAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") then StopAnimation("IMMERSIVE_DIALOG_ANIMATION_TITLE_BUTTON") end
 			if CheckStateAnimation("IMMERSIVE_TITLE_ANIMATION") then StopAnimation("IMMERSIVE_TITLE_ANIMATION") end
+			
 
 			AddToAnimation(
 				gwImmersiveFrame.ActiveFrame:GetName(),
@@ -593,8 +767,6 @@ do
 	GW.ImmersiveFrameHandleHide = ImmersiveFrameHandleHide
 
 	local function LoadTitleButtons()
-		GwImmersiveFrame.TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate")
-		
 		local function GetAvailableQuests() return C_GossipInfo.GetAvailableQuests() end
 		local function GetOptions() return C_GossipInfo.GetOptions() end		
 	

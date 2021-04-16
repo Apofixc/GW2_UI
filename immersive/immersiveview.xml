@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 
-	<Button name="GwTitleButtonTemplate" hidden="true" virtual="true" mixin="GossipTitleButtonMixin, AdvanceGossipTitleButtonMixin">
+	<Button name="GwTitleButtonTemplate" hidden="true" virtual="true" mixin="GossipTitleButtonMixin, GWAdvanceGossipTitleButtonMixin">
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="Icon" file="Interface\QuestFrame\UI-Quest-BulletPoint">
@@ -66,8 +66,6 @@
 				if self.ShowIn:IsPlaying() then 
 					self.ShowIn:Stop();
 				end
-
-				self.Icon:SetTexCoord(0, 1, 0, 1)
 			</OnHide>
 			<OnEnter>
 				self.Highlight:Play();
@@ -316,17 +314,10 @@
 								<Anchors>
 									<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
 								</Anchors>
-								<Scripts>
-									<OnHide>
-										self:RegisterForDrag("LeftButton");
-									</OnHide>
-								</Scripts>
 							</Frame> 
 						</ScrollChild>
 					</ScrollFrame>
 				</Frames>
-				<Scripts>
-				</Scripts>
 			</Frame>	
 		</Frames>
 		<Scripts>
@@ -608,9 +599,6 @@
 						<ScrollChild>
 							<Frame parentKey="ScrollChildFrame">
 								<Size x="210"/>
-								<Frames>
-
-								</Frames>
 							</Frame> 
 						</ScrollChild>
 					</ScrollFrame>
