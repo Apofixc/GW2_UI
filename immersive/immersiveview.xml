@@ -110,7 +110,7 @@
 			<Button parentKey="WarModeBonusFrame" inherits="LargeItemButtonTemplate, WarModeBonusFrameTemplate" hidden="true"/>
 			<Frame parentKey="MoneyFrame" inherits="MoneyDisplayFrameTemplate" hidden="true">
 				<KeyValues>
-					<KeyValue key="hideCopper" value="true" type="boolean"/>
+					<KeyValue key="hideCopper" value="false" type="boolean"/>
 					<KeyValue key="useAuctionHouseIcons" value="true" type="boolean"/>
 					<KeyValue key="resizeToFit" value="true" type="boolean"/>
 					<KeyValue key="leftAlign" value="true" type="boolean"/>

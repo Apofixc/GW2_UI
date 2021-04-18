@@ -156,7 +156,9 @@ local function GwImmersiveFrames_OnKeyDown(self, button)
 				self.Scroll.ScrollBar:SetAlpha(1)
 			end
 		elseif button == "F1" then
-			ImmersiveFrameHandleHide(GwImmersiveFrame, true)			
+			if not GwImmersiveFrame.ForceFrameTemp then
+				ImmersiveFrameHandleHide(GwImmersiveFrame, true)	
+			end		
 		elseif button == "F2" then
 			if self.Dialog:GetScript("OnClick") then self.Dialog:SetMouseClickEnabled(not self.Dialog:IsMouseEnabled()) end
 		else 
@@ -298,7 +300,7 @@ local function LoadImmersiveView()
 	GwImmersiveFrame:SetScript("OnEvent", GwImmersiveFrame_OnEvent)
 	GwImmersiveFrame.hasActiveQuest = false
 	GwImmersiveFrame.LoadDetail = true
-	local GwFullScreenGossipViewFrame = CreateFrame("Frame", nil, UIParent, "GwFullScreenGossipViewFrameTemplate")
+	CreateFrame("Frame", "GwFullScreenGossipViewFrame", UIParent, "GwFullScreenGossipViewFrameTemplate")
 	GwFullScreenGossipViewFrame:SetScript("OnKeyDown", GwImmersiveFrames_OnKeyDown)
 	GwFullScreenGossipViewFrame.Detail:SetScript("OnShow", GwImmersiveDetail_OnShow)
 	GwFullScreenGossipViewFrame.Detail:SetScript("OnHide", GwImmersiveDetail_OnHide)
@@ -306,7 +308,7 @@ local function LoadImmersiveView()
 		GwFullScreenGossipViewFrame:HookScript("OnShow", GwFullScreenGossipViewFrame_OnShow)
 	end
 
-	local GwNormalScreenGossipViewFrame = CreateFrame("Frame", nil, UIParent, "GwNormalScreenGossipViewFrameTemplate")
+	CreateFrame("Frame", "GwNormalScreenGossipViewFrame", UIParent, "GwNormalScreenGossipViewFrameTemplate")
 	GwNormalScreenGossipViewFrame:SetScript("OnKeyDown", GwImmersiveFrames_OnKeyDown)
 	GwNormalScreenGossipViewFrame.Detail:SetScript("OnShow", GwImmersiveDetail_OnShow)
 	GwNormalScreenGossipViewFrame.Detail:SetScript("OnHide", GwImmersiveDetail_OnHide)
@@ -325,8 +327,8 @@ local function LoadImmersiveView()
 
 	GwImmersiveFrame.TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate", FramePool_HideAndClearAnchors)
 	QuestInfoFrame:CreateFontString("GwQuestInfoObjectivesText", "BACKGROUND", "QuestFontLeft")
-	CreateFrame("Frame", "GwQuestInfoProgress",nil, "GwQuestInfoProgress")
-	CreateFrame("Frame", "GwQuestInfoRewardsFrame",nil, "GwQuestInfoRewardsFrame")
+	CreateFrame("Frame", "GwQuestInfoProgress", nil, "GwQuestInfoProgress")
+	CreateFrame("Frame", "GwQuestInfoRewardsFrame", nil, "GwQuestInfoRewardsFrame")
 
 	Model:CreateClassModel("FULLMODEL", {"CinematicModel"}, ModelDB.defSetUnit, ModelDB.defFullModel)
     Model:CreateSubClassModel("FULLMODEL", "RIGHT", ModelDB.defGetPlayer, ModelDB.defFullModelRight, ModelDB.defFullModelOffsetRight)
@@ -344,8 +346,8 @@ local function LoadImmersiveView()
 	Model:CreateClassAnimation("PORTRAIT", "RIGHT", {[60] = 60}, "LEFT", {[60] = 60} )
 	Model:RegisterSyncAnimation("PORTRAIT", GwNormalScreenGossipViewFrame.Models.Player, GwNormalScreenGossipViewFrame.Models.Giver)
 
-	GwImmersiveFrame.ActiveFrame = GetSetting("FULL_SCREEN") and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
 	GwImmersiveFrame.UnActiveFrame = GetSetting("FULL_SCREEN") and GwNormalScreenGossipViewFrame or GwFullScreenGossipViewFrame
+	GwImmersiveFrame.ActiveFrame = GetSetting("FULL_SCREEN") and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
 	GwImmersiveFrame.ActiveFrame.FontColor()
 
 	GwImmersiveFrame.ForceFrame = GwNormalScreenGossipViewFrame

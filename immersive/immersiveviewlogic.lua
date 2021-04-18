@@ -775,7 +775,7 @@ do
 		if not gwImmersiveFrame.LoadFrame then
 			gwImmersiveFrame.LoadFrame = true
 
-			if gwImmersiveFrame.ForceFrame and (InCombatLockdown() or true) then
+			if gwImmersiveFrame.ForceFrame and InCombatLockdown() then
 				gwImmersiveFrame.ActiveFrame, gwImmersiveFrame.ForceFrameTemp = gwImmersiveFrame.ForceFrame, gwImmersiveFrame.ActiveFrame
 				gwImmersiveFrame.ActiveFrame.FontColor()
 			end
@@ -783,7 +783,7 @@ do
 
 		gwImmersiveFrame.ActiveFrame:Show()
 		AddToAnimation(
-			"IMMERSIVE_ALPHA",
+			gwImmersiveFrame.ActiveFrame:GetName(),
 			gwImmersiveFrame.ActiveFrame:GetAlpha(),
 			1,
 			GetTime(),
@@ -836,7 +836,7 @@ do
 			
 
 			AddToAnimation(
-				"IMMERSIVE_ALPHA",
+				gwImmersiveFrame.ActiveFrame:GetName(),
 				gwImmersiveFrame.ActiveFrame:GetAlpha(),
 				0,
 				GetTime(),
@@ -888,7 +888,10 @@ do
 			local info ={}
 			local GreetingAvailableQuests = GetNumAvailableQuests();
 			for ID = 1, GreetingAvailableQuests do
-				local title, isTrivial, frequency, isRepeatable, isLegendary, questID, questLevel = GetAvailableTitle(ID), GetAvailableQuestInfo(ID), GetActiveLevel(ID)
+				local title = GetAvailableTitle(ID)
+				local isTrivial, frequency, isRepeatable, isLegendary, questID = GetAvailableQuestInfo(ID)
+				local questLevel = GetAvailableLevel(ID)
+
 				tinsert(info, {title = title, questLevel = questLevel, isTrivial = isTrivial, frequency = frequency, isRepeatable = isRepeatable, isLegendary = isLegendary, questID = questID})
 			end
 	
@@ -899,7 +902,11 @@ do
 			local info ={}
 			local GreetingActiveQuests = GetNumActiveQuests();
 			for ID = 1, GreetingActiveQuests do
-				local title, isComplete, questID, isTrivial, isLegendary, questLevel = GetActiveTitle(ID), GetActiveQuestID(ID), IsActiveQuestTrivial(ID), IsActiveQuestLegendary(ID), GetAvailableLevel(ID)
+				local title, isComplete = GetActiveTitle(ID)
+				local questID = GetActiveQuestID(ID)
+				local isTrivial, isLegendary = IsActiveQuestTrivial(ID), IsActiveQuestLegendary(ID)
+				local questLevel = GetAvailableLevel(ID)
+
 				tinsert(info, {title = title, questLevel = questLevel, isComplete = isComplete, isTrivial = isTrivial, isLegendary = isLegendary, questID = questID})
 			end
 	
