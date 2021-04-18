@@ -170,6 +170,7 @@ local function LoadHudPanel(sWindow)
     addOption(p_immersive.scroll.scrollchild, L["Use mouse"], L["Controlling dialog text using the mouse."], "MOUSE_DIALOG", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOption(p_immersive.scroll.scrollchild, L["Extended dialog with NPC"], L["Open additional dialog options when communicating with NPC."], "FORCE_GOSSIP", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOption(p_immersive.scroll.scrollchild, L["Scrolling text"], L["Automatic scrolling of dialog text."], "AUTO_NEXT", nil, nil, {["QUESTVIEW_ENABLED"] = true})
+    addOption(p_immersive.scroll.scrollchild,  L["Secure"], L["In some situations, for safety, we forcibly turn on 'Dialog mode'."], "SECURE_MODE", nil, nil, {["QUESTVIEW_ENABLED"] = true})
     addOptionSlider(
         p_immersive.scroll.scrollchild,
         L["Scrolling delay"],

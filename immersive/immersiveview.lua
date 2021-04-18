@@ -299,7 +299,7 @@ local function LoadImmersiveView()
 
 	GwImmersiveFrame:SetScript("OnEvent", GwImmersiveFrame_OnEvent)
 	GwImmersiveFrame.hasActiveQuest = false
-	GwImmersiveFrame.LoadDetail = true
+
 	CreateFrame("Frame", "GwFullScreenGossipViewFrame", UIParent, "GwFullScreenGossipViewFrameTemplate")
 	GwFullScreenGossipViewFrame:SetScript("OnKeyDown", GwImmersiveFrames_OnKeyDown)
 	GwFullScreenGossipViewFrame.Detail:SetScript("OnShow", GwImmersiveDetail_OnShow)
@@ -350,7 +350,9 @@ local function LoadImmersiveView()
 	GwImmersiveFrame.ActiveFrame = GetSetting("FULL_SCREEN") and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
 	GwImmersiveFrame.ActiveFrame.FontColor()
 
-	GwImmersiveFrame.ForceFrame = GwNormalScreenGossipViewFrame
+	if GetSetting("SECURE_MODE") then
+		GwImmersiveFrame.ForceFrame = GwNormalScreenGossipViewFrame
+	end
 end
 
 GW.LoadImmersiveView = LoadImmersiveView
