@@ -18,114 +18,6 @@ ModelsManagementLib.ModelSetByTypeMode.NOT_SHOW     = "NOT_SHOW"
 ModelsManagementLib.ModelSetByTypeMode.VISIBLE      = "VISIBLE"
 ModelsManagementLib.ModelSetByTypeMode.NOT_VISIBLE  = "NOT_VISIBLE"
 
-ModelsManagementLib.Animation.Idle = 0 
-ModelsManagementLib.Animation.Dead = 6 
-ModelsManagementLib.Animation.Talk = 60 
-ModelsManagementLib.Animation.TalkExclamation = 64
-ModelsManagementLib.Animation.TalkQuestion = 65 
-ModelsManagementLib.Animation.Bow = 66 
-ModelsManagementLib.Animation.Point = 84
-ModelsManagementLib.Animation.Salute = 113
-ModelsManagementLib.Animation.Drowned = 132
-ModelsManagementLib.Animation.Yes = 185
-ModelsManagementLib.Animation.No = 186
-
-ModelsManagementLib.defGetPlayer = function()
-    return {"player"} 
-end
-
-ModelsManagementLib.defGetNPC = function()
-    return {UnitExists("questnpc") and "questnpc" or UnitExists("npc") and "npc" or "none"}
-end
-
-ModelsManagementLib.defGetTarget = function()
-    return {UnitExists("target") and not UnitIsUnit("player", "npc") or "none"}
-end
-
-ModelsManagementLib.defSetUnit = function(model, unit)
-    model:ClearModel()
-    model:SetUnit(unit)     
-end
-
-ModelsManagementLib.defSetCreature = function(model, CreatureId)
-    model:ClearModel()
-    model:SetCreature(CreatureId)     
-end
-
-ModelsManagementLib.defSetItem = function(model, itemID, appearanceModID, itemVisualID)
-    model:ClearModel()
-    model:SetItem(itemID, appearanceModID, itemVisualID)
-end
-
-ModelsManagementLib.defSetCustomRace = function(model, raceId, sexId)
-    model:ClearModel()
-    model:SetCustomRace(raceId, sexId)     
-end
-
-ModelsManagementLib.defSetModel = function(model, file)
-    model:ClearModel()
-    model:SetModel(file)    
-end
-
-ModelsManagementLib.defFullModel = {
-    SetFacingLeft = { arg1 = "FacingLeft"}, 
-    InitializeCamera = {arg1 = "Camera"}, 
-    SetTargetDistance = {arg1 = "TargetDistance"}, 
-    SetHeightFactor = {arg1 = "HeightFactor"}, 
-    SetFacing = {arg1 = "Facing"},
-}
-
-ModelsManagementLib.defPortrait = {
-    SetCamDistanceScale = {arg1 = "DistanceScale"},
-    SetPortraitZoom = {arg1 = "PortraitZoom"},
-    SetPosition = {arg1 = "PositionX", arg2 = "PositionY", arg3 = "PositionZ"},
-    RefreshUnit = {}
-}
-
-ModelsManagementLib.defFullModelRight = {
-    FacingLeft = false,
-    Camera = 1.55, 
-    Facing = 2.3, 
-    TargetDistance = .27, 
-    HeightFactor = .4,    
-}
-
-ModelsManagementLib.defFullModelOffsetRight = {
-}
-
-ModelsManagementLib.defFullModelLeft = {
-    FacingLeft = true,
-    Camera = 1.8, 
-    Facing = -.92, 
-    TargetDistance = .27, 
-    HeightFactor = .34,   
-}
-
-ModelsManagementLib.defFullModelOffsetLeft= {
-}
-
-ModelsManagementLib.defPortraitRight = {
-    DistanceScale = 1.1,
-    PortraitZoom = .7,
-    PositionX = 0,
-    PositionY = 0,
-    PositionZ = -.05,
-}
-
-ModelsManagementLib.defPortraitOffsetRight = {
-}
-
-ModelsManagementLib.defPortraitLeft = {
-    DistanceScale = 1.1,
-    PortraitZoom = .7,
-    PositionX = 0,
-    PositionY = 0,
-    PositionZ = -.05,
-}
-
-ModelsManagementLib.defPortraitOffsetLeft= {
-}
-
 local MODEL_LIST = {}
 local CLASS_MODEL = {}
 
@@ -268,21 +160,25 @@ function ModelsManagementLib:ClearAll()
     end
 end
 
-function ModelsManagementLib:RegisterModel(ClassName, SubClassName, FrameModel, Name)
+function ModelsManagementLib:RegisterModel(ClassName, SubClassName, FrameModel, Name, GetName)
     if type(ClassName) ~= "string" then 
-        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name) - ClassName must be string, got "..type(ClassName)) 
+        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name, GetName) - ClassName must be string, got "..type(ClassName)) 
     end
 
     if type(SubClassName) ~= "string" then 
-        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name) - SubClassName must be string, got "..type(SubClassName)) 
+        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name, GetName) - SubClassName must be string, got "..type(SubClassName)) 
     end
 
     if type(FrameModel) ~= "table" then 
-        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name) - FrameModel must be object, got "..type(FrameModel)) 
+        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name, GetName) - FrameModel must be object, got "..type(FrameModel)) 
     end
 
     if Name and type(Name) ~= "table" then 
-        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name) - Name must be object, got "..type(Name)) 
+        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name, GetName) - Name must be object, got "..type(Name)) 
+    end
+
+    if GetName and type(GetName) ~= "function" then 
+        error(MAJOR..":RegisterModel(ClassName, SubClassName, FrameModel, Name, GetName) - Name must be function, got "..type(GetName)) 
     end
 
     ClassName = ClassName:upper() 
@@ -291,22 +187,23 @@ function ModelsManagementLib:RegisterModel(ClassName, SubClassName, FrameModel, 
         return false 
     end
 
-    if not tContains(CLASS_MODEL[ClassName]["Limit"], FrameModel:GetObjectType()) or Name and Name:GetObjectType() ~= "FontString" then 
+    if  not tContains(CLASS_MODEL[ClassName]["Limit"], FrameModel.GetObjectType and FrameModel:GetObjectType() or nil) or Name and Name.GetObjectType and Name:GetObjectType() ~= "FontString" then 
         return false 
     end
 
     if not MODEL_LIST[FrameModel] then MODEL_LIST[FrameModel] = {} end
 
-    MODEL_LIST[FrameModel].ClassName = ClassName
-    MODEL_LIST[FrameModel].SubClassName = SubClassName
-    MODEL_LIST[FrameModel].Default = CLASS_MODEL[ClassName]["Default"][SubClassName]
-    MODEL_LIST[FrameModel].Offset = CLASS_MODEL[ClassName]["Offset"][SubClassName]
-    MODEL_LIST[FrameModel].Name = Name
+    MODEL_LIST[FrameModel]["ClassName"] = ClassName
+    MODEL_LIST[FrameModel]["SubClassName"] = SubClassName
+    MODEL_LIST[FrameModel]["Default"] = CLASS_MODEL[ClassName]["Default"][SubClassName]
+    MODEL_LIST[FrameModel]["Offset"] = CLASS_MODEL[ClassName]["Offset"][SubClassName]
+    MODEL_LIST[FrameModel]["Name"] = Name
 
     FrameModel["LibScalingGetModelInfo"] = CLASS_MODEL[ClassName]["Models"][SubClassName]
     FrameModel["LibScalingSetModel"] = CLASS_MODEL[ClassName]["SetModel"]
+    FrameModel["LibScalingGetModelGetName"] = GetName
 
-    MODEL_LIST[FrameModel].ApplyScaling = CLASS_MODEL[ClassName]["SetScaling"]
+    MODEL_LIST[FrameModel]["ApplyScaling"]= CLASS_MODEL[ClassName]["SetScaling"]
 
     return true
 end
@@ -316,6 +213,7 @@ function ModelsManagementLib:DeleteModel(FrameModel)
         MODEL_LIST[FrameModel] = nil
         FrameModel["LibScalingSetModel"] = nil
         FrameModel["LibScalingGetModelInfo"] = nil
+        FrameModel["LibScalingGetModelGetName"] = nil
 
         return true 
     end
@@ -389,11 +287,15 @@ function ModelsManagementLib:SetModelsByType(ClassName, SubClassName, Mode)
 end
 
 function ModelsManagementLib:GetModelName(Model)
-    local unit = unpack(Model:LibScalingGetModelInfo(Model))
-    if type(unit) == "string" and unit ~= "none" then
-        return select(1, UnitName(unit))
+    if Model.LibScalingGetModelGetName then
+        local unit = Model:LibScalingGetModelGetName()
+        if type(unit) == "string" then
+            return unit
+        else
+            return UNKNOWN
+        end       
     else
-        return UNKNOWN
+        return nil
     end
 end
 
@@ -409,5 +311,139 @@ function ModelsManagementLib:SetModelsName(...)
     for i, model in ipairs(models) do
         self:SetModelName(model)
     end
+end
+
+-------------------------------------------------------------Animation--------------------------------------------------------------------------
+
+ModelsManagementLib.Animation.Idle = 0 
+ModelsManagementLib.Animation.Dead = 6 
+ModelsManagementLib.Animation.Talk = 60 
+ModelsManagementLib.Animation.TalkExclamation = 64
+ModelsManagementLib.Animation.TalkQuestion = 65 
+ModelsManagementLib.Animation.Bow = 66 
+ModelsManagementLib.Animation.Point = 84
+ModelsManagementLib.Animation.Salute = 113
+ModelsManagementLib.Animation.Drowned = 132
+ModelsManagementLib.Animation.Yes = 185
+ModelsManagementLib.Animation.No = 186
+
+function ModelsManagementLib:CreateClassAnimation(ClassName, ...)
+    if type(ClassName) ~= "string" then 
+        error(MAJOR..":CreateClassAnimation(ClassName, ...) - ClassName must be string, got "..type(ClassName)) 
+    end
+
+    if not CLASS_MODEL[ClassName] or CLASS_MODEL[ClassName] and tContains(CLASS_MODEL[ClassName]["Limit"], "Model") then
+        return false
+    end
+
+    local count = select("#", ...)
+    if count%2 == 1 then
+        return false
+    end
+
+    for i = 1, count, 2 do
+        local SubClassName = select(i, ...)
+        if type(SubClassName) ~= "string" then 
+            error(MAJOR..":CreateClassAnimation(ClassName, ...) - SubClass must be string, got "..type(SubClassName)) 
+        end
+
+        local Reaction = select(i + 1, ...)
+        if type(Reaction) ~= "table" then 
+            error(MAJOR..":CreateClassAnimation(ClassName, ...) - Reaction must be table, got "..type(Reaction)) 
+        end
+
+        if CLASS_MODEL[ClassName]["SubClass"][SubClassName] then
+            if not CLASS_MODEL[ClassName]["Animation"] then 
+                CLASS_MODEL[ClassName]["Animation"] = {} 
+            end
+
+            CLASS_MODEL[ClassName]["Animation"][SubClassName] = Reaction
+        end
+    end
+
+    CLASS_MODEL[ClassName]["Sync"] = count > 2
+
+    return true
+end
+
+function ModelsManagementLib:RegisterAnimation(FrameModel)
+    if  MODEL_LIST[FrameModel] and tContains(CLASS_MODEL[MODEL_LIST[FrameModel]["ClassName"]]["Limit"], "Model") or MODEL_LIST[FrameModel]["Animation"] then
+        return false
+    end
+
+    MODEL_LIST[FrameModel]["Animation"] = true
+    MODEL_LIST[FrameModel]["Sync"] = false
+
+    return true
+end
+
+local function clone(T, except)
+    local u = { }
+    for k, v in pairs(T) do 
+        if k ~= except then
+           u[k] = v          
+        end
+    end
+
+    return u
+end
+
+local function OnAnimFinished(self)
+    if self.SyncAnimActive then
+        self.SyncAnimActive = nil
+    end
+    
+end
+
+function ModelsManagementLib:RegisterSyncAnimation(ClassName, ...)
+    if type(ClassName) ~= "string" then 
+        error(MAJOR..":RegisterAnimation(ClassName, ...) - ClassName must be string, got "..type(ClassName)) 
+    end
+
+    if not CLASS_MODEL[ClassName]["Animation"] or not CLASS_MODEL[ClassName]["Sync"] then
+        return false
+    end
+
+    local sync = {}
+    local count = select("#", ...)
+    for i = 1, count do
+        local FrameModel = select(i, ...)
+
+        if MODEL_LIST[FrameModel]["ClassName"] == ClassName and CLASS_MODEL[ClassName]["Animation"][MODEL_LIST[FrameModel]["SubClassName"]] and not MODEL_LIST[FrameModel]["Animation"] then
+            sync[FrameModel] = true 
+        end
+    end
+
+    if not next(sync) then
+        return false     
+    end
+
+    for FrameModel, _ in pairs(sync) do
+        MODEL_LIST[FrameModel]["Animation"] = true
+        MODEL_LIST[FrameModel]["Sync"] = true
+        MODEL_LIST[FrameModel]["Reaction"] = CLASS_MODEL[ClassName]["Animation"][MODEL_LIST[FrameModel]["SubClassName"]] 
+        MODEL_LIST[FrameModel]["SyncFrame"] = clone(sync, FrameModel)
+       
+        FrameModel:SetScript("OnAnimFinished", OnAnimFinished)
+    end
+
+    return true
+end
+
+function ModelsManagementLib:SetAnimation(FrameModel, AnimationID)
+    if not MODEL_LIST[FrameModel] or not MODEL_LIST[FrameModel]["Animation"] or not FrameModel:HasAnimation(AnimationID) then
+        return false
+    end
+
+    FrameModel:SetAnimation(AnimationID)
+
+    if MODEL_LIST[FrameModel]["Sync"] then
+        for syncFrameModel, _ in pairs(MODEL_LIST[FrameModel]["SyncFrame"]) do
+            syncFrameModel.SyncAnimActive = true
+            syncFrameModel:SetAnimation(MODEL_LIST[syncFrameModel]["Reaction"][AnimationID])
+        end
+    end
+
+    return true
 end
 

@@ -68,18 +68,207 @@
 				end
 			</OnHide>
 			<OnEnter>
-				self.Highlight:Play();
+				<!-- self.Highlight:Play(); -->
 				self:OnEnter();
 			</OnEnter>
 			<OnLeave>
-				if self.Highlight:IsPlaying() then 
+				<!-- if self.Highlight:IsPlaying() then 
 					self.Highlight:Stop();
-				end
+				end -->
 				self:OnLeave();
 			</OnLeave>
 		</Scripts>
 	</Button>
-	
+
+	<Frame name="GwQuestInfoProgress" hidden="true" virtual="true">
+		<Frames>
+			<Frame parentKey="MoneyFrame" inherits="MoneyDisplayFrameTemplate" hidden="true">
+				<KeyValues>
+					<KeyValue key="hideCopper" value="true" type="boolean"/>
+					<KeyValue key="useAuctionHouseIcons" value="true" type="boolean"/>
+					<KeyValue key="resizeToFit" value="true" type="boolean"/>
+					<KeyValue key="leftAlign" value="true" type="boolean"/>
+				</KeyValues>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self.headerProgressPool = CreateFontStringPool(self, "BACKGROUND", 0, "QuestFontLeft")
+				self.buttonProgressPool = CreateFramePool("BUTTON", self, "QuestItemTemplate")
+			</OnLoad>
+		</Scripts>
+	</Frame>
+
+	<Frame name="GwQuestInfoRewardsFrame" hidden="true" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString parentKey="Header" inherits="QuestTitleFont" text="AJ_PRIMARY_REWARD_TEXT" justifyH="LEFT" hidden="true"/>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button parentKey="HonorFrame" inherits="LargeItemButtonTemplate, QuestInfoHonorFrameScriptTemplate" hidden="true"/>
+			<Button parentKey="WarModeBonusFrame" inherits="LargeItemButtonTemplate, WarModeBonusFrameTemplate" hidden="true"/>
+			<Frame parentKey="MoneyFrame" inherits="MoneyDisplayFrameTemplate" hidden="true">
+				<KeyValues>
+					<KeyValue key="hideCopper" value="true" type="boolean"/>
+					<KeyValue key="useAuctionHouseIcons" value="true" type="boolean"/>
+					<KeyValue key="resizeToFit" value="true" type="boolean"/>
+					<KeyValue key="leftAlign" value="true" type="boolean"/>
+				</KeyValues>
+			</Frame>
+
+			<Button parentKey="SkillPointFrame" inherits="LargeItemButtonTemplate" hidden="true">
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture parentKey="CircleBackground" file="Interface\QuestFrame\SkillUp-BG">
+							<Size x="32" y="32"/>
+							<Anchors>
+								<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="12" y="-6"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="CircleBackgroundGlow" file="Interface\QuestFrame\SkillUp-Glow" alphaMode="ADD" alpha="0.3">
+							<Size x="64" y="64"/>
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.CircleBackground"/>
+							</Anchors>
+						</Texture>
+						<FontString parentKey="ValueText" inherits="GameFontNormalLarge" justifyH="LEFT">
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.CircleBackground" relativePoint="CENTER" x="3"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						self.Name:SetPoint("LEFT", self.NameFrame, 24, 0);
+						self.Name:SetWidth(81);
+					</OnLoad>
+					<OnEnter>
+						if (self.tooltip) then
+							GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+							GameTooltip:SetText(self.tooltip, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
+						end
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</Button>
+			<Frame parentKey="XPFrame" frameLevel="31" hidden="true">
+				<Size x="280" y="20"/>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString parentKey="ReceiveText" inherits="QuestFont" text="EXPERIENCE_COLON">
+							<Anchors>
+								<Anchor point="LEFT" x="0" y="0"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="ValueText" inherits="NumberFontNormalLarge" justifyH="LEFT">
+							<Anchors>
+								<Anchor point="LEFT" relativeKey="$parent.ReceiveText" relativePoint="RIGHT" x="15" y="0"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Button parentKey="ArtifactXPFrame" inherits="LargeItemButtonTemplate" hidden="true">
+				<Layers>
+					<Layer level="BORDER">
+						<Texture parentKey="Overlay" file="Interface\Artifacts\ArtifactPower-QuestBorder">
+							<Size x="64" y="64" />
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.Icon" />
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+						GameTooltip:SetText(ARTIFACT_XP_REWARD, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b, nil, true);
+					</OnEnter>
+
+					<OnLeave function="GameTooltip_Hide" />
+				</Scripts>
+			</Button>
+
+
+			<Frame parentKey="TitleFrame" hidden="true">
+				<Size x="285" y="39"/>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture parentKey="Icon" file="Interface\Icons\INV_Misc_Note_02">
+							<Size x="39" y="39"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="0" y="0"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="FrameLeft" file="Interface\QuestFrame\UI-QuestItemNameFrame">
+							<Size x="4" y="40"/>
+							<Anchors>
+								<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="2" y="0"/>
+							</Anchors>
+							<TexCoords left="0.078125" right="0.1171875" top="0.15625" bottom="0.828125"/>
+						</Texture>
+						<Texture parentKey="FrameCenter" file="Interface\QuestFrame\UI-QuestItemNameFrame">
+							<Size x="200" y="40"/>
+							<Anchors>
+								<Anchor point="LEFT" relativeKey="$parent.FrameLeft" relativePoint="RIGHT" x="0" y="0"/>
+							</Anchors>
+							<TexCoords left="0.1171875" right="0.828125" top="0.15625" bottom="0.828125"/>
+						</Texture>
+						<Texture parentKey="FrameRight" file="Interface\QuestFrame\UI-QuestItemNameFrame">
+							<Size x="11" y="40"/>
+							<Anchors>
+								<Anchor point="LEFT" relativeKey="$parent.FrameCenter" relativePoint="RIGHT" x="0" y="0"/>
+							</Anchors>
+							<TexCoords left="0.828125" right="0.9140625" top="0.15625" bottom="0.828125"/>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY">
+						<FontString parentKey="Name" inherits="GameFontHighlight" justifyH="LEFT">
+							<Size x="200" y="0"/>
+							<Anchors>
+								<Anchor point="LEFT" relativeKey="$parent.FrameLeft" x="8" y="-2"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<Frame parentKey="ItemHighlight" hidden="true">
+				<Size x="256" y="64"/>
+				<Anchors>
+					<Anchor point="TOPLEFT"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface\QuestFrame\UI-QuestItemHighlight" alphaMode="ADD">
+							<Size x="256" y="64"/>
+							<Anchors>
+								<Anchor point="TOPLEFT"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad function="RaiseFrameLevel"/>
+				</Scripts>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self.buttonTemplate = "LargeQuestRewardItemButtonTemplate";
+				self.headerRewardsPool = CreateFontStringPool(self, "BACKGROUND", 0, "QuestFontLeft")
+				self.buttonRewardPool = CreateFramePool("BUTTON", self, "LargeQuestRewardItemButtonTemplate");
+				self.spellButtonRewardsPool = CreateFramePool("BUTTON", self, "QuestSpellTemplate, QuestInfoRewardSpellCodeTemplate");
+				self.followerButtonRewardsPool = CreateFramePool("BUTTON", self, "LargeQuestInfoRewardFollowerTemplate");
+				self.spellHeaderRewardsPool = CreateFontStringPool(self, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate");
+			</OnLoad>
+		</Scripts>
+	</Frame>
+
 	<Frame name="GwFullScreenGossipViewFrameTemplate" hidden="true" alpha="0" setAllPoints="true" enableKeyboard="true" ignoreParentAlpha="true" ignoreParentScale="false" frameStrata="FULLSCREEN" enableMouse="true" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -332,65 +521,19 @@
 					NORMAL_QUEST_DISPLAY = "|cFFFF5A00%s";
 					ACTION_DISPLAY = "|cFF8C00FF%s";
 				end
-				self.StyleReward = function(template)
-					local totalHeight = 0
-					local elementsTable = template.frames
+				self.Color = { r = 0, g = 0, b = 0};
 
-					for i = 1, #elementsTable, 2 do
-						if _G[elementsTable[i]]:IsShown() then
-							if elementsTable[i] == "QuestInfoRewardsFrame" then
-								local lastFrame = QuestInfoRewardsFrame.Header
-								local height = lastFrame:GetHeight()
-							
-								for _, frame in ipairs({"QuestSessionBonusReward", "ItemReceiveText", "MoneyFrame", "XPFrame", "ArtifactXPFrame", "WarModeBonusFrame", "HonorFrame", "SkillPointFrame", "PlayerTitleText", "TitleFrame", "ItemChooseText"}) do
-									if QuestInfoRewardsFrame[frame] and QuestInfoRewardsFrame[frame]:IsShown() then
-										QuestInfoRewardsFrame[frame]:ClearAllPoints()
-										QuestInfoRewardsFrame[frame]:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
-										lastFrame = QuestInfoRewardsFrame[frame]
-										height = height + lastFrame:GetHeight() + 5
-									end
-								end
-								
-								for _, obj in ipairs(QuestInfoRewardsFrame.collectionObjectFromPolls) do
-									obj:ClearAllPoints()
-									obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
-									lastFrame = obj
-									height = height + lastFrame:GetHeight() + 5
-								end
-								
-								for i, questItem in ipairs(QuestInfoRewardsFrame.RewardButtons) do
-									if questItem:IsShown() then
-										questItem:ClearAllPoints()
-										questItem:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", i == 1 and 5 or 0, -5)
-										lastFrame = questItem
-										height = height + lastFrame:GetHeight() + 5
-									end
-								end
-							
-								QuestInfoRewardsFrame:SetHeight(height)
-							end
-
-							if elementsTable[i] == "GwQuestInfoProgress" then
-								local height = 0
-								local lastFrame 
-								if QuestInfoRequiredMoneyFrame:IsShown() then
-									height = height + QuestInfoRequiredMoneyFrame:GetHeight()
-									lastFrame = QuestInfoRequiredMoneyFrame
-								end
-
-								for _, obj in ipairs(GwQuestInfoProgress.collectionObjectFromPolls) do
-									obj:ClearAllPoints()
-									obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
-									lastFrame = obj
-									height = height + lastFrame:GetHeight() + 5
-								end
-							end
-
-							totalHeight = totalHeight + _G[elementsTable[i]]:GetHeight() + elementsTable[i + 1]
-						end
+				self.Format = function(lastElement, num, name, element)
+					element:ClearAllPoints()
+					
+					if lastElement then
+						element:SetPoint("TOPLEFT", lastElement, "BOTTOMLEFT", 0, -5)
+					else
+						element:SetPoint("TOPLEFT", element:GetParent(), "TOPLEFT", 5, 0)
 					end
 
-					return totalHeight
+					element:Show()
+					return element, element:GetHeight() + 5
 				end
 			</OnLoad>
 			<OnShow>
@@ -573,32 +716,34 @@
 				</Layers>
 			</Button>
 			<Frame parentKey="Detail" frameLevel="5" enableMouse="true" movable="true" hidden="true">
-				<Size x="256" y="380"/>
+				<Size x="410" y="350"/>
 				<Anchors>
 					<Anchor point="TOP" relativeKey="$parent.DetailButton" relativePoint="BOTTOM" x="0" y="0"/>
 				</Anchors>
 				<Layers>
 					<Layer frameStrata="BACKGROUND">
-						<Texture parentKey="Background" setAllPoints="true"/>			
+						<Texture parentKey="Background" file="Interface/AddOns/GW2_UI/Textures/gossipview/reward" setAllPoints="true">		
+							<TexCoords left="0.1" right="0.915" top="0.06" bottom="0.86"/>	
+						</Texture>		
 					</Layer>
 					<Layer frameStrata="ARTWORK">
 						<FontString parentKey="Title" inherits="QuestTitleFont" text="QUEST_OBJECTIVES" justifyH="CENTER" JustifyV="CENTER">
-							<Size x="256" y="8"/>
+							<Size x="410" y="8"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-16"/>
+								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="-50"/>
 							</Anchors>
 						</FontString>
 					</Layer>
 				</Layers>
 				<Frames>	
 					<ScrollFrame parentKey="Scroll" inherits="GwScrollFrameScrollBarRightTemplate">
-						<Size x="210" y="305"/>
+						<Size x="355" y="235"/>
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="16" y="-40"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="16" y="-90"/>
 						</Anchors>
 						<ScrollChild>
 							<Frame parentKey="ScrollChildFrame">
-								<Size x="210"/>
+								<Size x="355"/>
 							</Frame> 
 						</ScrollChild>
 					</ScrollFrame>
@@ -627,65 +772,30 @@
 					NORMAL_QUEST_DISPLAY = "|cFFFF5A00%s";
 					ACTION_DISPLAY = "|cFF8C00FF%s";
 				end
-				self.StyleReward = function(template)
-					local totalHeight = 0
-					local elementsTable = template.frames
 
-					for i = 1, #elementsTable, 2 do
-						if _G[elementsTable[i]]:IsShown() then
-							if elementsTable[i] == "QuestInfoRewardsFrame" then
-								local lastFrame = QuestInfoRewardsFrame.Header
-								local height = lastFrame:GetHeight()
-							
-								for _, frame in ipairs({"QuestSessionBonusReward", "ItemReceiveText", "MoneyFrame", "XPFrame", "ArtifactXPFrame", "WarModeBonusFrame", "HonorFrame", "SkillPointFrame", "PlayerTitleText", "TitleFrame", "ItemChooseText"}) do
-									if QuestInfoRewardsFrame[frame] and QuestInfoRewardsFrame[frame]:IsShown() then
-										QuestInfoRewardsFrame[frame]:ClearAllPoints()
-										QuestInfoRewardsFrame[frame]:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
-										lastFrame = QuestInfoRewardsFrame[frame]
-										height = height + lastFrame:GetHeight() + 5
-									end
-								end
-								
-								for _, obj in ipairs(QuestInfoRewardsFrame.collectionObjectFromPolls) do
-									obj:ClearAllPoints()
-									obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
-									lastFrame = obj
-									height = height + lastFrame:GetHeight() + 5
-								end
-								
-								for i, questItem in ipairs(QuestInfoRewardsFrame.RewardButtons) do
-									if questItem:IsShown() then
-										questItem:ClearAllPoints()
-										questItem:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", i == 1 and 5 or 0, -5)
-										lastFrame = questItem
-										height = height + lastFrame:GetHeight() + 5
-									end
-								end
-							
-								QuestInfoRewardsFrame:SetHeight(height)
-							end
+				self.Color = { r = 1, g = 1, b = 1};
 
-							if elementsTable[i] == "GwQuestInfoProgress" then
-								local height = 0
-								local lastFrame 
-								if QuestInfoRequiredMoneyFrame:IsShown() then
-									height = height + QuestInfoRequiredMoneyFrame:GetHeight()
-									lastFrame = QuestInfoRequiredMoneyFrame
-								end
-
-								for _, obj in ipairs(GwQuestInfoProgress.collectionObjectFromPolls) do
-									obj:ClearAllPoints()
-									obj:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)	
-									lastFrame = obj
-									height = height + lastFrame:GetHeight() + 5
-								end
-							end
-
-							totalHeight = totalHeight + _G[elementsTable[i]]:GetHeight() + elementsTable[i + 1]
+				self.Format = function(lastElement, num, name, element)
+					element:ClearAllPoints()
+					local newLastElement, height = nil, 0
+					if lastElement then
+						if num % 2 == 1 then
+							element:SetPoint("TOPLEFT", lastElement, "BOTTOMLEFT", 0, -5)
+							newLastElement = element
+							height = element:GetHeight() + 5
+						else
+							element:SetPoint("TOPLEFT", lastElement, "TOPRIGHT", 1, 0)
+							newLastElement = lastElement
 						end
+					else
+						element:SetPoint("TOPLEFT", element:GetParent(), "TOPLEFT", 5, 0)
+						newLastElement = element
+						height = element:GetHeight() + 5
 					end
 
-					return totalHeight
+					element:Show()
+
+					return newLastElement, height
 				end
 			</OnLoad>
 		</Scripts>

@@ -1,6 +1,7 @@
 local _, GW = ...
 local L = GW.L
-local ModelScaling = GW.Libs.Model
+local Model = GW.Libs.Model
+local ModelDB = GW.Libs.ModelDB
 local GetSetting = GW.GetSetting
 local RegisterMovableFrame = GW.RegisterMovableFrame
 local IsIn = GW.IsIn
@@ -93,8 +94,8 @@ local function GwImmersiveFrame_OnEvent(self, event, ...)
 	elseif IsIn(event, "GOSSIP_CLOSED", "QUEST_FINISHED") then
 		ImmersiveFrameHandleHide(self)
 	elseif IsIn(event, "QUEST_ITEM_UPDATE", "LEARNED_SPELL_IN_TAB") then
+		print("yes1")
 		if IsIn(self.LastEvent, "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE") and self.ActiveFrame.Detail:IsVisible() then
-			self.LoadDetail = true
 			self.ActiveFrame.Detail:Hide()
 			self.ActiveFrame.Detail:Show()
 		end
@@ -105,9 +106,9 @@ local function GwImmersiveFrame_OnEvent(self, event, ...)
 	elseif event == "UNIT_MODEL_CHANGED" then
 		local unit = ...
 		if unit == "player" then
-			ModelScaling:SetModel(self.ActiveFrame.Models.Player)
+			Model:SetModel(self.ActiveFrame.Models.Player)
 		else
-			ModelScaling:SetModel(self.ActiveFrame.Models.Giver)
+			Model:SetModel(self.ActiveFrame.Models.Giver)
 		end
 	end
 end 
@@ -190,10 +191,12 @@ local function GwNormalScreenGossipViewFrame_OnClick(self, button)
 end
 
 local function GwImmersiveDetail_OnShow(self)
-	if GwImmersiveFrame.LoadDetail then
-		GwImmersiveFrame.LoadDetail = false
 		local template = _G["GW2_"..GwImmersiveFrame.LastEvent.."_TEMPLATE"]
-		local parentFrame = self.Scroll.ScrollChildFrame
+		local parentFrame = self:GetParent()
+		local format, mode, color = parentFrame.Format, parentFrame.mode, parentFrame.Color
+
+		local detail = self.Scroll.ScrollChildFrame
+		local detailWidth = detail:GetWidth()
 
 		if template.canHaveSealMaterial then
 			local questID = GetQuestID()
@@ -202,73 +205,68 @@ local function GwImmersiveDetail_OnShow(self)
 			QuestInfoSealFrame.theme = theme
 		end
 
-		for _, child in pairs({parentFrame:GetRegions()}) do
-			child:Hide()
-			child:SetParent(nil)
-		end
-	
-		for _, child in pairs({parentFrame:GetChildren()}) do
-			child:Hide()
-			child:SetParent(nil)
+		GwImmersiveFrame.chooseItems = template.chooseItems
+		GwQuestInfoRewardsFrame.rewardsHeader = true
+
+		if GwImmersiveFrame.material ~= mode  then
+			GwImmersiveFrame.material = mode
+			self.Title:SetTextColor(color.r, color.g, color.b)
+			GwQuestInfoObjectivesText:SetTextColor(color.r, color.g, color.b)
+			QuestInfoGroupSize:SetTextColor(color.r, color.g, color.b)
+			QuestInfoSealFrame.Text:SetTextColor(color.r, color.g, color.b)
+			GwQuestInfoRewardsFrame.Header:SetTextColor(color.r, color.g, color.b)
+			GwQuestInfoRewardsFrame.XPFrame.ReceiveText:SetTextColor(color.r, color.g, color.b)
+
+			GwQuestInfoProgress.headerProgressPool.textR, GwQuestInfoProgress.headerProgressPool.textG, GwQuestInfoProgress.headerProgressPool.textB = color.r, color.g, color.b
+			GwQuestInfoRewardsFrame.headerRewardsPool.textR, GwQuestInfoRewardsFrame.headerRewardsPool.textG, GwQuestInfoRewardsFrame.headerRewardsPool.textB = color.r, color.g, color.b
+			GwQuestInfoRewardsFrame.spellHeaderRewardsPool.textR, GwQuestInfoRewardsFrame.spellHeaderRewardsPool.textG, GwQuestInfoRewardsFrame.spellHeaderRewardsPool.textB = color.r, color.g, color.b
+			
+			GwQuestInfoProgress.buttonProgressPool.style = mode
+			GwQuestInfoRewardsFrame.buttonRewardPool.style = mode
 		end
 
-		QuestInfoFrame.questLog = template.questLog
-		QuestInfoFrame.chooseItems = template.chooseItems
-		QuestInfoFrame.acceptButton = nil
-
-		if QuestInfoFrame.mapView == true then
-			QuestInfoFrame.mapView = false
-			QuestInfoFrame.rewardsFrame = QuestInfoRewardsFrame
-			MapQuestInfoRewardsFrame:Hide()
+		if not detail.questInfoHyperlinksInstalled then
+			detail.questInfoHyperlinksInstalled = true
+			detail:SetHyperlinksEnabled(true)
+			detail:SetScript("OnHyperlinkEnter", QuestInfo_OnHyperlinkEnter)
+			detail:SetScript("OnHyperlinkLeave", QuestInfo_OnHyperlinkLeave)
 		end
 
-		if not parentFrame.questInfoHyperlinksInstalled then
-			parentFrame.questInfoHyperlinksInstalled = true
-			parentFrame:SetHyperlinksEnabled(true)
-			parentFrame:SetScript("OnHyperlinkEnter", QuestInfo_OnHyperlinkEnter)
-			parentFrame:SetScript("OnHyperlinkLeave", QuestInfo_OnHyperlinkLeave)
-		end
+		QuestInfoSealFrame:Hide()
+		QuestInfoSpecialObjectivesFrame:Hide()
+		QuestInfoGroupSize:Hide()
+		GwQuestInfoRewardsFrame:Hide()
+		GwQuestInfoProgress:Hide()
+		GwQuestInfoObjectivesText:Hide()
 
 		local lastFrame = nil
 		local totalHeight = 0
-		for _, GetElement in ipairs(template.elements) do
-			local shownFrame, objects = GetElement()
-			if shownFrame and objects then
-				for _, obj in ipairs(objects) do
-					obj.element:ClearAllPoints()
-					if lastFrame then
-						obj.element:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
-					else
-						obj.element:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", 0, 0)
-					end
-
-					lastFrame = obj.element
-					totalHeight = totalHeight + obj.element:GetHeight() + 5
-					obj.element:Show()
-					
-					if obj.element:IsObjectType("BUTTON") then 
-						GW.HandleReward(obj.element)
-					end
+		local element = template.elements
+		for i = 1, #element do
+			local shownFrame = element[i](format, template.rewardsHeader)
+			if shownFrame then
+				shownFrame:ClearAllPoints()
+				shownFrame:SetParent(detail)
+				shownFrame:SetWidth(detailWidth)
+				if lastFrame then
+					shownFrame:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+				else
+					shownFrame:SetPoint("TOPLEFT", detail, "TOPLEFT", 0, 0)
 				end
 
-				shownFrame:SetWidth(parentFrame:GetWidth())
-				shownFrame:SetParent(parentFrame)
-				shownFrame:Show()	
-			end	
+				shownFrame:Show()
+				lastFrame = shownFrame
+				totalHeight = totalHeight + shownFrame:GetHeight() + 5
+			end
 		end
-
-		
 		
 		if totalHeight > 0 then
 			self.Title:SetText(template.title)
 			self.Scroll.ScrollBar:SetValue(0)
-			self.Scroll.ScrollChildFrame:SetHeight(totalHeight)		
-
+			self.Scroll.ScrollChildFrame:SetHeight(totalHeight)	
 		else
 			self:Hide()
 		end
-	end
-
 end
 
 local function GwImmersiveDetail_OnHide(self)
@@ -276,18 +274,6 @@ local function GwImmersiveDetail_OnHide(self)
 end
 
 local function LoadImmersiveView()
-	function QuestInfoItem_OnClick(self)
-		if self.type == "choice" then
-			if QuestInfoFrame.itemChoice == self:GetID() then
-				GetQuestReward(QuestInfoFrame.itemChoice)
-			else
-				QuestInfoItemHighlight:SetPoint("TOPLEFT", self, "TOPLEFT", -8, 7)
-				QuestInfoItemHighlight:Show()
-				QuestInfoFrame.itemChoice = self:GetID()
-			end
-		end
-	end
-
 	for _, frame in ipairs({GossipFrame, QuestFrame}) do
 		frame:UnregisterAllEvents()
 		frame:EnableMouse(false)
@@ -312,7 +298,7 @@ local function LoadImmersiveView()
 	GwImmersiveFrame:SetScript("OnEvent", GwImmersiveFrame_OnEvent)
 	GwImmersiveFrame.hasActiveQuest = false
 	GwImmersiveFrame.LoadDetail = true
-	CreateFrame("Frame", "GwFullScreenGossipViewFrame", UIParent, "GwFullScreenGossipViewFrameTemplate")
+	local GwFullScreenGossipViewFrame = CreateFrame("Frame", nil, UIParent, "GwFullScreenGossipViewFrameTemplate")
 	GwFullScreenGossipViewFrame:SetScript("OnKeyDown", GwImmersiveFrames_OnKeyDown)
 	GwFullScreenGossipViewFrame.Detail:SetScript("OnShow", GwImmersiveDetail_OnShow)
 	GwFullScreenGossipViewFrame.Detail:SetScript("OnHide", GwImmersiveDetail_OnHide)
@@ -320,19 +306,16 @@ local function LoadImmersiveView()
 		GwFullScreenGossipViewFrame:HookScript("OnShow", GwFullScreenGossipViewFrame_OnShow)
 	end
 
-	CreateFrame("Frame", "GwNormalScreenGossipViewFrame", UIParent, "GwNormalScreenGossipViewFrameTemplate")
+	local GwNormalScreenGossipViewFrame = CreateFrame("Frame", nil, UIParent, "GwNormalScreenGossipViewFrameTemplate")
 	GwNormalScreenGossipViewFrame:SetScript("OnKeyDown", GwImmersiveFrames_OnKeyDown)
 	GwNormalScreenGossipViewFrame.Detail:SetScript("OnShow", GwImmersiveDetail_OnShow)
 	GwNormalScreenGossipViewFrame.Detail:SetScript("OnHide", GwImmersiveDetail_OnHide)
 	if GetSetting("MOUSE_DIALOG") then
 		GwNormalScreenGossipViewFrame.Dialog:SetScript("OnClick", GwNormalScreenGossipViewFrame_OnClick)
 	end
-	RegisterMovableFrame(GwNormalScreenGossipViewFrame, L["Immersive Frame"], "GwGossipViewFramePos", "VerticalActionBarDummy", nil, nil, {"scaleable"} )
+	RegisterMovableFrame(GwNormalScreenGossipViewFrame, L["Dialog Immersive Frame"], "GwGossipViewFramePos", "VerticalActionBarDummy", nil, nil, {"scaleable"} )
 	GwNormalScreenGossipViewFrame:ClearAllPoints()
 	GwNormalScreenGossipViewFrame:SetPoint("TOPLEFT", GwNormalScreenGossipViewFrame.gwMover)
-	
-	GwImmersiveFrame.ActiveFrame = GetSetting("FULL_SCREEN") and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
-	GwImmersiveFrame.ActiveFrame.FontColor()
 
 	local FramePool_HideAndClearAnchors = function(framePool, frame)
 		frame:Hide()
@@ -341,49 +324,31 @@ local function LoadImmersiveView()
 	end
 
 	GwImmersiveFrame.TitleButtonPool = CreateFramePool("BUTTON", nil, "GwTitleButtonTemplate", FramePool_HideAndClearAnchors)
-	CreateFrame("Frame", "GwQuestInfoProgress")
-	GwQuestInfoProgress.ProgressHeaderPool = CreateFontStringPool(GwQuestInfoProgress, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate")
-	GwQuestInfoProgress.ProgressButtonPool = CreateFramePool("BUTTON", GwQuestInfoProgress, "QuestItemTemplate")
-
-	QuestInfoRewardsFrame.Header:ClearAllPoints()
 	QuestInfoFrame:CreateFontString("GwQuestInfoObjectivesText", "BACKGROUND", "QuestFontLeft")
+	CreateFrame("Frame", "GwQuestInfoProgress",nil, "GwQuestInfoProgress")
+	CreateFrame("Frame", "GwQuestInfoRewardsFrame",nil, "GwQuestInfoRewardsFrame")
 
-	QuestInfoRewardsFrame.RewardsHeaderPool = CreateFontStringPool(QuestInfoRewardsFrame, "BACKGROUND", 0, "QuestFont")
+	Model:CreateClassModel("FULLMODEL", {"CinematicModel"}, ModelDB.defSetUnit, ModelDB.defFullModel)
+    Model:CreateSubClassModel("FULLMODEL", "RIGHT", ModelDB.defGetPlayer, ModelDB.defFullModelRight, ModelDB.defFullModelOffsetRight)
+    Model:CreateSubClassModel("FULLMODEL", "LEFT", ModelDB.defGetNPC, ModelDB.defFullModelLeft, ModelDB.defFullModelOffsetLeft)
+	Model:RegisterModel("FULLMODEL", "RIGHT", GwFullScreenGossipViewFrame.Models.Player)
+	Model:RegisterModel("FULLMODEL", "LEFT", GwFullScreenGossipViewFrame.Models.Giver)
+	Model:CreateClassAnimation("FULLMODEL", "RIGHT", {[60] = 60}, "LEFT", {[60] = 60} )
+	Model:RegisterSyncAnimation("FULLMODEL", GwFullScreenGossipViewFrame.Models.Player, GwFullScreenGossipViewFrame.Models.Giver)
 
-	QuestInfoRewardsFrame.Header:ClearAllPoints()
-	QuestInfoRewardsFrame.Header:SetText(AJ_PRIMARY_REWARD_TEXT)
-	QuestInfoRewardsFrame.Header:Hide()
+    Model:CreateClassModel("PORTRAIT", {"CinematicModel", "PlayerModel"}, ModelDB.defSetUnit, ModelDB.defPortrait)
+    Model:CreateSubClassModel("PORTRAIT", "RIGHT", ModelDB.defGetPlayer, ModelDB.defPortraitRight, ModelDB.defPortraitOffsetRight)
+    Model:CreateSubClassModel("PORTRAIT", "LEFT", ModelDB.defGetNPC, ModelDB.defPortraitLeft, ModelDB.defPortraitOffsetLeft)
+	Model:RegisterModel("PORTRAIT", "RIGHT", GwNormalScreenGossipViewFrame.Models.Player, GwNormalScreenGossipViewFrame.Models.Player.Name.Text, ModelDB.defGetNamePlayer)
+	Model:RegisterModel("PORTRAIT", "LEFT", GwNormalScreenGossipViewFrame.Models.Giver, GwNormalScreenGossipViewFrame.Models.Giver.Name.Text, ModelDB.defGetNameNPC)
+	Model:CreateClassAnimation("PORTRAIT", "RIGHT", {[60] = 60}, "LEFT", {[60] = 60} )
+	Model:RegisterSyncAnimation("PORTRAIT", GwNormalScreenGossipViewFrame.Models.Player, GwNormalScreenGossipViewFrame.Models.Giver)
 
-	QuestInfoRewardsFrame.MoneyFrame:ClearAllPoints()
-	QuestInfoRewardsFrame.MoneyFrame:Hide()
+	GwImmersiveFrame.ActiveFrame = GetSetting("FULL_SCREEN") and GwFullScreenGossipViewFrame or GwNormalScreenGossipViewFrame
+	GwImmersiveFrame.UnActiveFrame = GetSetting("FULL_SCREEN") and GwNormalScreenGossipViewFrame or GwFullScreenGossipViewFrame
+	GwImmersiveFrame.ActiveFrame.FontColor()
 
-	QuestInfoRewardsFrame.MoneyFrameButton = CreateFrame("BUTTON", nil, QuestInfoRewardsFrame, "LargeQuestRewardItemButtonTemplate")
-	QuestInfoRewardsFrame.MoneyFrameButton.Icon:SetTexture("Interface\\Icons\\inv_misc_coin_01")
-	QuestInfoRewardsFrame.MoneyFrameButton.Name:SetFontObject("GameFontHighlight")
-	QuestInfoRewardsFrame.MoneyFrameButton:Hide()
-
-	QuestInfoRewardsFrame.XPFrameButton = CreateFrame("BUTTON", nil, QuestInfoRewardsFrame, "LargeQuestRewardItemButtonTemplate")
-	QuestInfoRewardsFrame.XPFrameButton.Icon:SetTexture("Interface\\Icons\\XP_Icon")
-	QuestInfoRewardsFrame.XPFrameButton.Name:SetFontObject("NumberFontNormal")
-	QuestInfoRewardsFrame.XPFrameButton:Hide()
-
-	QuestInfoRewardsFrame.ArtifactXPFrame.Name:SetFontObject("NumberFontNormal")
-
-	QuestInfoRewardsFrame.TitleFrameButton = CreateFrame("BUTTON", nil, QuestInfoRewardsFrame, "LargeQuestRewardItemButtonTemplate")
-	QuestInfoRewardsFrame.TitleFrameButton.Icon:SetTexture("Interface\\Icons\\INV_Misc_Note_02")
-	QuestInfoRewardsFrame.TitleFrameButton:Hide()
-
-	ModelScaling:CreateClassModel("FULLMODEL", {"CinematicModel"}, ModelScaling.defSetUnit, ModelScaling.defFullModel)
-    ModelScaling:CreateSubClassModel("FULLMODEL", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defFullModelRight, ModelScaling.defFullModelOffsetRight)
-    ModelScaling:CreateSubClassModel("FULLMODEL", "LEFT", ModelScaling.defGetNPC, ModelScaling.defFullModelLeft, ModelScaling.defFullModelOffsetLeft)
-	ModelScaling:RegisterModel("FULLMODEL", "RIGHT", GwFullScreenGossipViewFrame.Models.Player)
-	ModelScaling:RegisterModel("FULLMODEL", "LEFT", GwFullScreenGossipViewFrame.Models.Giver)
-
-    ModelScaling:CreateClassModel("PORTRAIT", {"CinematicModel", "PlayerModel"}, ModelScaling.defSetUnit, ModelScaling.defPortrait)
-    ModelScaling:CreateSubClassModel("PORTRAIT", "RIGHT", ModelScaling.defGetPlayer, ModelScaling.defPortraitRight, ModelScaling.defPortraitOffsetRight)
-    ModelScaling:CreateSubClassModel("PORTRAIT", "LEFT", ModelScaling.defGetNPC, ModelScaling.defPortraitLeft, ModelScaling.defPortraitOffsetLeft)
-	ModelScaling:RegisterModel("PORTRAIT", "RIGHT", GwNormalScreenGossipViewFrame.Models.Player, GwNormalScreenGossipViewFrame.Models.Player.Name.Text)
-	ModelScaling:RegisterModel("PORTRAIT", "LEFT", GwNormalScreenGossipViewFrame.Models.Giver, GwNormalScreenGossipViewFrame.Models.Giver.Name.Text)
+	GwImmersiveFrame.ForceFrame = GwNormalScreenGossipViewFrame
 end
 
 GW.LoadImmersiveView = LoadImmersiveView
